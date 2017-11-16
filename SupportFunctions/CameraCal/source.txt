@@ -1,0 +1,1 @@
+The code in this folder was taken, with permission, from the Camera Calibration Toolbox for Matlab by Jean-Yves Bouguet. For more information please visit http://www.vision.caltech.edu/bouguetj/calib_doc/ .

@@ -1,0 +1,94 @@
+Matlab Light Field Toolbox v0.4 released 12-Feb-2015
+Copyright (c) 2013, 2014 by Donald G. Dansereau
+
+Please refer to LFToolbox.pdf for installation instructions and further information.
+
+This is a set of tools for working with light field (aka plenoptic) imagery in Matlab. Features include decoding, calibration, rectification, colour correction, basic filtering and visualization of light field images. New in version 0.4 are some linear depth/focus and denoising filters.
+
+Download the sample light field pack at http://www-personal.acfr.usyd.edu.au/ddan1654/LFToolbox0.3_Samples1.zip. Sample calibration datasets can be found at http://marine.acfr.usyd.edu.au/plenoptic-imaging.
+
+---Compatibility---
+LFToolbox 0.4 is reverse-compatible with LFToolbox 0.3. The original Lytro camera (the "F01") and the Lytro Illum are supported under Lytro Desktop 4 and 3. Calibration and rectification of Illum imagery is experimental.
+
+Users upgrading directly from LFToolbox 0.2 will need to re-run calibration and decoding and update some parameter names.
+
+---Contributing / Feedback---
+Suggestions, bug reports, code improvements and new functionality are welcome -- email Donald.Dansereau+LFToolbox {at} gmail dot com.
+
+---Acknowledgements---
+Parts of the code were taken with permission from the Camera Calibration Toolbox for Matlab by Jean-Yves Bouguet, with contributions from Pietro Perona and others; and from the JSONlab Toolbox by Qianqian Fang and others. LFFigure was originally by Daniel Eaton. The LFP reader is based in part on Nirav Patel and Doug Kelley's LFP readers. Thanks to Michael Tao for help and samples for decoding Illum imagery.
+
+---Citing---
+The appropriate citations for decoding, calibration and rectification and the volumetric focus (hyperfan) filter are:
+
+@inproceedings{dansereau2013decoding,
+ title={Decoding, Calibration and Rectification for lenselet-Based Plenoptic Cameras},
+ author={Donald G. Dansereau and Oscar Pizarro and Stefan B. Williams},
+ booktitle={Computer Vision and Pattern Recognition (CVPR), IEEE Conference on},
+ year={2013},
+ month={Jun},
+ organization={IEEE}
+}
+
+@article{dansereau2015linear, 
+	title={Linear Volumetric Focus for Light Field Cameras},
+	author={Donald G. Dansereau and Oscar Pizarro and Stefan B. Williams},
+	journal={ACM Transactions on Graphics (TOG)},
+	volume={34},
+	number={2},
+	month={Feb.},
+	year={2015}
+}
+
+---Future Plans---
+A way to keep calibrations reverse-compatible, a more direct decode procedure with user control over output resolution, 4D-to-2D rendering, spatial- and hybrid-domain filter implementations, more filtering demos including use of aliased filter components and denoising.
+
+
+---Changes---
+v0.4 :
+Features:
+- Building, applying 2D & 4D frequency-domain filters LFBuild*.m, LFFilt*.m, LFDemoBasicFilt*.m
+- Spatial-domain shift-sum filter LFFiltShiftSum.m
+- Quick 2D display convenience function LFDisp.m
+
+v0.3 :
+Features :
+- LFReadGantryArray: Loading gantry light fields
+- LFReadLFP: Loading Lytro lfp / lfr files
+- Compatibility with Lytro Desktop 4 and Illum files
+
+Bug Fixes :
+- Fixed incorrect hex grid phase on some cameras
+- Various compatibility updates for recent Matlab versions
+
+Performance and behaviour changes :
+- Replaced corner finder with Matlab version -- slower but more robust
+- Decoded light field size more closely matches individual camera characteristics
+- Faster triangulation-based resampling
+- Lower memory utilization in decode, rectification, histogram equalization
+- Figures no longer steal focus -- see SupportFunctions/LFFigure
+- Smarter input path interpretation -- see SupportFunction/LFFindFilesRecursive
+- LFDispMousePan works over a wider range of input types
+- LFHistEqualize converts colour images to HSV and operates on value
+- Colour correction no longer applies LFHistEqualize
+
+Name changes :
+- Lenselet -> lenslet
+- DecodeOptions.DehexMethod -> DecodeOptions.ResampMethod
+- Added DecodeOptions.DoDehex and DecodeOptions.DoSquarST options
+- Moved LevelLimits to DecodeOptions.LevelLimits
+- LFLytroDecodeImage -> LFLytroDecodeImage
+- Reorganized some functions into/out of "SupportFunctions"
+
+v0.2 : 
+- Calibration of lenslet cameras from checkerboard images
+- LFUtilDecodeLytroFolder: decoding, colour correction and rectification
+- Management of multiple cameras, white images and calibrations
+- Organized code into a folder structure, see LFMatlabPathSetup
+- Organized light fields / cameras into a folder structure
+- Code and usability improvements throughout
+
+v0.1 : Initial release
+
+
+
