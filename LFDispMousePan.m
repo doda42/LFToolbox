@@ -28,20 +28,31 @@
 %
 % See also: LFDisp, LFDispVidCirc
 
-% Part of LF Toolbox v0.4 released 12-Feb-2015
+% Part of LF Toolbox xxxVersionTagxxx
 % Copyright (c) 2013-2015 Donald G. Dansereau
 
-function FigureHandle = LFDispMousePan( LF, varargin )
+function FigureHandle = LFDispMousePan( LF, ScaleFactor, InitialViewIdx )
+
+%todo: document InitialViewIdx and change to default mouse rate, probably make param
+LFSize = size(LF);
+
+%---Check for a light field with only one spatial dim---
+if( ndims(LF) == 3 || (ndims(LF)==4 && (size(LF,4)==3 || size(LF,4)==4)) )
+	LF = reshape(LF, [1, size(LF)]);
+end
+LFSize = size(LF);
 
 %---Defaults---
-MouseRateDivider = 30;
+ScaleFactor = LFDefaultVal('ScaleFactor', 1);
+InitialViewIdx = LFDefaultVal('InitialViewIdx', max(1,floor((LFSize(1:2)-1)/2+1)));
+MouseRateDivider = 30./(LFSize(1:2)/9);
 
 %---Check for weight channel---
-HasWeight = (size(LF,5) == 4);
+HasWeight = (size(LF,5) == 4 || size(LF,5) == 2);
 
 %---Discard weight channel---
 if( HasWeight )
-    LF = LF(:,:,:,:,1:3);
+    LF = LF(:,:,:,:,1:end-1);
 end
 
 %---Rescale for 8-bit display---
@@ -52,17 +63,15 @@ else
 end
 
 %---Setup the display---
-[ImageHandle,FigureHandle] = LFDispSetup( squeeze(LF(max(1,floor(end/2)),max(1,floor(end/2)),:,:,:)), varargin{:} );
+[ImageHandle,FigureHandle] = LFDispSetup( squeeze(LF(max(1,floor(end/2)),max(1,floor(end/2)),:,:,:)), ScaleFactor );
 
 BDH = @(varargin) ButtonDownCallback(FigureHandle, varargin);
 BUH = @(varargin) ButtonUpCallback(FigureHandle, varargin);
 set(FigureHandle, 'WindowButtonDownFcn', BDH );
 set(FigureHandle, 'WindowButtonUpFcn', BUH );
 
-
-[TSize,SSize, ~,~] = size(LF(:,:,:,:,1));
-CurX = max(1,floor((SSize-1)/2+1));
-CurY = max(1,floor((TSize-1)/2+1));
+CurX = InitialViewIdx(2);
+CurY = InitialViewIdx(1);
 DragStart = 0;
 
 %---Update frame before first mouse drag---
@@ -71,6 +80,7 @@ set(ImageHandle,'cdata', LFRender);
 
 fprintf('Click and drag to shift perspective\n');
 
+%---Nested functions, these have access to variables of parent function---
 function ButtonDownCallback(FigureHandle,varargin) 
 set(FigureHandle, 'WindowButtonMotionFcn', @ButtonMotionCallback);
 DragStart = get(gca,'CurrentPoint')';
@@ -85,8 +95,8 @@ function ButtonMotionCallback(varargin)
     CurPoint = get(gca,'CurrentPoint');
     CurPoint = CurPoint(1,1:2);
     RelPoint = CurPoint - DragStart;
-    CurX = max(1,min(SSize, CurX - RelPoint(1)/MouseRateDivider));
-    CurY = max(1,min(TSize, CurY - RelPoint(2)/MouseRateDivider));
+    CurX = max(1,min(LFSize(2), CurX - RelPoint(1)/MouseRateDivider(2)));
+    CurY = max(1,min(LFSize(1), CurY - RelPoint(2)/MouseRateDivider(1)));
     DragStart = CurPoint;
    
     LFRender = squeeze(LF(round(CurY), round(CurX), :,:,:));

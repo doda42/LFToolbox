@@ -27,7 +27,7 @@
 %   LFFindFilesRecursive('IMG_0001.LFR')
 % 
 
-% Part of LF Toolbox v0.4 released 12-Feb-2015
+% Part of LF Toolbox xxxVersionTagxxx
 % Copyright (c) 2013-2015 Donald G. Dansereau
 
 function [AllFiles, BasePath, FolderList, PerFolderFiles] = LFFindFilesRecursive( InputPath, DefaultFileSpec, DefaultPath )
@@ -49,7 +49,7 @@ if( ~iscell(DefaultFileSpec) )
 end
 InputFileSpec = DefaultFileSpec;
 
-if( exist(InputPath{1}, 'dir') )  % try interpreting first param as a folder, if it exists, grab is as such
+if( exist(InputPath{1}, 'dir') )  % try interpreting first param as a folder, if it exists, grab it as such
     PathOnly = InputPath{1};
     InputPath(1) = [];
 end

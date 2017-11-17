@@ -58,7 +58,7 @@
 %            .IJVecToOptOver : Which samples in i and j were included in the optimization
 %           .IntrinsicsToOpt : Which intrinsics were optimized, these are indices into the 5x5
 %                              lenslet camera intrinsic matrix
-%     .DistortionParamsToOpt : Which distortion paramst were optimized
+%     .DistortionParamsToOpt : Which distortion params were optimized
 %     .PreviousCamIntrinsics : Previous estimate of the camera's intrinsics
 %     .PreviousCamDistortion : Previous estimate of the camera's distortion parameters
 %                    .NPoses : Number of poses in the dataset
@@ -66,7 +66,7 @@
 % 
 % See also:  LFUtilCalLensletCam, LFCalFindCheckerCorners, LFCalInit, LFUtilDecodeLytroFolder
 
-% Part of LF Toolbox v0.4 released 12-Feb-2015
+% Part of LF Toolbox xxxVersionTagxxx
 % Copyright (c) 2013-2015 Donald G. Dansereau
 
 function CalOptions = LFCalRefine( InputPath, CalOptions ) 
@@ -115,7 +115,6 @@ IdealChecker = [IdealChecker; ones(1,size(IdealChecker,2))]; % homogeneous coord
 CalOptions.NPoses = size(EstCamPosesV,1);
 [Params0, ParamsInfo, JacobSensitivity] = EncodeParams( EstCamPosesV, EstCamIntrinsicsH, EstCamDistortionV, CalOptions );
 
-% Params0 = EncodeParams(EstCamPosesV, EstCamIntrinsicsH, EstCamDistortionV, CalOptions);
 [PtPlaneDist0,JacobPattern] = FindError( Params0, CheckerObs, IdealChecker, CalOptions, ParamsInfo, JacobSensitivity );
 if( numel(PtPlaneDist0) == 0 )
     error('No valid grid points found -- possible grid parameter mismatch');

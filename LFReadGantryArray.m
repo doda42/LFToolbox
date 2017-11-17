@@ -2,7 +2,7 @@
 % 
 % Usage:
 % 
-%     LF = LFReadGantryArray( InputPath, DecodeOptions )
+%     LF , DecodeOptions]  todo = LFReadGantryArray( InputPath, DecodeOptions )
 %
 % To use, download and unzip an image archive from the Stanford light field archive, and pass this function the path to
 % the unzipped files. All inputs are optional, by default the light field is loaded from the current directory.
@@ -56,7 +56,7 @@
 
 % See also: LFDispMousePan, LFDispVidCirc
 
-% Part of LF Toolbox v0.4 released 12-Feb-2015
+% Part of LF Toolbox xxxVersionTagxxx
 % Copyright (c) 2013-2015 Donald G. Dansereau
 
 function [LF, DecodeOptions] = LFReadGantryArray( InputPath, DecodeOptions )

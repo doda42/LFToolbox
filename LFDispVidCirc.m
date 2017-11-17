@@ -1,10 +1,9 @@
-% LFDispVidCirc - visualize a 4D light field animating a circular path through two dimensions
+%todo todo % LFDispVidCirc - visualize a 4D light field animating a circular path through two dimensions
 % 
 % Usage: 
-% 
+% TODO
 %     FigureHandle = LFDispVidCirc( LF )
-%     FigureHandle = LFDispVidCirc( LF, PathRadius_percent, FrameDelay )
-%     FigureHandle = LFDispVidCirc( LF, PathRadius_percent, FrameDelay, ScaleFactor )
+%     FigureHandle = LFDispVidCirc( LF, PathRadius_percent, todo RenderOptions.FrameDelay )
 %     FigureHandle = LFDispVidCirc( LF, [], [], ScaleFactor )
 % 
 % 
@@ -22,12 +21,12 @@
 % 
 % Optional Inputs: 
 % 
-%     PathRadius_percent : radius of the circular path taken by the viewpoint. Values that are too
+%     RenderOptions.PathRadius_percent : radius of the circular path taken by the viewpoint. Values that are too
 %                          high can result in collision with the edges of the lenslet image, while
 %                          values that are too small result in a less impressive visualization. The
 %                          default value is 60%.
 % 
-%             FrameDelay : sets the delay between frames, in seconds. The default value is 1/60th of
+%             RenderOptions.FrameDelay : sets the delay between frames, in seconds. The default value is 1/60th of
 %                          a second.
 % 
 %            ScaleFactor : Adjusts the size of the display -- 1 means no change, 2 means twice as
@@ -43,15 +42,16 @@
 %
 % See also:  LFDisp, LFDispMousePan
 
-% Part of LF Toolbox v0.4 released 12-Feb-2015
+% Part of LF Toolbox xxxVersionTagxxx
 % Copyright (c) 2013-2015 Donald G. Dansereau
 
-function FigureHandle = LFDispVidCirc( LF, PathRadius_percent, FrameDelay, varargin )
+function FigureHandle = LFDispVidCirc( LF, RenderOptions, varargin )
 
 %---Defaults---
-PathRadius_percent = LFDefaultVal( 'PathRadius_percent', 60 );
-FrameDelay = LFDefaultVal( 'FrameDelay', 1/60 );
-
+RenderOptions = LFDefaultField( 'RenderOptions', 'PathRadius_percent', 60 );
+RenderOptions = LFDefaultField( 'RenderOptions', 'FrameDelay', 1/60 );
+RenderOptions = LFDefaultField( 'RenderOptions', 'NumCycles', inf );
+RenderOptions = LFDefaultField( 'RenderOptions', 'RotationRate', 0.05 );
 
 %---Check for mono and clip off the weight channel if present---
 Mono = (ndims(LF) == 4);
@@ -75,12 +75,12 @@ TCent = (TSize-1)/2 + 1;
 SCent = (SSize-1)/2 + 1;
 
 t = 0;
-RotRate = 0.05;
-RotRad = TCent*PathRadius_percent/100;
+RotRad = TCent*RenderOptions.PathRadius_percent/100;
+NumFrames = RenderOptions.NumCycles / RenderOptions.RotationRate;
 
 while(1)
-    TVal = TCent + RotRad * cos( 2*pi*RotRate * t );
-    SVal = SCent + RotRad * sin( 2*pi*RotRate * t );
+    TVal = TCent + RotRad * cos( 2*pi*RenderOptions.RotationRate * t );
+    SVal = SCent + RotRad * sin( 2*pi*RenderOptions.RotationRate * t );
     
     SIdx = round(SVal);
     TIdx = round(TVal);
@@ -88,6 +88,10 @@ while(1)
     CurFrame =  squeeze(LF( TIdx, SIdx, :,:,: ));
     set(ImageHandle,'cdata', CurFrame );
     
-    pause(FrameDelay)
+    pause(RenderOptions.FrameDelay)
     t = t + 1;
+	
+	if( t > NumFrames )
+		break;
+	end
 end

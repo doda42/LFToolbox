@@ -16,9 +16,9 @@
 %          Oranges =
 %               4
 %
-% See also: LFStruct2Var
+% See also: LFVar2Struct
 
-% Part of LF Toolbox v0.4 released 12-Feb-2015
+% Part of LF Toolbox xxxVersionTagxxx
 % Copyright (c) 2013-2015 Donald G. Dansereau
 
 function varargout = LFStruct2Var( StructIn, varargin )

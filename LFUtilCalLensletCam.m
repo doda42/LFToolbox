@@ -1,3 +1,4 @@
+% todo: better document that plane separation D is 1m, which 2pp is used (absolute? uppercase U in thesis)
 % LFUtilCalLensletCam - calibrate a lenslet-based light field camera
 %
 % Usage:
@@ -83,7 +84,7 @@
 %
 % See also:  LFCalFindCheckerCorners, LFCalInit, LFCalRefine, LFUtilDecodeLytroFolder, LFSelectFromDatabase
 
-% Part of LF Toolbox v0.4 released 12-Feb-2015
+% Part of LF Toolbox xxxVersionTagxxx
 % Copyright (c) 2013-2015 Donald G. Dansereau
 
 function LFUtilCalLensletCam( InputPath, CalOptions )

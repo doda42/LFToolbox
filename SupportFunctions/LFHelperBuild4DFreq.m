@@ -5,7 +5,7 @@
 % 
 % This gets called by the LFBuild4DFreq* functions.
 
-% Part of LF Toolbox v0.4 released 12-Feb-2015
+% Part of LF Toolbox xxxVersionTagxxx
 % Copyright (c) 2013-2015 Donald G. Dansereau
 
 function [H, FiltOptions] = LFHelperBuild4DFreq( LFSize, BW, FiltOptions, DistFunc )
@@ -45,7 +45,7 @@ clear s t u v ss tt uu vv
 if( ~FiltOptions.IncludeAliased )
 	Tiles = [0,0,0,0];
 else
-	Tiles = ceil(ExtentWithAspect);
+	Tiles = ceil(ExtentWithAspect) % todo: optimization possible for large extents
 end
 
 if( FiltOptions.IncludeAliased )
@@ -104,6 +104,10 @@ switch lower(FiltOptions.Rolloff)
 		FiltOptions = LFDefaultField('FiltOptions', 'Order', 3);
 		Dist = sqrt(Dist) ./ BW;
 		H(:) = sqrt( 1.0 ./ (1.0 + Dist.^(2*FiltOptions.Order)) ); % Butterworth-like rolloff
+
+	case 'sinc'
+		Dist = sqrt(Dist) ./ BW;
+		H(:) = sinc(Dist); % sinc-shaped rolloff
 		
 	otherwise
 		error('unrecognized rolloff method');
@@ -112,5 +116,9 @@ end
 
 H = ifftshift(H);
 
-% force symmetric
-H = max(H, H(mod(LFSize(1):-1:1,LFSize(1))+1, mod(LFSize(2):-1:1,LFSize(2))+1,mod(LFSize(3):-1:1,LFSize(3))+1,mod(LFSize(4):-1:1,LFSize(4))+1));
+% force symmetric -- needed to visualize in 4D to get this one right
+H = max(H, H(mod(LFSize(1):-1:1,LFSize(1))+1, mod(LFSize(2):-1:1,LFSize(2))+1, mod(LFSize(3):-1:1,LFSize(3))+1, mod(LFSize(4):-1:1,LFSize(4))+1));
+H = max(H, H(:, mod(LFSize(2):-1:1,LFSize(2))+1, :, mod(LFSize(4):-1:1,LFSize(4))+1));
+H = max(H, H(mod(LFSize(1):-1:1,LFSize(1))+1, :, mod(LFSize(3):-1:1,LFSize(3))+1, :));
+% todo: missing a spot for even sample counts, right in the corner; see xAliasedComponentsHyperfan.m
+% todo: check if 2D version needs similar edits

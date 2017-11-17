@@ -9,7 +9,7 @@
 %
 % To change input light fields, uncomment the appropriate line below.
 
-% Part of LF Toolbox v0.4 released 12-Feb-2015
+% Part of LF Toolbox xxxVersionTagxxx
 % Copyright (c) 2013-2015 Donald G. Dansereau
 
 clearvars

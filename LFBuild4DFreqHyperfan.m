@@ -2,8 +2,8 @@
 % 
 % Usage: 
 % 
-%     [H, FiltOptions] = LFBuild4DFreqHyperfan( LFSize, Slope, BW, FiltOptions )
-%     H = LFBuild4DFreqHyperfan( LFSize, Slope, BW )
+%     [H, FiltOptions] = LFBuild4DFreqHyperfan( LFSize, Slope1, Slope2, BW, FiltOptions )
+%     H = LFBuild4DFreqHyperfan( LFSize, Slope1, Slope2, BW )
 % 
 % This file constructs a real-valued magnitude response in 4D, for which the passband is a hyperfan.
 % This is useful for selecting objects over a range of depths from a lightfield, i.e. volumetric
@@ -30,6 +30,12 @@
 %     BW : 3-db Bandwidth of the planar passband.
 % 
 %     [optional] FiltOptions : struct controlling filter construction
+%            HyperfanMethod : 'sweep' or 'direct', controls how the hyperfan is constructed. 'sweep'
+%                             concatenates frequency planes, while 'direct' evaluates a single 4D 
+%                             equation; default 'direct'.
+%               HyperconeBW : Sets the underlying hypercone's BW separately from the dual-fan,
+%                             default is to use the BW parameter for both; only applies when
+%                             HyperfanMethod is 'direct'
 %               SlopeMethod : 'Skew' or 'Rotate' default 'skew'
 %                 Precision : 'single' or 'double', default 'single'
 %                   Rolloff : 'Gaussian' or 'Butter', default 'Gaussian'
@@ -58,9 +64,9 @@
 % LFBuild2DFreqFan, LFBuild2DFreqLine, LFBuild4DFreqDualFan, LFBuild4DFreqHypercone,
 % LFBuild4DFreqHyperfan, LFBuild4DFreqPlane, LFFilt2DFFT, LFFilt4DFFT, LFFiltShiftSum
 
-% Part of LF Toolbox v0.4 released 12-Feb-2015
+% Part of LF Toolbox xxxVersionTagxxx
 % Copyright (c) 2013-2015 Donald G. Dansereau
-
+% todo: rename lfsize to filtsize
 function [H, FiltOptions] = LFBuild4DFreqHyperfan( LFSize, Slope1, Slope2, BW, FiltOptions )
 
 FiltOptions = LFDefaultField('FiltOptions', 'HyperfanMethod', 'Direct'); % 'Direct', 'Sweep'

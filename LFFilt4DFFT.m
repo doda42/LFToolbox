@@ -38,7 +38,7 @@
 % LFBuild4DFreqDualFan, LFBuild4DFreqHypercone, LFBuild4DFreqHyperfan, LFBuild4DFreqPlane, LFFilt2DFFT, LFFilt4DFFT,
 % LFFiltShiftSum
 
-% Part of LF Toolbox v0.4 released 12-Feb-2015
+% Part of LF Toolbox xxxVersionTagxxx
 % Copyright (c) 2013-2015 Donald G. Dansereau
 
 function [LF, FiltOptions] = LFFilt4DFFT( LF, H, FiltOptions )
@@ -46,8 +46,10 @@ function [LF, FiltOptions] = LFFilt4DFFT( LF, H, FiltOptions )
 FiltOptions = LFDefaultField('FiltOptions', 'Precision', 'single'); 
 FiltOptions = LFDefaultField('FiltOptions', 'Normalize', true);
 FiltOptions = LFDefaultField('FiltOptions', 'MinWeight', 10*eps(FiltOptions.Precision));
+FiltOptions = LFDefaultField('FiltOptions', 'DoClamp', true);
 
 %---
+% todo: bug for non-colour LFs 
 NColChans = size(LF,5);
 HasWeight = ( NColChans == 4 || NColChans == 2 );
 HasColour = ( NColChans == 4 || NColChans == 3 );
@@ -72,7 +74,7 @@ if( FiltOptions.Normalize )
 	end
 end
 
-SliceSize = size(LF);
+SliceSize = size(LF, 5); % todo: bug for non-colour LFs 
 for( iColChan = 1:SliceSize(end) )
 	fprintf('.');
 	X = fftn(LF(:,:,:,:,iColChan), LFPaddedSize);
@@ -82,18 +84,23 @@ for( iColChan = 1:SliceSize(end) )
 	LF(:,:,:,:,iColChan) = x;
 end
 
+%---Normalize---
 if( FiltOptions.Normalize )
 	WeightChan = LF(:,:,:,:,end);
 	InvalidIdx = find(WeightChan <= FiltOptions.MinWeight);
 	ChanSize = numel(LF(:,:,:,:,1));
-	for( iColChan = 1:NColChans )
+	for( iColChan = 1:NColChans )  
 		LF(:,:,:,:,iColChan) = LF(:,:,:,:,iColChan) ./ WeightChan;
 		LF( InvalidIdx + ChanSize.*(iColChan-1) ) = 0;
 	end
+	LF( InvalidIdx + ChanSize.*NColChans ) = 0; % also zero weight channel where invalid  % todo: propagate to other filts
 end
 
-LF = max(0,LF);
-LF = min(1,LF);
+%---Clamp---
+if( FiltOptions.DoClamp )
+	LF = max(0,LF);
+	LF = min(1,LF);
+end
 
 %---
 TimeStamp = datestr(now,'ddmmmyyyy_HHMMSS');

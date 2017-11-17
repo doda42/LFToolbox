@@ -5,7 +5,7 @@
 % 
 % This gets called by the LFBuild2DFreq* functions.
 
-% Part of LF Toolbox v0.4 released 12-Feb-2015
+% Part of LF Toolbox xxxVersionTagxxx
 % Copyright (c) 2013-2015 Donald G. Dansereau
 
 function [H, FiltOptions] = LFHelperBuild2DFreq( LFSize, BW, FiltOptions, DistFunc )
@@ -91,6 +91,8 @@ switch lower(FiltOptions.Rolloff)
 		FiltOptions = LFDefaultField('FiltOptions', 'Order', 3);
 		Dist = sqrt(Dist) ./ BW;
 		H(:) = sqrt( 1.0 ./ (1.0 + Dist.^(2*FiltOptions.Order)) ); % Butterworth-like rolloff
+
+		% todo: sinc
 		
 	otherwise
 		error('unrecognized rolloff method');
@@ -101,4 +103,4 @@ H = ifftshift(H);
 
 % force symmetric
 H = max(H, H(mod(LFSize(1):-1:1,LFSize(1))+1, mod(LFSize(2):-1:1,LFSize(2))+1));
-
+%todo: check sufficient?

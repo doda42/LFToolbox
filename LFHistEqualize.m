@@ -61,15 +61,20 @@
 % 
 % See also: LFUtilDecodeLytroFolder, LFUtilProcessWhiteImages, LFColourCorrect
 
-% Part of LF Toolbox v0.4 released 12-Feb-2015
+% Part of LF Toolbox xxxVersionTagxxx
 % Copyright (c) 2013-2015 Donald G. Dansereau
 
 function [LF, LowerBound, UpperBound] = ...
     LFHistEqualize(LF, Cutoff_percent, LowerBound, UpperBound, Precision)
 
 %---Defaults---
+if( isfloat(LF) )
+	DefaultPrecision = class(LF);
+else
+	DefaultPrecision = 'single';
+end
 Cutoff_percent = LFDefaultVal( 'Cutoff_percent', 0.1 );
-Precision = LFDefaultVal( 'Precision', 'single' );
+Precision = LFDefaultVal( 'Precision', DefaultPrecision );
 MaxBlkSize = LFDefaultVal( 'MaxBlkSize', 10e6 ); % slice up to limit memory utilization
 
 %---Make sure LF is floating point, as required by hist function---
@@ -99,7 +104,6 @@ if( size(LF,2) == 3 )
     LF = LF - min(LF(ValidIdx));
     LF = LF ./ max(LF(ValidIdx));
     LF = max(0,min(1,LF));
-    fprintf('Converting to HSV...');
     
     for( UStart = 1:MaxBlkSize:size(LF,1) )
         UStop = UStart + MaxBlkSize - 1;
@@ -107,7 +111,6 @@ if( size(LF,2) == 3 )
 
         % matlab 2014b's rgb2hsv requires doubles
         LF(UStart:UStop,:) = cast(rgb2hsv( double(LF(UStart:UStop,:)) ), Precision);  
-        fprintf('.')
     end
     LF_hsv = LF(:,1:2);
     LF = LF(:,3); % operate on value channel only
@@ -115,7 +118,6 @@ else
     LF_hsv = [];
 end
 
-fprintf(' Equalizing...');
 %---Compute bounds from histogram---
 if( ~exist('LowerBound','var') || ~exist('UpperBound','var') || ...
         isempty(LowerBound) || isempty(UpperBound))
@@ -143,13 +145,11 @@ if( ~isempty(LF_hsv) )
     LF = cat(2,LF_hsv,LF);
     clear LF_hsv
     
-    fprintf(' Converting to RGB...');
     for( UStart = 1:MaxBlkSize:size(LF,1) )
         UStop = UStart + MaxBlkSize - 1;
         UStop = min(UStop, size(LF,1));
         
         LF(UStart:UStop,:) = hsv2rgb(LF(UStart:UStop,:));
-        fprintf('.');
     end
 end
 
@@ -160,5 +160,3 @@ end
 
 %---Unflatten---
 LF = reshape(LF, [LFSize(1:NDims-1),NChans]);
-
-fprintf(' Done.\n');

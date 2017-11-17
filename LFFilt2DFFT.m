@@ -43,7 +43,7 @@
 % LFBuild4DFreqDualFan, LFBuild4DFreqHypercone, LFBuild4DFreqHyperfan, LFBuild4DFreqPlane, LFFilt2DFFT, LFFilt4DFFT,
 % LFFiltShiftSum
 
-% Part of LF Toolbox v0.4 released 12-Feb-2015
+% Part of LF Toolbox xxxVersionTagxxx
 % Copyright (c) 2013-2015 Donald G. Dansereau
 
 function [LF, FiltOptions] = LFFilt2DFFT( LF, H, FiltDims, FiltOptions )
@@ -71,6 +71,9 @@ LF = LFConvertToFloat(LF, FiltOptions.Precision);
 
 %---
 LFSize = size(LF);
+if( length(LFSize) == 4 )
+	LFSize(5) = 1;
+end
 SlicePaddedSize = size(H);
 
 for( IterDim1 = 1:LFSize(1) )

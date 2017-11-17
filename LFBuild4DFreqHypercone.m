@@ -56,7 +56,7 @@
 % LFBuild2DFreqFan, LFBuild2DFreqLine, LFBuild4DFreqDualFan, LFBuild4DFreqHypercone,
 % LFBuild4DFreqHyperfan, LFBuild4DFreqPlane, LFFilt2DFFT, LFFilt4DFFT, LFFiltShiftSum
 
-% Part of LF Toolbox v0.4 released 12-Feb-2015
+% Part of LF Toolbox xxxVersionTagxxx
 % Copyright (c) 2013-2015 Donald G. Dansereau
 
 function [H, FiltOptions] = LFBuild4DFreqHypercone( LFSize, BW, FiltOptions )
@@ -79,7 +79,7 @@ switch( lower(FiltOptions.HyperconeMethod ))
 		
 	case 'rotated'
 		R = 1/sqrt(2) .* [1,0,0,1; 0,1,1,0; 0,1,-1,0; 1,0,0,-1];
-		P=R*P;
+		P = R*P;
 		Dist = (sqrt(P(1,:).^2 + P(3,:).^2) - sqrt(P(2,:).^2 + P(4,:).^2)).^2 /2;
 		
 	otherwise

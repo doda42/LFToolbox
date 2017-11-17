@@ -22,15 +22,17 @@
 %
 % See also:  LFDispVidCirc, LFDispMousePan
 
-% Part of LF Toolbox v0.4 released 12-Feb-2015
+% Part of LF Toolbox xxxVersionTagxxx
 % Copyright (c) 2013-2015 Donald G. Dansereau
 
-function ImgOut = LFDisp( LF )
+function [ImgOut, WOut] = LFDisp( LF, Renormalize )  % todo: doc WOut
+
+Renormalize = LFDefaultVal('Renormalize', false);
 
 LF = squeeze(LF);
 LFSize = size(LF);
 
-HasWeight = (ndims(LF)>2 && LFSize(end)==2 || LFSize(end)==4);
+HasWeight = (ndims(LF)>2 && (LFSize(end)==2 || LFSize(end)==4));
 HasColor = (ndims(LF)>2 && (LFSize(end)==3 || LFSize(end)==4) );
 HasMonoAndWeight = (ndims(LF)>2 && LFSize(end)==2);
 
@@ -43,10 +45,20 @@ while( ndims(LF) > GoalDims )
 	LF = squeeze(LF(round(end/2),:,:,:,:,:,:));
 end
 if( HasWeight )
+	if( nargout >= 2 )
+		WOut = LF(:,:,end);
+	end
     LF = squeeze(LF(:,:,1:end-1));
 end
 
-if( nargout > 0 )
+if( Renormalize )
+	if( isfloat( LF ) )
+		LF = LF - min(LF(:));
+		LF = LF ./ max(LF(:));
+	end
+end
+
+if( nargout >= 1 )
 	ImgOut = LF;
 else
 	imagesc(LF);

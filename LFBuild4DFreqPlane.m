@@ -58,7 +58,7 @@
 % LFBuild2DFreqFan, LFBuild2DFreqLine, LFBuild4DFreqDualFan, LFBuild4DFreqHypercone,
 % LFBuild4DFreqHyperfan, LFBuild4DFreqPlane, LFFilt2DFFT, LFFilt4DFFT, LFFiltShiftSum
 
-% Part of LF Toolbox v0.4 released 12-Feb-2015
+% Part of LF Toolbox xxxVersionTagxxx
 % Copyright (c) 2013-2015 Donald G. Dansereau
 
 function [H, FiltOptions] = LFBuild4DFreqPlane( LFSize, Slope, BW, FiltOptions )
@@ -99,7 +99,5 @@ switch( lower(FiltOptions.SlopeMethod) )
 end
 P = R * P;
 Dist = P(2,:).^2 + P(1,:).^2;
+% Dist = max(abs(P(2,:)), abs(P(1,:))).^2;  % todo: seems to match synthetic ideal better, rect in u,v instead of circ
 end
-
-
-

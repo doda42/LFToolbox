@@ -27,8 +27,8 @@
 %                  Aspect4D : aspect ratio of the light field, default [1 1 1 1]
 %                 Normalize : default true; when enabled the output is normalized so that darkening near image edges is
 %                             removed
-%             FlattenMethod : 'Sum', 'Max' or 'Median', default 'Sum'; when the shifted light field slices are combined,
-%                             they are by default added together, but median and max can also yield useful results.
+%             FlattenMethod : 'Sum', 'Max', 'Min' or 'Median', default 'Sum'; when the shifted light field slices are combined,
+%                             they are by default added together, but median, max and min can also yield useful results.
 %              InterpMethod : default 'linear'; this is passed on to interpn to determine how shifted light field slices
 %                             are found; other useful settings are 'nearest', 'cubic' and 'spline'
 %                 ExtrapVal : default 0; when shifting light field slices, pixels falling outside the input light field
@@ -48,18 +48,27 @@
 % LFBuild4DFreqDualFan, LFBuild4DFreqHypercone, LFBuild4DFreqHyperfan, LFBuild4DFreqPlane, LFFilt2DFFT, LFFilt4DFFT,
 % LFFiltShiftSum
 
-% Part of LF Toolbox v0.4 released 12-Feb-2015
+% Part of LF Toolbox xxxVersionTagxxx
 % Copyright (c) 2013-2015 Donald G. Dansereau
 
 function [ImgOut, FiltOptions, LF] = LFFiltShiftSum( LF, Slope, FiltOptions )
 
 FiltOptions = LFDefaultField('FiltOptions', 'Precision', 'single'); 
-FiltOptions = LFDefaultField('FiltOptions', 'Normalize', true);
 FiltOptions = LFDefaultField('FiltOptions', 'MinWeight', 10*eps(FiltOptions.Precision));  
 FiltOptions = LFDefaultField('FiltOptions', 'Aspect4D', 1); 
 FiltOptions = LFDefaultField('FiltOptions', 'FlattenMethod', 'sum'); % 'Sum', 'Max', 'Median'
 FiltOptions = LFDefaultField('FiltOptions', 'InterpMethod', 'linear'); 
 FiltOptions = LFDefaultField('FiltOptions', 'ExtrapVal', 0); 
+FiltOptions = LFDefaultField('FiltOptions', 'MaskThresh', 0.5); 
+FiltOptions = LFDefaultField('FiltOptions', 'Mask', false);   % todo: doc
+
+switch( lower(FiltOptions.FlattenMethod) )
+	case 'sum'
+		DefaultNormalize = true;
+	otherwise
+		DefaultNormalize = false;
+end
+FiltOptions = LFDefaultField('FiltOptions', 'Normalize', DefaultNormalize);
 
 if( length(FiltOptions.Aspect4D) == 1 )
 	FiltOptions.Aspect4D = FiltOptions.Aspect4D .* [1,1,1,1];
@@ -86,6 +95,20 @@ if( FiltOptions.Normalize )
 end
 
 %---
+if( FiltOptions.Mask )
+	if( HasWeight )
+		InvalidIdx = find( LF(:,:,:,:,end) < FiltOptions.MaskThresh );
+		ChanSize = numel(LF(:,:,:,:,1));
+		for( iColChan = 1:NColChans )
+			LF(InvalidIdx + (iColChan-1)*ChanSize) = NaN;
+		end
+		LF(InvalidIdx + (NColChans)*ChanSize) = 0; % also zero out the invalid in weight
+	else
+		error('Masking requires a weight channel');
+	end
+end
+
+%---
 TVSlope = Slope * FiltOptions.Aspect4D(3) / FiltOptions.Aspect4D(1);
 SUSlope = Slope * FiltOptions.Aspect4D(4) / FiltOptions.Aspect4D(2);
 
@@ -104,18 +127,23 @@ for( TIdx = 1:LFSize(1) )
             CurSlice = interpn(CurSlice, vv+VOffset, uu+UOffset, FiltOptions.InterpMethod, FiltOptions.ExtrapVal);
             LF(TIdx,SIdx, :,:, iChan) = CurSlice;
         end
-    end
-    fprintf('.');
+	end
+	if( mod(TIdx, ceil(LFSize(1)/10)) == 0 )
+		fprintf('.');
+	end
 end
 
 switch( lower(FiltOptions.FlattenMethod) )
 	case 'sum'
-		ImgOut = squeeze(sum(sum(LF,1),2));
+		ImgOut = squeeze(nansum(nansum(LF,1),2));
 	case 'max'
-		ImgOut = squeeze(max(max(LF,[],1),[],2));
+		ImgOut = squeeze(nanmax(nanmax(LF,[],1),[],2));
+	case 'min'
+		ImgOut = squeeze(nanmin(nanmin(LF,[],1),[],2));
 	case 'median'
-		t = reshape(LF, [prod(LFSize(1:2)), LFSize(3:end)]);
-		ImgOut = squeeze(median(t));
+		% todo: use weight channel correctly in median
+		t = reshape(LF(:,:,:,:,1:NColChans), [prod(LFSize(1:2)), LFSize(3:4), NColChans]);
+		ImgOut = squeeze(nanmedian(t));
 	otherwise
 		error('Unrecognized method');
 end
