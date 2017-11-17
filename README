@@ -1,3 +1,15 @@
+---
+16-Nov-2017 Copied LFToolbox to github at
+https://github.com/doda42/LFToolbox
+
+The branch structure is:
+master is always the most recent release, currently v0.4.0
+develop is the next revision under development, i.e. the future 0.5.0
+release tags are used to keep track of previous releases
+
+Code in the development branch is generally incomplete, unstable, and undocumented.  Use at your own risk.
+
+---
 Matlab Light Field Toolbox v0.4 released 12-Feb-2015
 Copyright (c) 2013, 2014 by Donald G. Dansereau
 
