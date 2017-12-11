@@ -5,14 +5,20 @@
 
 % Copyright (c) 2016 Donald G. Dansereau
 
-function LF = LFXReadStanfordIllum( FName, LensletSize )
+function [LF, Alpha] = LFXReadStanfordIllum( FName, LensletSize, HasAlpha )
 
 LensletSize = LFDefaultVal('LensletSize',[14,14]);
+HasAlpha = LFDefaultVal('HasAlpha',false);
 NChans = 3;
 
-[Img,map, alpha] = imread( FName ); % requesting alpha sets bg to black
-if( ~isempty(map) )  % indexed colour image
-	Img = ind2rgb(Img, map); % todo[optimization] may wish to convert to uint8
+if( HasAlpha )
+	[Img,ColorMap, Alpha] = imread( FName ); % note: requesting Alpha sets bg to black
+else
+	[Img,ColorMap] = imread( FName );
+end
+
+if( ~isempty(ColorMap) )  % indexed colour image
+	Img = ind2rgb(Img, ColorMap); % todo[optimization] may wish to convert to uint8
 end
 
 ImgSize = size(Img(:,:,1));
