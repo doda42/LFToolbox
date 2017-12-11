@@ -8,9 +8,10 @@
 function LF = LFXReadStanfordIllum( FName, LensletSize )
 
 LensletSize = LFDefaultVal('LensletSize',[14,14]);
+NChans = 3;
 
-[Img,map] = imread( FName );
-if( ndims(Img) == 2 )  % indexed colour image
+[Img,map, alpha] = imread( FName ); % requesting alpha sets bg to black
+if( ~isempty(map) )  % indexed colour image
 	Img = ind2rgb(Img, map); % todo[optimization] may wish to convert to uint8
 end
 
@@ -21,7 +22,7 @@ PadSize = LFSize(3:4) .* LensletSize;
 PadAmt = PadSize-ImgSize;
 
 LFSize(1:2) = PadSize ./ LFSize(3:4);
-LFSize(5) = 3;
+LFSize(5) = NChans;
 
 ImgPad = padarray(Img, PadAmt, 0,'post');
 
