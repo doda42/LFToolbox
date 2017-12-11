@@ -10,7 +10,9 @@ function LF = LFXReadStanfordIllum( FName, LensletSize )
 LensletSize = LFDefaultVal('LensletSize',[14,14]);
 
 [Img,map] = imread( FName );
-Img = ind2rgb(Img, map); % todo: make it autodetect when this is necessary
+if( ndims(Img) == 2 )  % indexed colour image
+	Img = ind2rgb(Img, map); % todo[optimization] may wish to convert to uint8
+end
 
 ImgSize = size(Img(:,:,1));
 
