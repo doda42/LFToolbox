@@ -5,7 +5,7 @@
 
 % Copyright (c) 2016 Donald G. Dansereau
 
-function [LF, Alpha] = LFXReadStanfordIllum( FName, LensletSize, HasAlpha )
+function LF = LFXReadStanfordIllum( FName, LensletSize, HasAlpha )
 
 LensletSize = LFDefaultVal('LensletSize',[14,14]);
 HasAlpha = LFDefaultVal('HasAlpha',false);
@@ -13,6 +13,8 @@ NChans = 3;
 
 if( HasAlpha )
 	[Img,ColorMap, Alpha] = imread( FName ); % note: requesting Alpha sets bg to black
+	Img(:,:,4) = Alpha;
+	NChans = NChans + 1;
 else
 	[Img,ColorMap] = imread( FName );
 end
