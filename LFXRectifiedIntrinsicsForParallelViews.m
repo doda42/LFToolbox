@@ -19,7 +19,8 @@
 % Applying the parallel version of the intrinsics matrix, running LFDispMousePan(LF) should reveal that objects in the
 % distance (e.g. the building in F01/IMG_0002) have small or zero apparent motion between virtual views.
 % 
-% See also Section 3.1 of the paper "Panorama Light-Field Imaging", 2014 by Birklbauer and Bimber.
+% See also Section 3.1 of the paper "Panorama Light-Field Imaging", 2014 by Birklbauer and Bimber;
+% and "Structure from Plenoptic Imaging", 2018 by Marto et al.
 
 % Copyright (c) 2016 Donald G. Dansereau
 
@@ -40,7 +41,7 @@ RectOptions = LFCalDispRectIntrinsics( LF, LFMetadata, RectOptions );
 % Optionally make all views parallel
 if( ForceParallel )
 	fprintf('forcing cameras to be parallel\n');
-	RectOptions.RectCamIntrinsicsH(3:4,1:2) = 0;%RectOptions.RectCamIntrinsicsH(1:2,1:2);
+	RectOptions.RectCamIntrinsicsH(3:4,1:2) = 0;
 	RectOptions.RectCamIntrinsicsH = LFRecenterIntrinsics( RectOptions.RectCamIntrinsicsH, size(LF) );
 
 	% show updated sampling pattern
