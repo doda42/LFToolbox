@@ -2,7 +2,7 @@
 % 
 % Usage: 
 % 
-%   [AllFiles, BasePath, FolderList, PerFolderFiles] = LFFindFilesRecursive( InputPath )
+%   [AllFiles, BasePath, FolderList, PerFolderFiles] = LFFindFilesRecursive( InputPath )  % todo: document new options
 % 
 % Inputs:
 % 
@@ -30,7 +30,7 @@
 % Part of LF Toolbox xxxVersionTagxxx
 % Copyright (c) 2013-2015 Donald G. Dansereau
 
-function [AllFiles, BasePath, FolderList, PerFolderFiles] = LFFindFilesRecursive( InputPath, DefaultFileSpec, DefaultPath )
+function [AllFiles, BasePath, FolderList, PerFolderFiles] = LFFindFilesRecursive( InputPath, DefaultFileSpec, DefaultPath, IncludeRecursion )
 
 PerFolderFiles = [];
 AllFiles = [];
@@ -39,6 +39,7 @@ AllFiles = [];
 DefaultFileSpec = LFDefaultVal( 'DefaultFileSpec', {'*'} );
 DefaultPath = LFDefaultVal( 'DefaultPath', '.' );
 InputPath = LFDefaultVal( 'InputPath', '.' );
+IncludeRecursion = LFDefaultVal( 'IncludeRecursion', true );
 
 PathOnly = '';
 if( ~iscell(InputPath) )
@@ -75,7 +76,11 @@ fprintf('%s ', InputFileSpec{:});
 fprintf('] in %s\n', InputPath);
 
 %---
-FolderList = genpath(InputPath);
+if( IncludeRecursion )
+	FolderList = genpath(InputPath);
+else
+	FolderList = InputPath;
+end
 if( isempty(FolderList) )
     error(['Input path not found... are you running from the correct folder? ' ...
         'Current folder: %s'], pwd);
