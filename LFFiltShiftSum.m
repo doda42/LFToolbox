@@ -117,7 +117,8 @@ SUSlope = Slope * FiltOptions.Aspect4D(4) / FiltOptions.Aspect4D(2);
 
 v = linspace(1,LFSize(3), round(LFSize(3)*FiltOptions.UpsampRate));
 u = linspace(1,LFSize(4), round(LFSize(4)*FiltOptions.UpsampRate));
-NewLFSize = [LFSize(1:2), length(v), length(u), LFSize(5)];
+NewLFSize = LFSize;
+NewLFSize(3:4) = [length(v), length(u)];
 [vv, uu] = ndgrid(v,u);
 
 VOffsetVec = linspace(-0.5,0.5, LFSize(1)) * TVSlope*LFSize(1);
