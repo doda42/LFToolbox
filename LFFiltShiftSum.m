@@ -61,6 +61,8 @@ FiltOptions = LFDefaultField('FiltOptions', 'InterpMethod', 'linear');
 FiltOptions = LFDefaultField('FiltOptions', 'ExtrapVal', 0); 
 FiltOptions = LFDefaultField('FiltOptions', 'MaskThresh', 0.5); 
 FiltOptions = LFDefaultField('FiltOptions', 'Mask', false);   % todo: doc
+FiltOptions = LFDefaultField('FiltOptions', 'UpsampRate', 1);   % todo: doc
+
 
 switch( lower(FiltOptions.FlattenMethod) )
 	case 'sum'
@@ -91,6 +93,7 @@ if( FiltOptions.Normalize )
 		end
 	else % add a weight channel
 		LF(:,:,:,:,end+1) = ones(size(LF(:,:,:,:,1)), FiltOptions.Precision);
+		LFSize = size(LF);
 	end
 end
 
@@ -112,26 +115,32 @@ end
 TVSlope = Slope * FiltOptions.Aspect4D(3) / FiltOptions.Aspect4D(1);
 SUSlope = Slope * FiltOptions.Aspect4D(4) / FiltOptions.Aspect4D(2);
 
-[vv, uu] = ndgrid(1:LFSize(3), 1:LFSize(4));
+v = linspace(1,LFSize(3), round(LFSize(3)*FiltOptions.UpsampRate));
+u = linspace(1,LFSize(4), round(LFSize(4)*FiltOptions.UpsampRate));
+NewLFSize = [LFSize(1:2), length(v), length(u), LFSize(5)];
+[vv, uu] = ndgrid(v,u);
 
-VVec = linspace(-0.5,0.5, LFSize(1)) * TVSlope*LFSize(1);
-UVec = linspace(-0.5,0.5, LFSize(2)) * SUSlope*LFSize(2);
+VOffsetVec = linspace(-0.5,0.5, LFSize(1)) * TVSlope*LFSize(1);
+UOffsetVec = linspace(-0.5,0.5, LFSize(2)) * SUSlope*LFSize(2);
 
+LFOut = zeros(NewLFSize, 'like', LF);
 for( TIdx = 1:LFSize(1) )
-	VOffset = VVec(TIdx);
+	VOffset = VOffsetVec(TIdx);
     for( SIdx = 1:LFSize(2) )
-		UOffset = UVec(SIdx);
+		UOffset = UOffsetVec(SIdx);
 		
         for( iChan=1:size(LF,5) )
             CurSlice = squeeze(LF(TIdx, SIdx, :,:, iChan));
             CurSlice = interpn(CurSlice, vv+VOffset, uu+UOffset, FiltOptions.InterpMethod, FiltOptions.ExtrapVal);
-            LF(TIdx,SIdx, :,:, iChan) = CurSlice;
+            LFOut(TIdx,SIdx, :,:, iChan) = CurSlice;
         end
 	end
 	if( mod(TIdx, ceil(LFSize(1)/10)) == 0 )
 		fprintf('.');
 	end
 end
+LF = LFOut;
+clear LFOut
 
 switch( lower(FiltOptions.FlattenMethod) )
 	case 'sum'
@@ -142,7 +151,7 @@ switch( lower(FiltOptions.FlattenMethod) )
 		ImgOut = squeeze(nanmin(nanmin(LF,[],1),[],2));
 	case 'median'
 		% todo: use weight channel correctly in median
-		t = reshape(LF(:,:,:,:,1:NColChans), [prod(LFSize(1:2)), LFSize(3:4), NColChans]);
+		t = reshape(LF(:,:,:,:,1:NColChans), [prod(LFSize(1:2)), NewLFSize(3:4), NColChans]);
 		ImgOut = squeeze(nanmedian(t));
 	otherwise
 		error('Unrecognized method');
