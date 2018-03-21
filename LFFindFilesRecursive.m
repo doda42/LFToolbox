@@ -30,8 +30,7 @@
 % Part of LF Toolbox xxxVersionTagxxx
 % Copyright (c) 2013-2015 Donald G. Dansereau
 
-function [AllFiles, BasePath, FolderList, PerFolderFiles] = LFFindFilesRecursive( InputPath, DefaultFileSpec, DefaultPath, IncludeRecursion )
-
+function [AllFiles, BasePath, FolderList, PerFolderFiles] = LFFindFilesRecursive( InputPath, DefaultFileSpec, DefaultPath, IncludeRecursion, Verbose )
 PerFolderFiles = [];
 AllFiles = [];
 
@@ -40,6 +39,7 @@ DefaultFileSpec = LFDefaultVal( 'DefaultFileSpec', {'*'} );
 DefaultPath = LFDefaultVal( 'DefaultPath', '.' );
 InputPath = LFDefaultVal( 'InputPath', '.' );
 IncludeRecursion = LFDefaultVal( 'IncludeRecursion', true );
+Verbose = LFDefaultVal( 'Verbose', true );  % todo: doc
 
 PathOnly = '';
 if( ~iscell(InputPath) )
@@ -71,9 +71,11 @@ end
 BasePath = InputPath;
 
 %---Crawl folder structure locating raw lenslet images---
-fprintf('Searching for files [ ');
-fprintf('%s ', InputFileSpec{:});
-fprintf('] in %s\n', InputPath);
+if( Verbose )
+	fprintf('Searching for files [ ');
+	fprintf('%s ', InputFileSpec{:});
+	fprintf('] in %s\n', InputPath);
+end
 
 %---
 if( IncludeRecursion )
