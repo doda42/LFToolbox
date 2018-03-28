@@ -78,8 +78,6 @@ DragStart = 0;
 LFRender = squeeze(LF(round(CurY), round(CurX), :,:,:));
 set(ImageHandle,'cdata', LFRender);
 
-fprintf('Click and drag to shift perspective\n');
-
 %---Nested functions, these have access to variables of parent function---
 function ButtonDownCallback(FigureHandle,varargin) 
 set(FigureHandle, 'WindowButtonMotionFcn', @ButtonMotionCallback);
