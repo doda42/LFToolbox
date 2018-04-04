@@ -89,10 +89,10 @@ NChans = LFSize(end);
 LF = reshape(LF, [prod(LFSize(1:NDims-1)), NChans]);
 
 %---Strip out and use the weight channel if it's present---
-if( NChans == 4 )
+if( NChans == 4 || NChans == 2 )
     % Weight channel found, strip it out and use it
-    LFW = LF(:,4);
-    LF = LF(:,1:3);
+    LFW = LF(:,end);
+    LF = LF(:,1:end-1);
     ValidIdx = find(LFW > 0);
 else
     LFW = [];
@@ -155,7 +155,7 @@ end
 
 %---Return the weight channel---
 if( ~isempty(LFW) )
-    LF(:,4) = LFW;
+    LF(:,end+1) = LFW;
 end
 
 %---Unflatten---
