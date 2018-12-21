@@ -34,7 +34,7 @@ switch lower(Order)
 	case 'sutv'
 		ImgW = SSize*TSize+(SSize+1)*BorderSize;
 		ImgH = USize*VSize+(USize+1)*BorderSize;
-		Img = zeros( ImgH, ImgW, Colors );
+		Img = zeros( ImgH, ImgW, Colors, 'like',LF );
 		for( i=1:Colors )
 			Img(:,:,i) = BorderColor(i);
 		end	
@@ -57,7 +57,7 @@ switch lower(Order)
 	case 'tvsu'
 		ImgW = SSize*TSize+(TSize+1)*BorderSize;
 		ImgH = USize*VSize+(VSize+1)*BorderSize;
-		Img = zeros( ImgH, ImgW, Colors );
+		Img = zeros( ImgH, ImgW, Colors, 'like',LF );
 		for( i=1:Colors )
 			Img(:,:,i) = BorderColor(i);
 		end	
@@ -80,7 +80,7 @@ switch lower(Order)
 	case 'stuv'
 		ImgW = SSize*USize+(SSize+1)*BorderSize;
 		ImgH = TSize*VSize+(TSize+1)*BorderSize;
-		Img = zeros( ImgH, ImgW, Colors );
+		Img = zeros( ImgH, ImgW, Colors, 'like',LF );
 		for( i=1:Colors )
 			Img(:,:,i) = BorderColor(i);
 		end	
@@ -101,7 +101,7 @@ switch lower(Order)
 	case 'uvst'
 		ImgW = SSize*USize+(USize+1)*BorderSize;
 		ImgH = TSize*VSize+(VSize+1)*BorderSize;
-		Img = zeros( ImgH, ImgW, Colors );
+		Img = zeros( ImgH, ImgW, Colors, 'like',LF );
 		for( i=1:Colors )
 			Img(:,:,i) = BorderColor(i);
 		end	
@@ -122,7 +122,7 @@ switch lower(Order)
 	case 'svtu'
 		ImgW = TSize*SSize+(SSize+1)*BorderSize;
 		ImgH = USize*VSize+(VSize+1)*BorderSize;
-		Img = zeros( ImgH, ImgW, Colors );
+		Img = zeros( ImgH, ImgW, Colors, 'like',LF );
 		for( i=1:Colors )
 			Img(:,:,i) = BorderColor(i);
 		end	
@@ -145,7 +145,7 @@ switch lower(Order)
 	case 'tusv'
 		ImgW = SSize*TSize+(TSize+1)*BorderSize;
 		ImgH = VSize*USize+(USize+1)*BorderSize;
-		Img = zeros( ImgH, ImgW, Colors );
+		Img = zeros( ImgH, ImgW, Colors, 'like',LF );
 		for( i=1:Colors )
 			Img(:,:,i) = BorderColor(i);
 		end	
