@@ -63,7 +63,7 @@ else
 end
 
 %---Setup the display---
-[ImageHandle,FigureHandle] = LFDispSetup( squeeze(LF(max(1,floor(end/2)),max(1,floor(end/2)),:,:,:)), ScaleFactor );
+[ImageHandle,FigureHandle] = LFDispSetup( squeeze(LF(InitialViewIdx(1),InitialViewIdx(2),:,:,:)), ScaleFactor );
 
 BDH = @(varargin) ButtonDownCallback(FigureHandle, varargin);
 BUH = @(varargin) ButtonUpCallback(FigureHandle, varargin);
