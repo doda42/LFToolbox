@@ -110,10 +110,9 @@ for( iFile = 1:length(CalOptions.FileList) )
                     CurChecker = CurChecker(:, :, end:-1:1);
                     CurChecker = permute(CurChecker, [1,3,2]);
                     CurChecker = reshape(CurChecker, 2, []);
-				elseif( IsBotRight )  % untested case
+				elseif( IsBotRight )
                     CurChecker = reshape(CurChecker, [2, CalOptions.ExpectedCheckerSize]);
                     CurChecker = CurChecker(:, end:-1:1, end:-1:1);
-                    CurChecker = permute(CurChecker, [1,3,2]);
                     CurChecker = reshape(CurChecker, 2, []);
 				end
                 IsTopLeft = all(CurChecker(:,1) < Centroid);
