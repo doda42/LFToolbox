@@ -13,7 +13,9 @@
 %                                   lenslets; expressed relative to lenslet spacing; e.g. a
 %                                   value of 1/3 means a disk filter with a radius of 1/3 the
 %                                   lenslet spacing
-%                        .CropAmt : Image edge pixels to ignore when finding the grid
+%                        .CropAmt : Defines a region of interest: CropAmt determines image edge 
+%                                   pixels to ignore when finding the grid; works with CropOffset
+%                     .CropOffset : Defines a decentering for the region of interest
 %                       .SkipStep : As a speed optimization, not all lenslet centers contribute
 %                                   to the grid estimate; <SkipStep> pixels are skipped between
 %                                   lenslet centers that get used; a value of 1 means use all
@@ -41,15 +43,20 @@ function [LensletGridModel, GridCoords] = LFBuildLensletGridModel( WhiteImg, Gri
 
 %---Defaults---
 GridModelOptions = LFDefaultField( 'GridModelOptions', 'Precision', 'single' );
+GridModelOptions = LFDefaultField( 'GridModelOptions', 'CropOffset', 0 );
 DebugDisplay = LFDefaultVal( 'DebugDisplay', false );
 if( numel(GridModelOptions.CropAmt) == 1 )  % todo: doc
 	GridModelOptions.CropAmt = GridModelOptions.CropAmt .* [1,1];
+end
+if( numel(GridModelOptions.CropOffset) == 1 )  % todo: doc
+	GridModelOptions.CropOffset = GridModelOptions.CropOffset .* [1,1];
 end
 
 %---Optionally rotate for vertically-oriented grids---
 if( strcmpi(GridModelOptions.Orientation, 'vert') )
     WhiteImg = WhiteImg';
 	GridModelOptions.CropAmt = GridModelOptions.CropAmt([2,1]);
+	GridModelOptions.CropOffset = GridModelOptions.CropOffset([2,1]);
 end
 
 % Try locating lenslets by convolving with a disk
@@ -79,8 +86,11 @@ PeakIdx = find(Peaks==1);
 clear Peaks
 
 % Crop to central peaks; eliminates edge effects
-InsidePts = find(PeakIdxY>GridModelOptions.CropAmt(2) & PeakIdxY<(size(WhiteImg,1)-GridModelOptions.CropAmt(2)) & ...
-    PeakIdxX>GridModelOptions.CropAmt(1) & PeakIdxX<size(WhiteImg,2)-GridModelOptions.CropAmt(1));
+InsidePts = find( ...
+	PeakIdxY-GridModelOptions.CropOffset(2) > GridModelOptions.CropAmt(2) & ...
+	PeakIdxY-GridModelOptions.CropOffset(2) < (size(WhiteImg,1)-GridModelOptions.CropAmt(2)) & ...
+    PeakIdxX-GridModelOptions.CropOffset(1) > GridModelOptions.CropAmt(1) & ...
+	PeakIdxX-GridModelOptions.CropOffset(1) < size(WhiteImg,2)-GridModelOptions.CropAmt(1) );
 PeakIdxY = PeakIdxY(InsidePts);
 PeakIdxX = PeakIdxX(InsidePts);
 
@@ -98,11 +108,11 @@ end
 
 %--Traverse vertically--
 fprintf('Vertical fit...\n');
-YStart = GridModelOptions.CropAmt(2)*2;
-YStop = size(WhiteImg,1)-GridModelOptions.CropAmt(2)*2;
+YStart = GridModelOptions.CropAmt(2)*2 + GridModelOptions.CropOffset(2);
+YStop = size(WhiteImg,1)-GridModelOptions.CropAmt(2)*2 + GridModelOptions.CropOffset(2);
 
 XIdx = 1;
-for( XStart = GridModelOptions.CropAmt(1)*2:GridModelOptions.SkipStep:size(WhiteImg,2)-GridModelOptions.CropAmt(1)*2 )
+for( XStart = GridModelOptions.CropAmt(1)*2+GridModelOptions.CropOffset(1) : GridModelOptions.SkipStep : size(WhiteImg,2)-GridModelOptions.CropAmt(1)*2+GridModelOptions.CropOffset(1) )
     CurPos = [XStart, YStart];
     YIdx = 1;
     while( 1 )
@@ -130,10 +140,10 @@ if( DebugDisplay ) drawnow; end
 
 %--Traverse horizontally--
 fprintf('Horizontal fit...\n');
-XStart = GridModelOptions.CropAmt(1)*2;
-XStop = size(WhiteImg,2)-GridModelOptions.CropAmt(1)*2;
+XStart = GridModelOptions.CropAmt(1)*2 + GridModelOptions.CropOffset(1);
+XStop = size(WhiteImg,2)-GridModelOptions.CropAmt(1)*2 + GridModelOptions.CropOffset(1);
 YIdx = 1;
-for( YStart = GridModelOptions.CropAmt(2)*2:GridModelOptions.SkipStep:size(WhiteImg,1)-GridModelOptions.CropAmt(2)*2 )
+for( YStart = GridModelOptions.CropAmt(2)*2+GridModelOptions.CropOffset(2):GridModelOptions.SkipStep:size(WhiteImg,1)-GridModelOptions.CropAmt(2)*2+GridModelOptions.CropOffset(2) )
     CurPos = [XStart, YStart];
     XIdx = 1;
     while( 1 )
