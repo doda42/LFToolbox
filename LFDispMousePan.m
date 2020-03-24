@@ -31,7 +31,7 @@
 % Part of LF Toolbox xxxVersionTagxxx
 % Copyright (c) 2013-2015 Donald G. Dansereau
 
-function FigureHandle = LFDispMousePan( LF, ScaleFactor, InitialViewIdx )
+function FigureHandle = LFDispMousePan( LF, ScaleFactor, InitialViewIdx, Verbose )
 
 %todo: document InitialViewIdx and change to default mouse rate, probably make param
 LFSize = size(LF);
@@ -45,6 +45,8 @@ LFSize = size(LF);
 %---Defaults---
 ScaleFactor = LFDefaultVal('ScaleFactor', 1);
 InitialViewIdx = LFDefaultVal('InitialViewIdx', max(1,floor((LFSize(1:2)-1)/2+1)));
+Verbose = LFDefaultVal('Verbose', false);
+
 MouseRateDivider = 30./(LFSize(1:2)/9);
 
 %---Check for weight channel---
@@ -96,7 +98,10 @@ function ButtonMotionCallback(varargin)
     CurX = max(1,min(LFSize(2), CurX - RelPoint(1)/MouseRateDivider(2)));
     CurY = max(1,min(LFSize(1), CurY - RelPoint(2)/MouseRateDivider(1)));
     DragStart = CurPoint;
-   
+
+	if( Verbose )   
+		disp( [round(CurX), round(CurY)] )
+	end
     LFRender = squeeze(LF(round(CurY), round(CurX), :,:,:));
     set(ImageHandle,'cdata', LFRender);
 end
