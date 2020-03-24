@@ -130,8 +130,8 @@ end
 fprintf('Initial estimate of focal length...\n');
 ValidCheckerCount = 0;
 for( iFile = 1:length(CalOptions.FileList) )
-    for( TIdx = 1:size(CheckerCorners,1) )
-        for( SIdx = 1:size(CheckerCorners,2) )
+    for( TIdx = 1:size(CheckerObs,3) )
+        for( SIdx = 1:size(CheckerObs,2) )
 			CurChecker = CheckerObs{iFile, TIdx, SIdx};
 			if( ~isempty(CurChecker) )
 				ValidCheckerCount = ValidCheckerCount + 1;			
