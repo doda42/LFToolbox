@@ -1,16 +1,8 @@
-%todo todo % LFDispVidCirc - visualize a 4D light field animating a circular path through two dimensions
+% LFDispVidCirc - visualize a 4D light field animating a circular path through two dimensions
 % 
 % Usage: 
-% TODO
 %     FigureHandle = LFDispVidCirc( LF )
-%     FigureHandle = LFDispVidCirc( LF, PathRadius_percent, todo RenderOptions.FrameDelay )
-%     FigureHandle = LFDispVidCirc( LF, [], [], ScaleFactor )
-% 
-% 
-% A figure is set up for high-performance display, with the tag 'LFDisplay'. Subsequent calls to
-% this function and LFDispVidCirc will reuse the same figure, rather than creating a new window on
-% each call. All parameters except LF are optional -- pass an empty array "[]" to omit an optional
-% parameter.
+%     FigureHandle = LFDispVidCirc( LF, [RenderOptions], [ScaleFactor] )
 % 
 % 
 % Inputs:
@@ -21,19 +13,17 @@
 % 
 % Optional Inputs: 
 % 
-%     RenderOptions.PathRadius_percent : radius of the circular path taken by the viewpoint. Values that are too
-%                          high can result in collision with the edges of the lenslet image, while
-%                          values that are too small result in a less impressive visualization. The
-%                          default value is 60%.
+%     RenderOptions
+%        .PathRadius_percent : radius of the circular path taken by the viewpoint. Values that are
+%                              too high can result in collision with the edges of the lenslet image,
+%                              while values that are too small result in a less impressive
+%                              visualization. The default value is 60%.
+%        .FrameDelay         : delay between frames, in seconds. Default 1/30.
+%        .NumCycles          : how many times the circular path should repeat. Default inf.
+%        .FramesPerCycle     : how many frames along a single cycle. Default 20.
 % 
-%             RenderOptions.FrameDelay : sets the delay between frames, in seconds. The default value is 1/60th of
-%                          a second.
-% 
-%            ScaleFactor : Adjusts the size of the display -- 1 means no change, 2 means twice as
-%                          big, etc. Integer values are recommended to avoid scaling artifacts. Note
-%                          that the scale factor is only applied the first time a figure is created.
-%                          To change the scale factor, close the figure before calling
-%                          LFDispMousePan.
+%     ScaleFactor : Adjusts the size of the display -- 1 means no change, 2 means twice as
+%                   big, etc. Integer values are recommended to avoid scaling artifacts.
 % 
 % Outputs:
 % 
@@ -45,13 +35,14 @@
 % Part of LF Toolbox xxxVersionTagxxx
 % Copyright (c) 2013-2015 Donald G. Dansereau
 
-function FigureHandle = LFDispVidCirc( LF, RenderOptions, varargin )
+function FigureHandle = LFDispVidCirc( LF, RenderOptions, ScaleFactor )
 
 %---Defaults---
+ScaleFactor = LFDefaultVal('ScaleFactor', 1);
 RenderOptions = LFDefaultField( 'RenderOptions', 'PathRadius_percent', 60 );
-RenderOptions = LFDefaultField( 'RenderOptions', 'FrameDelay', 1/60 );
+RenderOptions = LFDefaultField( 'RenderOptions', 'FrameDelay', 1/30 );
 RenderOptions = LFDefaultField( 'RenderOptions', 'NumCycles', inf );
-RenderOptions = LFDefaultField( 'RenderOptions', 'RotationRate', 0.05 );
+RenderOptions = LFDefaultField( 'RenderOptions', 'FramesPerCycle', 20 );
 
 %---Check for mono and clip off the weight channel if present---
 Mono = (ndims(LF) == 4);
@@ -66,9 +57,6 @@ else
     LF = uint8(LF.*(255 / double(intmax(class(LF)))));
 end
 
-%---Setup the display---
-[ImageHandle,FigureHandle] = LFDispSetup( squeeze(LF(floor(end/2),floor(end/2),:,:,:)), varargin{:} );
-
 %---Setup the motion path---
 [TSize,SSize, ~,~] = size(LF(:,:,:,:,1));
 TCent = (TSize-1)/2 + 1;
@@ -76,15 +64,20 @@ SCent = (SSize-1)/2 + 1;
 
 t = 0;
 RotRad = TCent*RenderOptions.PathRadius_percent/100;
-NumFrames = RenderOptions.NumCycles / RenderOptions.RotationRate;
+NumFrames = RenderOptions.NumCycles * RenderOptions.FramesPerCycle;
+
+%---Setup the display---
+TIdx = round(TCent + RotRad);
+SIdx = round(SCent);
+[ImageHandle,FigureHandle] = LFDispSetup( squeeze(LF(TIdx,SIdx,:,:,:)), ScaleFactor );
 
 while(1)
-    TVal = TCent + RotRad * cos( 2*pi*RenderOptions.RotationRate * t );
-    SVal = SCent + RotRad * sin( 2*pi*RenderOptions.RotationRate * t );
+    TVal = TCent + RotRad * cos( 2*pi*t/RenderOptions.FramesPerCycle );
+    SVal = SCent + RotRad * sin( 2*pi*t/RenderOptions.FramesPerCycle );
     
     SIdx = round(SVal);
     TIdx = round(TVal);
-    
+	
     CurFrame =  squeeze(LF( TIdx, SIdx, :,:,: ));
     set(ImageHandle,'cdata', CurFrame );
     
