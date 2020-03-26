@@ -94,6 +94,7 @@ P = R * P;
 
 % Find the distance
 Dist = P(1,:).^2;
+
 end
 
 

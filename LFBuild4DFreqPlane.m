@@ -106,6 +106,4 @@ P = R * P;
 % Find the distance
 Dist = P(2,:).^2 + P(1,:).^2;
 
-% Dist = max(abs(P(2,:)), abs(P(1,:))).^2;  % todo: investigate why rect in u,v instead of circ
-% works better in some cases
 end
