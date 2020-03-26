@@ -29,13 +29,16 @@
 %                             removed
 %             FlattenMethod : 'Sum', 'Max', 'Min' or 'Median', default 'Sum'; when the shifted light field slices are combined,
 %                             they are by default added together, but median, max and min can also yield useful results.
-%              InterpMethod : default 'linear'; this is passed on to interpn to determine how shifted light field slices
-%                             are found; other useful settings are 'nearest', 'cubic' and 'spline'
-%                 ExtrapVal : default 0; when shifting light field slices, pixels falling outside the input light field
-%                             are set to this value
+%              InterpMethod : default 'linear'; this is passed on to griddedInterpolant to determine how shifted light field slices
+%                             are found; others are 'nearest', 'cubic'; see griddedInterpolant for others
+%              ExtrapMethod : defualt 'nearest'; extrapolation method used by griddedInterpolant; 'none' is also useful, see griddedInterpolant
 %                 MinWeight : during normalization, pixels for which the output value is not well defined (i.e. for
 %                             which the filtered weight is very low) get set to 0. MinWeight sets the threshold at which
 %                             this occurs, default is 10 * the numerical precision of the output, as returned by eps
+%                      Mask : ignore samples with weights below MaskThresh; default false
+%                MaskThresh : if Mask is true, samples with weights below this value are ignored
+%                UpsampRate : linear super-resolution. Each slice is upscaled by this factor before
+%                             the flattening step. Default 1, i.e. no upsampling; values of 2 or 3 yield good resuls.
 %
 % Outputs:
 % 
@@ -58,11 +61,10 @@ FiltOptions = LFDefaultField('FiltOptions', 'MinWeight', 10*eps(FiltOptions.Prec
 FiltOptions = LFDefaultField('FiltOptions', 'Aspect4D', 1); 
 FiltOptions = LFDefaultField('FiltOptions', 'FlattenMethod', 'sum'); % 'Sum', 'Max', 'Median'
 FiltOptions = LFDefaultField('FiltOptions', 'InterpMethod', 'linear'); 
-FiltOptions = LFDefaultField('FiltOptions', 'ExtrapVal', 0); 
+FiltOptions = LFDefaultField('FiltOptions', 'ExtrapMethod', 'nearest');
 FiltOptions = LFDefaultField('FiltOptions', 'MaskThresh', 0.5); 
-FiltOptions = LFDefaultField('FiltOptions', 'Mask', false);   % todo: doc
-FiltOptions = LFDefaultField('FiltOptions', 'UpsampRate', 1);   % todo: doc
-
+FiltOptions = LFDefaultField('FiltOptions', 'Mask', false);
+FiltOptions = LFDefaultField('FiltOptions', 'UpsampRate', 1);
 
 switch( lower(FiltOptions.FlattenMethod) )
 	case 'sum'
@@ -72,6 +74,7 @@ switch( lower(FiltOptions.FlattenMethod) )
 end
 FiltOptions = LFDefaultField('FiltOptions', 'Normalize', DefaultNormalize);
 
+%---
 if( length(FiltOptions.Aspect4D) == 1 )
 	FiltOptions.Aspect4D = FiltOptions.Aspect4D .* [1,1,1,1];
 end
@@ -119,7 +122,6 @@ v = linspace(1,LFSize(3), round(LFSize(3)*FiltOptions.UpsampRate));
 u = linspace(1,LFSize(4), round(LFSize(4)*FiltOptions.UpsampRate));
 NewLFSize = LFSize;
 NewLFSize(3:4) = [length(v), length(u)];
-[vv, uu] = ndgrid(v,u);
 
 VOffsetVec = linspace(-0.5,0.5, LFSize(1)) * TVSlope*LFSize(1);
 UOffsetVec = linspace(-0.5,0.5, LFSize(2)) * SUSlope*LFSize(2);
@@ -129,19 +131,31 @@ for( TIdx = 1:LFSize(1) )
 	VOffset = VOffsetVec(TIdx);
     for( SIdx = 1:LFSize(2) )
 		UOffset = UOffsetVec(SIdx);
+		CurSlice = squeeze(LF(TIdx, SIdx, :,:, :));
 		
-        for( iChan=1:size(LF,5) )
-            CurSlice = squeeze(LF(TIdx, SIdx, :,:, iChan));
-            CurSlice = interpn(CurSlice, vv+VOffset, uu+UOffset, FiltOptions.InterpMethod, FiltOptions.ExtrapVal);
-            LFOut(TIdx,SIdx, :,:, iChan) = CurSlice;
-        end
+		Interpolant = griddedInterpolant( CurSlice );
+		Interpolant.Method = FiltOptions.InterpMethod;
+		Interpolant.ExtrapolationMethod = FiltOptions.ExtrapMethod;
+		
+		CurSlice = Interpolant( {v+VOffset, u+UOffset, 1:size(LF,5)} );
+		
+		LFOut(TIdx,SIdx, :,:, :) = CurSlice;
 	end
 	if( mod(TIdx, ceil(LFSize(1)/10)) == 0 )
 		fprintf('.');
 	end
 end
+
 LF = LFOut;
 clear LFOut
+
+% griddedInterpolant returns NaN for out-of-range extrapolation; make sure these register as invalid
+% in the weight channel
+if( FiltOptions.Normalize )
+	W = LF(:,:,:,:,end);
+	W(isnan(W)) = 0;
+	LF(:,:,:,:,end) = W;
+end
 
 switch( lower(FiltOptions.FlattenMethod) )
 	case 'sum'
@@ -151,7 +165,6 @@ switch( lower(FiltOptions.FlattenMethod) )
 	case 'min'
 		ImgOut = squeeze(nanmin(nanmin(LF,[],1),[],2));
 	case 'median'
-		% todo: use weight channel correctly in median
 		t = reshape(LF(:,:,:,:,1:NColChans), [prod(LFSize(1:2)), NewLFSize(3:4), NColChans]);
 		ImgOut = squeeze(nanmedian(t));
 	otherwise
