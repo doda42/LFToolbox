@@ -75,6 +75,8 @@ end
 
 %-----------------------------------------------------------------------------------------------------------------------
 function Dist = DistFunc_4DPlane( P, Slope, FiltOptions )
+
+% Build a transformation, either skew or rotation, to xform the plane to the desired slope
 switch( lower(FiltOptions.SlopeMethod) )
 	case 'skew'
 		R = eye(4);
@@ -97,7 +99,13 @@ switch( lower(FiltOptions.SlopeMethod) )
 	otherwise
 		error('Unrecognized slope method');
 end
+
+% Apply the trasformation
 P = R * P;
+
+% Find the distance
 Dist = P(2,:).^2 + P(1,:).^2;
-% Dist = max(abs(P(2,:)), abs(P(1,:))).^2;  % todo: seems to match synthetic ideal better, rect in u,v instead of circ
+
+% Dist = max(abs(P(2,:)), abs(P(1,:))).^2;  % todo: investigate why rect in u,v instead of circ
+% works better in some cases
 end
