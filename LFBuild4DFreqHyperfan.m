@@ -32,7 +32,7 @@
 %     [optional] FiltOptions : struct controlling filter construction
 %            HyperfanMethod : 'sweep' or 'direct', controls how the hyperfan is constructed. 'sweep'
 %                             concatenates frequency planes, while 'direct' evaluates a single 4D 
-%                             equation; default 'direct'.
+%                             equation; default 'direct'. Warning: sweep can be very slow.
 %               HyperconeBW : Sets the underlying hypercone's BW separately from the dual-fan,
 %                             default is to use the BW parameter for both; only applies when
 %                             HyperfanMethod is 'direct'
@@ -53,6 +53,7 @@
 %                             increase processing time dramatically, e.g. Extent4D = [2,2,2,2] 
 %                             requires a 2^4 = 16-fold increase in time to construct the filter. 
 %                             Useful when passband content is aliased, see [2].
+%                SweepSteps : For HyperfanMethod 'sweep', how many steps to use in the sweep.
 % 
 % Outputs:
 % 
@@ -66,7 +67,7 @@
 
 % Part of LF Toolbox xxxVersionTagxxx
 % Copyright (c) 2013-2015 Donald G. Dansereau
-% todo: rename lfsize to filtsize
+
 function [H, FiltOptions] = LFBuild4DFreqHyperfan( LFSize, Slope1, Slope2, BW, FiltOptions )
 
 FiltOptions = LFDefaultField('FiltOptions', 'HyperfanMethod', 'Direct'); % 'Direct', 'Sweep'
