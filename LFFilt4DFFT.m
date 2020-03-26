@@ -5,19 +5,19 @@
 %     [LF, FiltOptions] = LFFilt4DFFT( LF, H, FiltOptions )
 %     LF = LFFilt4DFFT( LF, H )
 %
-% 
+%
 % This filter works by taking the FFT of the input light field, multiplying by the provided magnitude response H, then
 % calling the inverse FFT.  The frequency-domain filter H should match or exceed the size of the light field LF. If H is
 % larger than the input light field, LF is zero-padded to match the filter's size.  If a weight channel is present in
 % the light field it gets used during normalization.
-% 
+%
 % See LFDemoBasicFiltLytro for example usage.
-% 
+%
 %
 % Inputs
 %
 %        LF : The light field to be filtered
-% 
+%
 %         H : The frequency-domain filter to apply, as constructed by one of the LFBuild4DFreq* functions
 %
 %     [optional] FiltOptions : struct controlling filter operation
@@ -27,11 +27,12 @@
 %                 MinWeight : during normalization, pixels for which the output value is not well defined (i.e. for
 %                             which the filtered weight is very low) get set to 0. MinWeight sets the threshold at which
 %                             this occurs, default is 10 * the numerical precision of the output, as returned by eps
+%                   DoClamp : clamp the output to range 0-1. Default: true.
 %
 % Outputs:
-% 
+%
 %                LF : The filtered 4D light field
-%       FiltOptions : The filter options including defaults, with an added FilterInfo field detailing the function and 
+%       FiltOptions : The filter options including defaults, with an added FilterInfo field detailing the function and
 %                     time of filtering.
 %
 % See also:  LFDemoBasicFiltGantry, LFDemoBasicFiltIllum, LFDemoBasicFiltLytroF01, LFBuild2DFreqFan, LFBuild2DFreqLine,
@@ -43,16 +44,14 @@
 
 function [LF, FiltOptions] = LFFilt4DFFT( LF, H, FiltOptions )
 
-FiltOptions = LFDefaultField('FiltOptions', 'Precision', 'single'); 
+FiltOptions = LFDefaultField('FiltOptions', 'Precision', 'single');
 FiltOptions = LFDefaultField('FiltOptions', 'Normalize', true);
 FiltOptions = LFDefaultField('FiltOptions', 'MinWeight', 10*eps(FiltOptions.Precision));
 FiltOptions = LFDefaultField('FiltOptions', 'DoClamp', true);
 
 %---
-% todo: bug for non-colour LFs 
 NColChans = size(LF,5);
 HasWeight = ( NColChans == 4 || NColChans == 2 );
-HasColour = ( NColChans == 4 || NColChans == 3 );
 
 if( HasWeight )
 	NColChans = NColChans-1;
@@ -74,8 +73,8 @@ if( FiltOptions.Normalize )
 	end
 end
 
-SliceSize = size(LF, 5); % todo: bug for non-colour LFs 
-for( iColChan = 1:SliceSize(end) )
+SliceSize = size(LF, 5);
+for( iColChan = 1:SliceSize )
 	fprintf('.');
 	X = fftn(LF(:,:,:,:,iColChan), LFPaddedSize);
 	X = X .* H;
@@ -89,11 +88,11 @@ if( FiltOptions.Normalize )
 	WeightChan = LF(:,:,:,:,end);
 	InvalidIdx = find(WeightChan <= FiltOptions.MinWeight);
 	ChanSize = numel(LF(:,:,:,:,1));
-	for( iColChan = 1:NColChans )  
+	for( iColChan = 1:NColChans )
 		LF(:,:,:,:,iColChan) = LF(:,:,:,:,iColChan) ./ WeightChan;
 		LF( InvalidIdx + ChanSize.*(iColChan-1) ) = 0;
 	end
-	LF( InvalidIdx + ChanSize.*NColChans ) = 0; % also zero weight channel where invalid  % todo: propagate to other filts
+	LF( InvalidIdx + ChanSize.*NColChans ) = 0; % also zero weight channel where invalid
 end
 
 %---Clamp---

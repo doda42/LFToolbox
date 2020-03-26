@@ -32,6 +32,7 @@
 %                 MinWeight : during normalization, pixels for which the output value is not well defined (i.e. for
 %                             which the filtered weight is very low) get set to 0. MinWeight sets the threshold at which
 %                             this occurs, default is 10 * the numerical precision of the output, as returned by eps
+%                   DoClamp : clamp the output to range 0-1. Default: true.
 %
 % Outputs:
 % 
@@ -50,7 +51,8 @@ function [LF, FiltOptions] = LFFilt2DFFT( LF, H, FiltDims, FiltOptions )
 
 FiltOptions = LFDefaultField('FiltOptions', 'Precision', 'single'); 
 FiltOptions = LFDefaultField('FiltOptions', 'Normalize', true);
-FiltOptions = LFDefaultField('FiltOptions', 'MinWeight', 10*eps(FiltOptions.Precision));  
+FiltOptions = LFDefaultField('FiltOptions', 'MinWeight', 10*eps(FiltOptions.Precision));
+FiltOptions = LFDefaultField('FiltOptions', 'DoClamp', true);
 %---
 NColChans = size(LF,5);
 HasWeight = ( NColChans == 4 || NColChans == 2 );
@@ -106,8 +108,9 @@ for( IterDim1 = 1:LFSize(1) )
 			ChanSize = numel(CurSlice(:,:,1));
 			for( iColChan = 1:NColChans )
 				CurSlice(:,:,iColChan) = CurSlice(:,:,iColChan) ./ WeightChan;
-				CurSlice( InvalidIdx + ChanSize.*(iColChan-1) ) = 0; 
+				CurSlice( InvalidIdx + ChanSize.*(iColChan-1) ) = 0;
 			end
+	        CurSlice( InvalidIdx + ChanSize.*NColChans ) = 0; % also zero weight channel where invalid
 		end
 		
 		% record channel
@@ -115,8 +118,11 @@ for( IterDim1 = 1:LFSize(1) )
 	end
 end
 
-LF = max(0,LF);
-LF = min(1,LF);
+%---Clamp---
+if( FiltOptions.DoClamp )
+	LF = max(0,LF);
+	LF = min(1,LF);
+end
 
 LF = ipermute(LF, PermuteOrder);
 
