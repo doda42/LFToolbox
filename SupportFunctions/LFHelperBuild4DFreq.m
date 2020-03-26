@@ -1,7 +1,8 @@
 % LFHelperBuild4DFreq - Helper function used to construct 4D frequency-domain filters
 %
-% Much of the complexity in constructing MD frequency-domain filters, especially around including aliased components and
-% controlling the filter rolloff, is common between filter shapes.  This function wraps much of this complexity.
+% Much of the complexity in constructing MD frequency-domain filters, especially around including
+% aliased components and controlling the filter rolloff, is common between filter shapes.  This
+% function wraps much of this complexity.
 % 
 % This gets called by the LFBuild4DFreq* functions.
 
@@ -17,8 +18,9 @@ FiltOptions = LFDefaultField('FiltOptions', 'Window', false);
 FiltOptions = LFDefaultField('FiltOptions', 'Extent4D', 1.0);
 FiltOptions = LFDefaultField('FiltOptions', 'IncludeAliased', false);
 
-FiltOptions.Extent4D = cast(FiltOptions.Extent4D, FiltOptions.Precision); % avoid rounding error during comparisons
-FiltOptions.Aspect4D = cast(FiltOptions.Aspect4D, FiltOptions.Precision); % avoid rounding error during comparisons
+% avoid rounding error during comparisons
+FiltOptions.Extent4D = cast(FiltOptions.Extent4D, FiltOptions.Precision); 
+FiltOptions.Aspect4D = cast(FiltOptions.Aspect4D, FiltOptions.Precision);
 
 if( length(LFSize) == 1 )
 	LFSize = LFSize .* [1,1,1,1];
@@ -38,7 +40,8 @@ t = LFNormalizedFreqAxis( LFSize(1), FiltOptions.Precision ) .* FiltOptions.Aspe
 s = LFNormalizedFreqAxis( LFSize(2), FiltOptions.Precision ) .* FiltOptions.Aspect4D(2);
 v = LFNormalizedFreqAxis( LFSize(3), FiltOptions.Precision ) .* FiltOptions.Aspect4D(3);
 u = LFNormalizedFreqAxis( LFSize(4), FiltOptions.Precision ) .* FiltOptions.Aspect4D(4);
-[tt,ss,vv,uu] = ndgrid(cast(t,FiltOptions.Precision),cast(s,FiltOptions.Precision),cast(v,FiltOptions.Precision),cast(u,FiltOptions.Precision));
+[tt,ss,vv,uu] = ndgrid(cast(t,FiltOptions.Precision),cast(s,FiltOptions.Precision), ...
+	cast(v,FiltOptions.Precision),cast(u,FiltOptions.Precision));
 P = [tt(:),ss(:),vv(:),uu(:)]';
 clear s t u v ss tt uu vv
 
@@ -96,6 +99,7 @@ end
 H = zeros(LFSize, FiltOptions.Precision);
 
 switch lower(FiltOptions.Rolloff)
+	
 	case 'gaussian'
 		BW = BW.^2 / log(sqrt(2));
 		H(:) = exp( -Dist / BW );  % Gaussian rolloff
@@ -117,8 +121,8 @@ end
 H = ifftshift(H);
 
 % force symmetric -- needed to visualize in 4D to get this one right
-H = max(H, H(mod(LFSize(1):-1:1,LFSize(1))+1, mod(LFSize(2):-1:1,LFSize(2))+1, mod(LFSize(3):-1:1,LFSize(3))+1, mod(LFSize(4):-1:1,LFSize(4))+1));
+H = max(H, H(mod(LFSize(1):-1:1,LFSize(1))+1, mod(LFSize(2):-1:1,LFSize(2))+1, ...
+	mod(LFSize(3):-1:1,LFSize(3))+1, mod(LFSize(4):-1:1,LFSize(4))+1));
 H = max(H, H(:, mod(LFSize(2):-1:1,LFSize(2))+1, :, mod(LFSize(4):-1:1,LFSize(4))+1));
 H = max(H, H(mod(LFSize(1):-1:1,LFSize(1))+1, :, mod(LFSize(3):-1:1,LFSize(3))+1, :));
-% todo: missing a spot for even sample counts, right in the corner; see xAliasedComponentsHyperfan.m
-% todo: check if 2D version needs similar edits
+% todo: confirm this is sufficient

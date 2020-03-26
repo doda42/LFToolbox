@@ -92,15 +92,18 @@ switch lower(FiltOptions.Rolloff)
 		Dist = sqrt(Dist) ./ BW;
 		H(:) = sqrt( 1.0 ./ (1.0 + Dist.^(2*FiltOptions.Order)) ); % Butterworth-like rolloff
 
-		% todo: sinc
+	case 'sinc'
+		Dist = sqrt(Dist) ./ BW;
+		H(:) = sinc(Dist); % sinc-shaped rolloff, sinc function is in the signal processing toolbox
 		
 	otherwise
 		error('unrecognized rolloff method');
-		
+
 end
 
 H = ifftshift(H);
 
 % force symmetric
 H = max(H, H(mod(LFSize(1):-1:1,LFSize(1))+1, mod(LFSize(2):-1:1,LFSize(2))+1));
-%todo: check sufficient?
+
+% todo: check whether this is always sufficient
