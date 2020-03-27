@@ -1,9 +1,11 @@
 % Combines adjacent views of a light field by taking the sum or max across views
+% todo: doc
+% todo: mean, skip
 
 % Part of LF Toolbox xxxVersionTagxxx
 % Copyright (C) 2012-2018 by Donald G. Dansereau
 
-function LF2 = LFXResampLF( LF, FoldingRate, FoldingMethod )
+function LF2 = LFDispResamp( LF, FoldingRate, FoldingMethod )
 
 FoldingMethod = LFDefaultVal('FoldingMethod', 'max');
 
