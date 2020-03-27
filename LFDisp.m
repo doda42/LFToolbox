@@ -16,7 +16,8 @@
 % Optional Inputs:
 %
 %      Renormalize : optionally rescale the image intensities between 0 and 1, only applies for
-%                    float inputs
+%                    float inputs; this accepts false or empty array or string to disable, and true
+%                    or any nonempty string to enable.
 %
 % Outputs:
 %
@@ -24,13 +25,20 @@
 %               returned.
 %
 %     WOut : for inputs with a weight channel, the weight is stripped and returned separately
+% 
+% Examples:
+% 
+%     LFDisp( LF );  % display centermost u,v slice of LF
+%     LFDisp( LF( 9,:,100,:, :) ); % display s,u slice at t=9, v=100
+%     LFDisp( LF, true );          % enable renormalisation
+%     LFDisp( LF, 'Renormalize' ); % enable renormalisation
 %
 % See also:  LFDispVidCirc, LFDispMousePan
 
 % Part of LF Toolbox xxxVersionTagxxx
 % Copyright (c) 2013-2015 Donald G. Dansereau
 
-function [ImgOut, WOut] = LFDisp( LF, Renormalize )  % todo: doc WOut
+function [ImgOut, WOut] = LFDisp( LF, Renormalize )
 
 Renormalize = LFDefaultVal('Renormalize', false);
 
@@ -56,7 +64,7 @@ if( HasWeight )
 	LF = squeeze(LF(:,:,1:end-1));
 end
 
-if( Renormalize )
+if( (~isempty( Renormalize )) && ~(isa(Renormalize,'logical') && Renormalize == false) )
 	if( isfloat( LF ) )
 		LF = LF - min(LF(:));
 		LF = LF ./ max(LF(:));
