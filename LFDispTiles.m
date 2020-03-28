@@ -74,7 +74,7 @@ SubsampRate = LFDefaultVal('SubsampRate', [1,1,1,1]);
 SubsampMethod = LFDefaultVal('SubsampMethod', 'mean');
 
 %---Subsample the LF---
-LF = LFDispSubsamp( LF, SubsampRate, SubsampMethod );
+LF = LFSubsamp( LF, SubsampRate, SubsampMethod );
 
 LFSize = size(LF);
 TSize = LFSize(1);

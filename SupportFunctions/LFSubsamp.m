@@ -1,6 +1,6 @@
 % Subsample a light field by combining neighbourhoods of pixels
 % 
-%   LF = LFDispSubsamp( LF, SubsampRate, SubsampMethod )
+%   LF = LFSubsamp( LF, SubsampRate, SubsampMethod )
 % 
 % Inputs:
 % 
@@ -23,9 +23,9 @@
 % Part of LF Toolbox xxxVersionTagxxx
 % Copyright (C) 2012-2018 by Donald G. Dansereau
 
-function LF2 = LFDispSubsamp( LF, SubsampRate, SubsampMethod )
+function LF2 = LFSubsamp( LF, SubsampRate, SubsampMethod )
 
-SubsampMethod = LFDefaultVal('SubsampMethod', 'max');
+SubsampMethod = LFDefaultVal('SubsampMethod', 'skip');
 
 %---Cap subsampling rate to ensure at least 2 entries in each dim---
 LFSize = size(LF);
