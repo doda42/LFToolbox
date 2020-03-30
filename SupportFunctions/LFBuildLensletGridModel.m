@@ -14,8 +14,12 @@
 %                                   value of 1/3 means a disk filter with a radius of 1/3 the
 %                                   lenslet spacing
 %                        .CropAmt : Defines a region of interest: CropAmt determines image edge 
-%                                   pixels to ignore when finding the grid; works with CropOffset
-%                     .CropOffset : Defines a decentering for the region of interest
+%                                   pixels to ignore when finding the grid; works with CropOffset;
+%                                   default 0; a 1D entry gets repeated to apply to horizontal and
+%                                   vertical directions
+%                     .CropOffset : Defines a decentering for the region of interest; default 0; a
+%                                   1D entry gets repeated to apply to horizontal and vertical
+%                                   directions
 %                       .SkipStep : As a speed optimization, not all lenslet centers contribute
 %                                   to the grid estimate; <SkipStep> pixels are skipped between
 %                                   lenslet centers that get used; a value of 1 means use all
@@ -43,12 +47,13 @@ function [LensletGridModel, GridCoords] = LFBuildLensletGridModel( WhiteImg, Gri
 
 %---Defaults---
 GridModelOptions = LFDefaultField( 'GridModelOptions', 'Precision', 'single' );
+GridModelOptions = LFDefaultField( 'GridModelOptions', 'CropAmt', 0 );
 GridModelOptions = LFDefaultField( 'GridModelOptions', 'CropOffset', 0 );
 DebugDisplay = LFDefaultVal( 'DebugDisplay', false );
-if( numel(GridModelOptions.CropAmt) == 1 )  % todo: doc
+if( numel(GridModelOptions.CropAmt) == 1 )
 	GridModelOptions.CropAmt = GridModelOptions.CropAmt .* [1,1];
 end
-if( numel(GridModelOptions.CropOffset) == 1 )  % todo: doc
+if( numel(GridModelOptions.CropOffset) == 1 )
 	GridModelOptions.CropOffset = GridModelOptions.CropOffset .* [1,1];
 end
 
@@ -221,7 +226,6 @@ LensletGridModel.VOffset = LensletGridModel.VOffset + EstOffset(2);
 
 %--Remove crop offset / find top-left lenslet--
 % project onto rotated direction vectors to find top-leftmost lenslet
-% todo: previous version didn't project, this version needs testing
 UVVec = [1,0,0; 0,1,0]';
 R = LFRotz(LensletGridModel.Rot);
 UVVec = R*UVVec;
