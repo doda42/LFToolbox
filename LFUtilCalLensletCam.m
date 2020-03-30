@@ -1,4 +1,3 @@
-% todo: better document that plane separation D is 1m, which 2pp is used (absolute? uppercase U in thesis)
 % LFUtilCalLensletCam - calibrate a lenslet-based light field camera
 %
 % Usage:

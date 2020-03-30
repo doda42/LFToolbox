@@ -67,8 +67,6 @@ fprintf('Found :\n');
 disp(CalOptions.FileList)
 
 %---Initial estimate of focal length---
-
-
 SkippedFileCount = 0;
 ValidSuperPoseCount = 0;
 ValidCheckerCount = 0;
