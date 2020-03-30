@@ -67,7 +67,7 @@
 %
 % See also: LFBuildLensletGridModel, LFUtilDecodeLytroFolder, LFUtilProcessCalibrations
 
-% Part of LF Toolbox xxxVersionTagxxx
+% Part of LF Toolbox v0.4 released 12-Feb-2015
 % Copyright (c) 2013-2015 Donald G. Dansereau
 
 function LFUtilProcessWhiteImages( WhiteImagesPath, FileOptions, GridModelOptions )
@@ -174,43 +174,48 @@ for( iFile = 1:length(WhiteImageInfo) )
         
         LFFigure(1);
         clf
-        subplot(331);
+        subplot(231);
         imagesc(WhiteImage(1:DispSize_pix,1:DispSize_pix));
         hold on
         colormap gray
         plot(GridCoordsX(1:VPlotSamps,1:HPlotSamps), GridCoordsY(1:VPlotSamps,1:HPlotSamps), 'r.')
         axis off
+		title('Lop left');
         
-        subplot(333);
-        imagesc(WhiteImage(1:DispSize_pix, ImgSize(2)-DispSize_pix:ImgSize(2)));
-        hold on
-        colormap gray
-        plot(-(ImgSize(2)-DispSize_pix)+1 + GridCoordsX(1:VPlotSamps, end-HPlotSamps:end), GridCoordsY(1:VPlotSamps, end-HPlotSamps:end), 'r.')
-        axis off
-        
-        CenterStart = (ImgSize-DispSize_pix)/2;
+		CenterStart = (ImgSize-DispSize_pix)/2;
         HCenterStartSamps = floor(CenterStart(2) / LensletGridModel.HSpacing);
         VCenterStartSamps = floor(CenterStart(1) / LensletGridModel.VSpacing);
-        subplot(335);
+        subplot(232);
         imagesc(WhiteImage(CenterStart(1):CenterStart(1)+DispSize_pix, CenterStart(2):CenterStart(2)+DispSize_pix));
         hold on
         colormap gray
         plot(-CenterStart(2)+1 + GridCoordsX(VCenterStartSamps + (1:VPlotSamps), HCenterStartSamps + (1:HPlotSamps)), -CenterStart(1)+1 + GridCoordsY(VCenterStartSamps + (1:VPlotSamps), HCenterStartSamps + (1:HPlotSamps)),'r.');
         axis off
-        
-        subplot(337);
+		title('Center (Horz and Vert)');
+
+        subplot(233);
+        imagesc(WhiteImage(1:DispSize_pix, ImgSize(2)-DispSize_pix:ImgSize(2)));
+        hold on
+        colormap gray
+        plot(-(ImgSize(2)-DispSize_pix)+1 + GridCoordsX(1:VPlotSamps, end-HPlotSamps:end), GridCoordsY(1:VPlotSamps, end-HPlotSamps:end), 'r.')
+        axis off
+		title('Top Right');
+                
+        subplot(234);
         imagesc(WhiteImage(ImgSize(1)-DispSize_pix:ImgSize(1), 1:DispSize_pix));
         hold on
         colormap gray
         plot(GridCoordsX(end-VPlotSamps:end,1:HPlotSamps), -(ImgSize(1)-DispSize_pix)+1 + GridCoordsY(end-VPlotSamps:end,1:HPlotSamps), 'r.')
         axis off
+		title('Bottom Left');
         
-        subplot(339);
+        subplot(236);
         imagesc(WhiteImage(ImgSize(1)-DispSize_pix:ImgSize(1),ImgSize(2)-DispSize_pix:ImgSize(2)));
         hold on
         colormap gray
         plot(-(ImgSize(2)-DispSize_pix)+1 + GridCoordsX(end-VPlotSamps:end, end-HPlotSamps:end), -(ImgSize(1)-DispSize_pix)+1 + GridCoordsY(end-VPlotSamps:end, end-HPlotSamps:end), 'r.')
         axis off
+		title('Bottom Right');
         
         truesize % bigger display
         drawnow
