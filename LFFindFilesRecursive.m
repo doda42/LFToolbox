@@ -91,6 +91,9 @@ if( SearchOptions.Verbose )
 	fprintf('Searching for files [ ');
 	fprintf('%s ', InputFileSpec{:});
 	fprintf('] in %s\n', InputPath);
+	if( ~SearchOptions.IncludeRecursion )
+		fprintf('Not searching recursively\n');
+	end
 end
 
 %---
