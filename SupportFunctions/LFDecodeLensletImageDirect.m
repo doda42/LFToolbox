@@ -1,3 +1,4 @@
+% todo: doc
 % LFDecodeLensletImageSimple - decodes a 2D lenslet image into a 4D light field, called by LFUtilDecodeLytroFolder
 %
 % Usage:
@@ -57,7 +58,7 @@
 % Copyright (c) 2013-2020 Donald G. Dansereau
 
 function [LF, LFWeight, DecodeOptions, DebayerLensletImage, CorrectedLensletImage] = ...
-    LFDecodeLensletImageSimple( LensletImage, WhiteImage, LensletGridModel, DecodeOptions )
+    LFDecodeLensletImageDirect( LensletImage, WhiteImage, LensletGridModel, DecodeOptions )
 
 %---Defaults---
  % LevelLimits defaults are a failsafe, should be passed in / come from the white image metadata
