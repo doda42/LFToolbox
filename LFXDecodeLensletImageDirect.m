@@ -54,13 +54,13 @@
 %
 % See also:  LFLytroDecodeImage, LFUtilDecodeLytroFolder
 
-% Part of LF Toolbox xxxVersionTagxxx
-% Copyright (c) 2013, 2014 Donald G. Dansereau
+% Copyright (c) 2013-2020 Donald G. Dansereau
 
 function [LF, LFWeight, DecodeOptions, DebayerLensletImage, CorrectedLensletImage] = ...
     LFDecodeLensletImageSimple( LensletImage, WhiteImage, LensletGridModel, DecodeOptions )
 
 %---Defaults---
+ % LevelLimits defaults are a failsafe, should be passed in / come from the white image metadata
 DecodeOptions = LFDefaultField( 'DecodeOptions', 'LevelLimits', [min(WhiteImage(:)), max(WhiteImage(:))] );
 DecodeOptions = LFDefaultField( 'DecodeOptions', 'ResampMethod', 'fast' ); %'fast', 'triangulation'
 DecodeOptions = LFDefaultField( 'DecodeOptions', 'Precision', 'single' );
@@ -135,18 +135,8 @@ RTrans(end,1:2) = XformTrans;
 
 % The following rotation can rotate parts of the lenslet image out of frame.
 % todo[optimization]: attempt to keep these regions, offer greater user-control of what's kept
-FixAll = maketform('affine', RRot*RScale*RTrans);
-NewSize = size(LensletImage(:,:,1)) .* XformScale(2:-1:1);
-OrigLenslet = LensletImage;
-LensletImage = imtransform( LensletImage, FixAll, 'YData',[1 NewSize(1)], 'XData',[1 NewSize(2)]);
-if( nargout >= 2 )
-    WhiteImage = imtransform( WhiteImage, FixAll, 'YData',[1 NewSize(1)], 'XData',[1 NewSize(2)]);
-end
-if( nargout >= 4 )
-    CorrectedLensletImage = LensletImage;
-end
-
-LF = SliceXYImage( RRot*RScale*RTrans, OrigLenslet, NewLensletGridModel, LensletImage, WhiteImage, DecodeOptions );
+FixAll = RRot*RScale*RTrans;
+LF = SliceXYImage( FixAll, NewLensletGridModel, LensletImage, WhiteImage, DecodeOptions );
 clear WhiteImage LensletImage
 
 %---Correct for hex grid and resize to square u,v pixels---
@@ -284,7 +274,7 @@ end
 end
 
 %------------------------------------------------------------------------------------------------------
-function LF = SliceXYImage( ImXform, OrigLenslet, LensletGridModel, LensletImage, WhiteImage, DecodeOptions )
+function LF = SliceXYImage( ImXform, NewSize, LensletGridModel, LensletImage, WhiteImage, DecodeOptions )
 % todo[optimization]: The SliceIdx and ValidIdx variables could be precomputed
 
 fprintf('\nSlicing lenslets into LF...');
@@ -296,7 +286,6 @@ SSize = MaxSpacing + 1; % force odd for centered middle pixel -- H,VSpacing are 
 TSize = MaxSpacing + 1;
 
 LF = zeros(TSize, SSize, VSize, USize, DecodeOptions.NColChans + DecodeOptions.NWeightChans, DecodeOptions.Precision);
-LF2=LF;
 
 TVec = cast(floor((-(TSize-1)/2):((TSize-1)/2)), 'int16');
 SVec = cast(floor((-(SSize-1)/2):((SSize-1)/2)), 'int16');
@@ -319,50 +308,25 @@ for( UStart = 0:UBlkSize:USize-1 )  % note zero-based indexing
     %---Lenslet mask in s,t and clip at image edges---
     CurSTAspect = DecodeOptions.OutputScale(1)/DecodeOptions.OutputScale(2);
     R = sqrt((cast(tt,DecodeOptions.Precision)*CurSTAspect).^2 + cast(ss,DecodeOptions.Precision).^2);
-    ValidIdx = find(R < LensletGridModel.HSpacing/2 & ...
-        LFSliceIdxX >= 1 & LFSliceIdxY >= 1 & LFSliceIdxX <= size(LensletImage,2) & LFSliceIdxY <= size(LensletImage,1) );
     
     %---try going back to uncorrected lenslet img---
     ImCoords = double([LFSliceIdxX(:), LFSliceIdxY(:), ones(size(LFSliceIdxX(:)))]);
     ImCoords = (ImXform'^-1) * ImCoords';
 
-    InValidIdx = find(R >= LensletGridModel.HSpacing/2 );% | ...
-%         LFSliceIdxX < 1 | LFSliceIdxY < 1 | LFSliceIdxX > size(LensletImage,2) | LFSliceIdxY > size(LensletImage,1) );
+    InValidIdx = find(R >= LensletGridModel.HSpacing/2  );%| ...
+%         LFSliceIdxX < 1 | LFSliceIdxY < 1 | LFSliceIdxX > NewSize(2) | LFSliceIdxY > NewSize(1) );
 
-    ImSize = size(OrigLenslet);
     for( ColChan=1:3 )
-        IDirect = interpn( squeeze(OrigLenslet(:,:,ColChan)), ImCoords(2,:),ImCoords(1,:) );
+        IDirect = interpn( squeeze(LensletImage(:,:,ColChan)), ImCoords(2,:),ImCoords(1,:) );
         IDirect(isnan(IDirect)) = 0;
         IDirect(InValidIdx) = 0;
-        LF2(:,:,:,1 + (UStart:UStop),ColChan) = reshape(IDirect, size(ss));
-    end
-
-
+        LF(:,:,:,1 + (UStart:UStop),ColChan) = reshape(IDirect, size(ss));
+	end
+	IDirect = interpn( squeeze(WhiteImage), ImCoords(2,:),ImCoords(1,:) );
+	IDirect(isnan(IDirect)) = 0;
+	IDirect(InValidIdx) = 0;
+	LF(:,:,:,1 + (UStart:UStop),4) = reshape(IDirect, size(ss));
         
-    %--clip -- the interp'd values get ignored via ValidIdx--
-    LFSliceIdxX = max(1, min(size(LensletImage,2), LFSliceIdxX ));
-    LFSliceIdxY = max(1, min(size(LensletImage,1), LFSliceIdxY ));
-    
-    %---
-    LFSliceIdx = sub2ind(size(LensletImage), cast(LFSliceIdxY,'int32'), ...
-        cast(LFSliceIdxX,'int32'), ones(size(LFSliceIdxX),'int32'));
-    
-    tt = tt - min(tt(:)) + 1;
-    ss = ss - min(ss(:)) + 1;
-    vv = vv - min(vv(:)) + 1;
-    uu = uu - min(uu(:)) + 1 + UStart;
-    LFOutSliceIdx = sub2ind(size(LF), cast(tt,'int32'), cast(ss,'int32'), ...
-        cast(vv,'int32'),cast(uu,'int32'), ones(size(ss),'int32'));
-    
-    %---
-    for( ColChan = 1:DecodeOptions.NColChans )
-        LF(LFOutSliceIdx(ValidIdx) + numel(LF(:,:,:,:,1)).*(ColChan-1)) = ...
-            LensletImage( LFSliceIdx(ValidIdx) + numel(LensletImage(:,:,1)).*(ColChan-1) );
-    end
-    if( DecodeOptions.NWeightChans ~= 0 )
-        LF(LFOutSliceIdx(ValidIdx) + numel(LF(:,:,:,:,1)).*(DecodeOptions.NColChans)) = ...
-            WhiteImage( LFSliceIdx(ValidIdx) );
-    end
     fprintf('.');
 end
 end
