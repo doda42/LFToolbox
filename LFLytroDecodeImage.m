@@ -172,5 +172,5 @@ WhiteImage = LFReadRaw( WhiteRawFname, BitPacking );
 
 %---Decode---
 fprintf('Decoding lenslet image :');
-[LF, LFWeight, DecodeOptions] = LFDecodeLensletImageSimple( LensletImage, WhiteImage, LensletGridModel, DecodeOptions );
+[LF, LFWeight, DecodeOptions] = LFDecodeLensletImageDirect( LensletImage, WhiteImage, LensletGridModel, DecodeOptions );
 LF(:,:,:,:,4) = LFWeight;
