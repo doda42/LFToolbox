@@ -1,0 +1,167 @@
+\usepackage{bm}  % bolding with \bm
+
+\DeclareMathSymbol{\Gamma}{\mathalpha}{letters}{"00}
+\DeclareMathSymbol{\Delta}{\mathalpha}{letters}{"01}
+\DeclareMathSymbol{\Theta}{\mathalpha}{letters}{"02}
+\DeclareMathSymbol{\Lambda}{\mathalpha}{letters}{"03}
+\DeclareMathSymbol{\Xi}{\mathalpha}{letters}{"04}
+\DeclareMathSymbol{\Pi}{\mathalpha}{letters}{"05}
+\DeclareMathSymbol{\Sigma}{\mathalpha}{letters}{"06}
+\DeclareMathSymbol{\Upsilon}{\mathalpha}{letters}{"07}
+\DeclareMathSymbol{\Phi}{\mathalpha}{letters}{"08}
+\DeclareMathSymbol{\Psi}{\mathalpha}{letters}{"09}
+\DeclareMathSymbol{\Omega}{\mathalpha}{letters}{"0A}
+
+\DeclareMathOperator{\tr}{Tr}
+\DeclareMathOperator{\MSE}{MSE}
+\DeclareMathOperator{\E}{E}
+
+\newcommand{\rpm}{\raisebox{.2ex}{$\scriptstyle\pm$}}  % better plus or minus
+
+%\newcommand{\vect}[1]{\vec{#1}}  % arrow on top
+\newcommand{\vect}[1]{\bm{#1}}
+\newcommand{\const}[1]{\mathrm{#1}}
+\newcommand{\constvect}[1]{\bm{\mathrm{#1}}}
+\newcommand{\mat}[1]{\bm{\mathalpha{#1}}}   % bold matrices
+\newcommand{\constmat}[1]{\bm{\mathrm{#1}}} % bold matrices
+%\newcommand{\mat}[1]{{\mathalpha{#1}}}     % not bold matrices
+%\newcommand{\constmat}[1]{{\mathrm{#1}}}   % not bold matrices
+\newcommand{\abs}[1]{\left|#1\right|}
+\newcommand{\norm}[1]{\left\|#1\right\|}
+\newcommand{\unitvect}[1]{\vect{\hat{#1}}}
+\newcommand{\sgn}{\operatorname{sgn}}
+%\newcommand\trans[1]{#1^{\mathsf{\intercal}}}
+%\newcommand\trans[1]{#1^{\mathsf{T}}}
+%\newcommand\trans[1]{#1^{\top}}
+\newcommand\trans[1]{#1^{\scriptscriptstyle\mathsf{T}}}
+%\newcommand\negative[1]{\,{\text{-}#1}}
+%\newcommand\negative[1]{\mathord{-}{#1}}
+\newcommand\negative[1]{{\text{-}#1}}
+\newcommand\negtrans[1]{#1^{\negative{\scriptscriptstyle\mathsf{T}}}}
+\newcommand\sub[1]{_{\scriptscriptstyle\mathit{#1}}}
+\newcommand\subup[1]{_{\scriptscriptstyle\mathrm{#1}}}
+\newcommand\super[1]{^{\scriptscriptstyle\mathit{#1}}}
+\newcommand\superup[1]{^{\scriptscriptstyle\mathrm{#1}}}
+\newcommand{\argmin}{\operatornamewithlimits{argmin}}
+
+% upright lowercase greek characters, from http://www-zeus.desy.de/~wing/dstar_dis_final_paper/submit_hep_ex/LaTeX/styles/upgreek.sty
+% alternatives: http://www.superstrate.net/useful/useful.html, or the built-in upgreek.sty, but it doesn't look as nice
+%-----------------------------------------------------------------------
+%  define symbol fonts 
+%-----------------------------------------------------------------------
+\DeclareSymbolFont{EUr}{U}{eur}{m}{n}
+\DeclareSymbolFont{EUb}{U}{eur}{b}{n}
+%-----------------------------------------------------------------------
+%  define upright greek letters
+%-----------------------------------------------------------------------
+\DeclareMathSymbol{\upGamma}{\mathord}{EUr}{"00}
+\DeclareMathSymbol{\upDelta}{\mathord}{EUr}{"01}
+\DeclareMathSymbol{\upTheta}{\mathord}{EUr}{"02}
+\DeclareMathSymbol{\upLambda}{\mathord}{EUr}{"03}
+\DeclareMathSymbol{\upXi}{\mathord}{EUr}{"04}
+\DeclareMathSymbol{\upPi}{\mathord}{EUr}{"05}
+\DeclareMathSymbol{\upSigma}{\mathord}{EUr}{"06}
+\DeclareMathSymbol{\upUpsilon}{\mathord}{EUr}{"07}
+\DeclareMathSymbol{\upPhi}{\mathord}{EUr}{"08}
+\DeclareMathSymbol{\upPsi}{\mathord}{EUr}{"09}
+\DeclareMathSymbol{\upOmega}{\mathord}{EUr}{"0A}
+\DeclareMathSymbol{\upalpha}{\mathord}{EUr}{"0B}
+\DeclareMathSymbol{\upbeta}{\mathord}{EUr}{"0C}
+\DeclareMathSymbol{\upgamma}{\mathord}{EUr}{"0D}
+\DeclareMathSymbol{\updelta}{\mathord}{EUr}{"0E}
+\DeclareMathSymbol{\upepsilon}{\mathord}{EUr}{"0F}
+\DeclareMathSymbol{\upzeta}{\mathord}{EUr}{"10}
+\DeclareMathSymbol{\upeta}{\mathord}{EUr}{"11}
+\DeclareMathSymbol{\uptheta}{\mathord}{EUr}{"12}
+\DeclareMathSymbol{\upiota}{\mathord}{EUr}{"13}
+\DeclareMathSymbol{\upkappa}{\mathord}{EUr}{"14}
+\DeclareMathSymbol{\uplambda}{\mathord}{EUr}{"15}
+\DeclareMathSymbol{\upmu}{\mathord}{EUr}{"16}
+\DeclareMathSymbol{\upnu}{\mathord}{EUr}{"17}
+\DeclareMathSymbol{\upxi}{\mathord}{EUr}{"18}
+\DeclareMathSymbol{\uppi}{\mathord}{EUr}{"19}
+\DeclareMathSymbol{\uprho}{\mathord}{EUr}{"1A}
+\DeclareMathSymbol{\upsigma}{\mathord}{EUr}{"1B}
+\DeclareMathSymbol{\uptau}{\mathord}{EUr}{"1C}
+\DeclareMathSymbol{\upupsilon}{\mathord}{EUr}{"1D}
+\DeclareMathSymbol{\upphi}{\mathord}{EUr}{"1E}
+\DeclareMathSymbol{\upchi}{\mathord}{EUr}{"1F}
+\DeclareMathSymbol{\uppsi}{\mathord}{EUr}{"20}
+\DeclareMathSymbol{\upomega}{\mathord}{EUr}{"21}
+\DeclareMathSymbol{\upvarepsilon}{\mathord}{EUr}{"22}
+\DeclareMathSymbol{\upvartheta}{\mathord}{EUr}{"23}
+\DeclareMathSymbol{\upvaromega}{\mathord}{EUr}{"24}
+\DeclareMathSymbol{\upvarphi}{\mathord}{EUr}{"27}
+
+%-----------------------------------------------------------------------
+%  define bold upright greek letters
+%-----------------------------------------------------------------------
+\DeclareMathSymbol{\UpGamma}{\mathord}{EUb}{"00}
+\DeclareMathSymbol{\UpDelta}{\mathord}{EUb}{"01}
+\DeclareMathSymbol{\UpTheta}{\mathord}{EUb}{"02}
+\DeclareMathSymbol{\UpLambda}{\mathord}{EUb}{"03}
+\DeclareMathSymbol{\UpXi}{\mathord}{EUb}{"04}
+\DeclareMathSymbol{\UpPi}{\mathord}{EUb}{"05}
+\DeclareMathSymbol{\UpSigma}{\mathord}{EUb}{"06}
+\DeclareMathSymbol{\UpUpsilon}{\mathord}{EUb}{"07}
+\DeclareMathSymbol{\UpPhi}{\mathord}{EUb}{"08}
+\DeclareMathSymbol{\UpPsi}{\mathord}{EUb}{"09}
+\DeclareMathSymbol{\UpOmega}{\mathord}{EUb}{"0A}
+\DeclareMathSymbol{\Upalpha}{\mathord}{EUb}{"0B}
+\DeclareMathSymbol{\Upbeta}{\mathord}{EUb}{"0C}
+\DeclareMathSymbol{\Upgamma}{\mathord}{EUb}{"0D}
+\DeclareMathSymbol{\Updelta}{\mathord}{EUb}{"0E}
+\DeclareMathSymbol{\Upepsilon}{\mathord}{EUb}{"0F}
+\DeclareMathSymbol{\Upzeta}{\mathord}{EUb}{"10}
+\DeclareMathSymbol{\Upeta}{\mathord}{EUb}{"11}
+\DeclareMathSymbol{\Uptheta}{\mathord}{EUb}{"12}
+\DeclareMathSymbol{\Upiota}{\mathord}{EUb}{"13}
+\DeclareMathSymbol{\Upkappa}{\mathord}{EUb}{"14}
+\DeclareMathSymbol{\Uplambda}{\mathord}{EUb}{"15}
+\DeclareMathSymbol{\Upmu}{\mathord}{EUb}{"16}
+\DeclareMathSymbol{\Upnu}{\mathord}{EUb}{"17}
+\DeclareMathSymbol{\Upxi}{\mathord}{EUb}{"18}
+\DeclareMathSymbol{\Uppi}{\mathord}{EUb}{"19}
+\DeclareMathSymbol{\Uprho}{\mathord}{EUb}{"1A}
+\DeclareMathSymbol{\Upsigma}{\mathord}{EUb}{"1B}
+\DeclareMathSymbol{\Uptau}{\mathord}{EUb}{"1C}
+\DeclareMathSymbol{\Upupsilon}{\mathord}{EUb}{"1D}
+\DeclareMathSymbol{\Upphi}{\mathord}{EUb}{"1E}
+\DeclareMathSymbol{\Upchi}{\mathord}{EUb}{"1F}
+\DeclareMathSymbol{\Uppsi}{\mathord}{EUb}{"20}
+\DeclareMathSymbol{\Upomega}{\mathord}{EUb}{"21}
+\DeclareMathSymbol{\Upvarepsilon}{\mathord}{EUb}{"22}
+\DeclareMathSymbol{\Upvartheta}{\mathord}{EUb}{"23}
+\DeclareMathSymbol{\Upvaromega}{\mathord}{EUb}{"24}
+\DeclareMathSymbol{\Upvarphi}{\mathord}{EUb}{"27}
+
+%% New definition of square root:
+%% it renames \sqrt as \oldsqrt
+%\let\oldsqrt\sqrt
+%% it defines the new \sqrt in terms of the old one
+%\def\sqrt{\mathpalette\DHLhksqrt}
+%\def\DHLhksqrt#1#2{%
+%\setbox0=\hbox{$#1\oldsqrt{#2\,}$}\dimen0=\ht0
+%\advance\dimen0-0.2\ht0
+%\setbox2=\hbox{\vrule height\ht0 depth -\dimen0}%
+%{\box0\lower0.4pt\box2}}
+
+%% comma separation for large numbers, e.g. 1,000,000 
+\newcount\ppnum
+\newcommand\ppnumber[1]{%
+        \ppnum=#1\relax
+        \ifnum\ppnum<0
+                $-$%
+                \ppnum=-\ppnum
+        \fi
+        \let\pptemp\empty
+        \loop\ifnum\ppnum>999
+                \count255=\ppnum
+                \divide\ppnum by1000
+                \count255=\numexpr \count255 - 1000*\ppnum \relax
+                \edef\pptemp{,\!\ifnum\count255<100 0\ifnum\count255<10 0\fi\fi
+                             \the\count255 \pptemp}%
+        \repeat
+        \the\ppnum
+        \pptemp
+}
