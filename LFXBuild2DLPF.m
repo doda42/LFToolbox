@@ -1,3 +1,4 @@
+% todo: doc
 % LFBuild4DFreqPlane - construct a 4D planar passband filter in the frequency domain
 % 
 % Usage: 

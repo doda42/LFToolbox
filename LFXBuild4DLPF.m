@@ -1,3 +1,4 @@
+% todo: doc
 % LFBuild4DFreqPlane - construct a 4D planar passband filter in the frequency domain
 % 
 % Usage: 
@@ -66,7 +67,7 @@ function [H, FiltOptions] = BuildLPF( LFSize, BW, FiltOptions )
 FiltOptions = LFDefaultField('FiltOptions', 'Precision', 'single');
 
 DistFunc = @(P, FiltOptions) DistFunc_4DPt( P, FiltOptions );
-[H, FiltOptions] = LFHelperBuild4DFreqHacked( LFSize, BW, FiltOptions, DistFunc );
+[H, FiltOptions] = LFHelperBuild4DFreq( LFSize, BW, FiltOptions, DistFunc );
 
 TimeStamp = datestr(now,'ddmmmyyyy_HHMMSS');
 FiltOptions.PassbandInfo = struct('mfilename', mfilename, 'time', TimeStamp, 'VersionStr', LFToolboxVersion);
