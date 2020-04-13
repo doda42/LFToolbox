@@ -47,6 +47,7 @@ Dim1 = LFDefaultVal('Dim1', 3);
 Dim2 = LFDefaultVal('Dim2', 4);
 ProjectionMethod = LFDefaultVal('ProjectionMethod', 'mean');
 
+LF = LFConvertToFloat(LF); % this implementation doesn't deal well with ints
 
 %---Set labels, always display in same order---
 if( Dim1 > Dim2 )
