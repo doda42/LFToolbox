@@ -1,0 +1,79 @@
+Matlab Light Field Toolbox
+Copyright (c) 2013-2020 Donald G. Dansereau
+
+Please refer to README.md and LFToolbox.pdf for installation instructions and further information.
+
+---v0.5------------------------------------------------------------------------
+New Features :
+- Linear super-resolution via LFFiltShiftSum parameter UpsampRate
+- New display functions LFDispLawnmower, LFDispTiles, LFDispTilesSubfigs, LFDispProj, LFDispProjSubfigs
+- LFReadESLF, LFWriteESLF: Read / write ESLF files
+- LFDispMousePan verbose mode, InitialViewIdx parameter
+- LFDisp: optional renormalize, weight channel output
+- Contents.m: lists functions by category, type "help <LFToolbox folder name>"
+
+Bug Fixes :
+- Calibration: correction to radial distortion model polynomial highest term
+- LFFilt2DFFT, LFFilt4DFFT: better handling of monochrome images; more consistent/optional clamping of output
+- LFCalInit: handle more cases of checkerboard point order
+- LFMatlabPathSetup.m: compatible with deployed code
+
+Performance and behaviour changes :
+- Decoding Lytro images is up to 2x as fast, excluding saving to disk
+- LFDispVidCirc: parameters changed, finer control over animation
+- LFDisp* functions now display in the active figure window, allowing multiple open interactive displays; scale changes work without closing the window
+- LFBuildLensletGridModel: added CropOffset to control region of interest; more informative debug display; improved alignment with rotated lenslet grids
+- LFUtilProcessWhiteImages: more compact grid display
+- LFFiltShiftSum: optional masking via weight channel threshold; more consistent weight treatment / edge appearance for 'median' flattening
+- Filtering: added sinc rolloff shape for 2D and 4D filter construction; improved frequency-domain symmetry for 4D filters
+- LFFindFilesRecursive: optional verbosity; recursion is now optional; option to search for folders
+- LFHistEqualize: more consistent type treatment; accepts 2-channel weighted monochrome images; new parameters for verbose operation, weight cutoff
+- Misc readability, consistency, speed improvements
+
+---v0.4------------------------------------------------------------------------
+Features:
+- Building, applying 2D & 4D frequency-domain filters LFBuild*.m, LFFilt*.m, LFDemoBasicFilt*.m
+- Spatial-domain shift-sum filter LFFiltShiftSum.m
+- Quick 2D display convenience function LFDisp.m
+
+---v0.3------------------------------------------------------------------------
+Features :
+- LFReadGantryArray: Loading gantry light fields
+- LFReadLFP: Loading Lytro lfp / lfr files
+- Compatibility with Lytro Desktop 4 and Illum files
+
+Bug Fixes :
+- Fixed incorrect hex grid phase on some cameras
+- Various compatibility updates for recent Matlab versions
+
+Performance and behaviour changes :
+- Replaced corner finder with Matlab version -- slower but more robust
+- Decoded light field size more closely matches individual camera characteristics
+- Faster triangulation-based resampling
+- Lower memory utilization in decode, rectification, histogram equalization
+- Figures no longer steal focus -- see SupportFunctions/LFFigure
+- Smarter input path interpretation -- see SupportFunction/LFFindFilesRecursive
+- LFDispMousePan works over a wider range of input types
+- LFHistEqualize converts colour images to HSV and operates on value
+- Colour correction no longer applies LFHistEqualize
+
+Name changes :
+- Lenselet -> lenslet
+- DecodeOptions.DehexMethod -> DecodeOptions.ResampMethod
+- Added DecodeOptions.DoDehex and DecodeOptions.DoSquarST options
+- Moved LevelLimits to DecodeOptions.LevelLimits
+- LFLytroDecodeImage -> LFLytroDecodeImage
+- Reorganized some functions into/out of "SupportFunctions"
+
+v0.2------------------------------------------------------------------------
+- Calibration of lenslet cameras from checkerboard images
+- LFUtilDecodeLytroFolder: decoding, colour correction and rectification
+- Management of multiple cameras, white images and calibrations
+- Organized code into a folder structure, see LFMatlabPathSetup
+- Organized light fields / cameras into a folder structure
+- Code and usability improvements throughout
+
+---v0.1------------------------------------------------------------------------
+
+
+
