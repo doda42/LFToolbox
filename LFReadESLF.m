@@ -2,7 +2,7 @@
 % 
 % Usage: 
 %   LF = LFReadESLF( FName )
-%   LF = LFReadESLF( FName, [LensletSize_pix], [HasAlpha], [<imread options>] )
+%   LF = LFReadESLF( FName, [LensletSize_pix], [LoadAlpha], [<imread options>] )
 %
 % This function reads the ESLF files commonly used to store light fields, e.g. those at
 % lightfields.stanford.edu.
@@ -13,9 +13,9 @@
 % Optional Inputs:
 %   LensletSize_pix: number of pixels per lenslet, default 14
 %  
-%   HasAlpha: default false; if true, a weight channel is loaded from the ESLF alpha channel,
-%             useful for indicating empty subaperture images; use in conjunction with png or other
-%             formats with alpha channels
+%   LoadAlpha: default true; if true, aattempts to load an alpha channel from the ESLF and use as
+%             a weight channel for the LF; useful for indicating empty subaperture images; use in
+%             conjunction with png or other formats with alpha channels
 % 
 %  <imread options>: additional options are passed to imread; useful examples: 'BackgroundColor'
 % 
@@ -27,16 +27,18 @@
 
 % Copyright (c) 2013-2020 Donald G. Dansereau
 
-function LF = LFReadESLF( FName, LensletSize_pix, HasAlpha, varargin )
+function LF = LFReadESLF( FName, LensletSize_pix, LoadAlpha, varargin )
 
-LensletSize_pix = LFDefaultVal('LensletSize_pix',[14,14]);
-HasAlpha = LFDefaultVal('HasAlpha',false);
+LensletSize_pix = LFDefaultVal('LensletSize_pix', [14,14]);
+LoadAlpha = LFDefaultVal('LoadAlpha', true);
 NChans = 3;
 
-if( HasAlpha )
+if( LoadAlpha )
 	[Img,ColorMap, Alpha] = imread( FName, varargin{:} ); % note: requesting Alpha sets bg to black
-	Img(:,:,4) = Alpha;
-	NChans = NChans + 1;
+	if( ~isempty(Alpha) )
+		Img(:,:,NChans+1) = Alpha;
+		NChans = NChans + 1;
+	end
 else
 	[Img,ColorMap] = imread( FName, varargin{:} );
 end
