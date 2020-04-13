@@ -35,8 +35,7 @@
 % 
 % See also:  LFCalRectifyLF, LFRecenterIntrinsics, LFUtilCalLensletCam, LFUtilDecodeLytroFolder
 
-% Part of LF Toolbox xxxVersionTagxxx
-% Copyright (c) 2013-2015 Donald G. Dansereau
+% Copyright (c) 2013-2020 Donald G. Dansereau
 
 function [RectOptions, LF] = LFCalDispRectIntrinsics( LF, LFMetadata, RectOptions, PaintColour )
 

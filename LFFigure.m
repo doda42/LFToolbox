@@ -1,11 +1,12 @@
 function h = LFFigure(h, varargin)
-% LFFIGURE (originally sfigure) Create figure window (minus annoying focus-theft).
+% LFFIGURE - Create a figure window without stealing focus
 %
 % Usage is identical to figure.
 %
+% originally published at sfigure
 % Daniel Eaton, 2005
 %
-% See also figure
+% See also: figure
 
 if nargin>=1 
 	if ishandle(h)

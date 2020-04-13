@@ -1,4 +1,4 @@
-% Builds a set of six subfigures, dispaying tilings of the LF into different sets of dimensions
+% LFDispTilesSubfigs - Build six subfigures dispaying 2D x 2D tilings of the LF
 % 
 % Usage: 
 %     LFDispTileSubfigs(  LF, [<LFDispTiles options>]  )
@@ -20,7 +20,6 @@
 % 
 % See also: LFDispTiles, LFDispProj, LFDispProjSubfigs, LFDispVidCirc, LFDispMousePan
 
-% Part of LF Toolbox xxxVersionTagxxx
 % Copyright ( C ) 2012-2018 by Donald G. Dansereau
 
 function LFDispTilesSubfigs( LF, varargin )

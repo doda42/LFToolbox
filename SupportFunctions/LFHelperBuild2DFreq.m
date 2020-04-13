@@ -5,8 +5,7 @@
 % 
 % This gets called by the LFBuild2DFreq* functions.
 
-% Part of LF Toolbox xxxVersionTagxxx
-% Copyright (c) 2013-2015 Donald G. Dansereau
+% Copyright (c) 2013-2020 Donald G. Dansereau
 
 function [H, FiltOptions] = LFHelperBuild2DFreq( LFSize, BW, FiltOptions, DistFunc )
 

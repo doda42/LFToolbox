@@ -2,7 +2,7 @@
 % 
 % Usage: 
 %   LF = LFReadESLF( FName )
-%   LF = LFReadESLF( FName, LensletSize_pix, HasAlpha )
+%   LF = LFReadESLF( FName, [LensletSize_pix], [HasAlpha], [<imread options>] )
 %
 % This function reads the ESLF files commonly used to store light fields, e.g. those at
 % lightfields.stanford.edu.
@@ -10,19 +10,22 @@
 % Inputs:
 %   FName: path to input file
 % 
-%   LensletSize_pix, default 14: number of pixels per lenslet
+% Optional Inputs:
+%   LensletSize_pix: number of pixels per lenslet, default 14
+%  
+%   HasAlpha: default false; if true, a weight channel is loaded from the ESLF alpha channel,
+%             useful for indicating empty subaperture images; use in conjunction with png or other
+%             formats with alpha channels
 % 
-%   HasAlpha, default false: if true, a weight channel is added to the loaded light field indicating
-%   which subaperture views are empty
+%  <imread options>: additional options are passed to imread; useful examples: 'BackgroundColor'
 % 
 % Outputs:
 %   LF: a 4D light field with index order [t,s,v,u,c], where s,t are horizontal and vertical
 %   subaperture index; u,v are horizontal and vertical pixel index; and c is colour channel.
 %
-% See also LFReadGantryArray, LFUtilDecodeLytroFolder
+% See also LFWriteESLF, LFReadGantryArray, LFUtilDecodeLytroFolder
 
-% Part of LF Toolbox v0.4 released 12-Feb-2015
-% Copyright (c) 2019 Donald G. Dansereau
+% Copyright (c) 2013-2020 Donald G. Dansereau
 
 function LF = LFReadESLF( FName, LensletSize_pix, HasAlpha )
 

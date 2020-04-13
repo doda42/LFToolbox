@@ -41,8 +41,7 @@
 %   LFFindFilesRecursive('IMG_0001.LFR')
 %   LFFindFilesRecursive('*.png',[],[],struct('IncludeRecursion',false))
 
-% Part of LF Toolbox xxxVersionTagxxx
-% Copyright (c) 2013-2015 Donald G. Dansereau
+% Copyright (c) 2013-2020 Donald G. Dansereau
 
 function [AllFiles, BasePath, FolderList, PerFolderFiles] = ...
 	LFFindFilesRecursive( InputPath, DefaultFileSpec, DefaultPath, SearchOptions )

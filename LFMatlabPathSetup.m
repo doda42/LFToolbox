@@ -2,8 +2,7 @@
 %
 % It may be convenient to add this to your startup.m file.
 
-% Part of LF Toolbox xxxVersionTagxxx
-% Copyright (c) 2013-2015 Donald G. Dansereau
+% Copyright (c) 2013-2020 Donald G. Dansereau
 
 function LFMatlabPathSetup
 

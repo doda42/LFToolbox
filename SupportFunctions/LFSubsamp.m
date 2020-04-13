@@ -20,8 +20,7 @@
 % 
 % See also: LFDispTiles
 
-% Part of LF Toolbox xxxVersionTagxxx
-% Copyright (C) 2012-2018 by Donald G. Dansereau
+% Copyright (C) 2012-2020 Donald G. Dansereau
 
 function LF2 = LFSubsamp( LF, SubsampRate, SubsampMethod )
 

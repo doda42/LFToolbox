@@ -27,8 +27,7 @@
 %
 % See also:  LFDisp, LFDispMousePan, LFDispVidCirc
 
-% Part of LF Toolbox xxxVersionTagxxx
-% Copyright (c) 2013-2015 Donald G. Dansereau
+% Copyright (c) 2013-2020 Donald G. Dansereau
 
 % todo: smooth transition from vertical to horizontal
 % todo: optional horz/vert only

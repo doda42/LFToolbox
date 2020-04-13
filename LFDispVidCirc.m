@@ -32,8 +32,7 @@
 %
 % See also:  LFDisp, LFDispMousePan
 
-% Part of LF Toolbox xxxVersionTagxxx
-% Copyright (c) 2013-2015 Donald G. Dansereau
+% Copyright (c) 2013-2020 Donald G. Dansereau
 
 function FigureHandle = LFDispVidCirc( LF, RenderOptions, ScaleFactor )
 

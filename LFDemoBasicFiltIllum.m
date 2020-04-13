@@ -6,8 +6,7 @@
 % Before running this you must download and decode the sample light field pack. Run the demo from
 % the top of the samples folder. Please see the accompanying documentation for more information.
 
-% Part of LF Toolbox xxxVersionTagxxx
-% Copyright (c) 2013-2015 Donald G. Dansereau
+% Copyright (c) 2013-2020 Donald G. Dansereau
 
 clearvars
 

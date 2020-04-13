@@ -6,8 +6,7 @@
 % The recentering works by forcing the central sample in a light field of LFSize samples to
 % correspond to the ray [s,t,u,v] = 0. Note that 1-based indexing is assumed in [i,j,k,l].
 
-% Part of LF Toolbox xxxVersionTagxxx
-% Copyright (c) 2013-2015 Donald G. Dansereau
+% Copyright (c) 2013-2020 Donald G. Dansereau
 
 function H = LFRecenterIntrinsics( H, LFSize )
 

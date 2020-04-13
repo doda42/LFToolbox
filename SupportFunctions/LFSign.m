@@ -1,7 +1,6 @@
 % LFSign - Like Matlab's sign, but never returns 0, treating 0 as positive
 
-% Part of LF Toolbox xxxVersionTagxxx
-% Copyright (c) 2013-2015 Donald G. Dansereau
+% Copyright (c) 2013-2020 Donald G. Dansereau
 
 function s = LFSign(i)
 

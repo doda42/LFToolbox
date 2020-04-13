@@ -1,4 +1,4 @@
-% Builds a set of six subfigures, dispaying projections of the LF onto different pairs dimensions
+% LFDispProjSubfigs - Build six subfigures dispaying projections of the LF onto pairs dimensions
 % 
 % Usage: 
 %     LFDispProjSubfigs( LF, [<LFDispProj options>] )
@@ -20,8 +20,7 @@
 % 
 % See also: LFDispProj, LFDispTiles, LFDispTilesSubfigs, LFDispVidCirc, LFDispMousePan
 
-% Part of LF Toolbox xxxVersionTagxxx
-% Copyright (C) 2012-2018 by Donald G. Dansereau
+% Copyright (c) 2012-2020 Donald G. Dansereau
 
 function LFDispProjSubfigs( LF, varargin )
 

@@ -1,4 +1,4 @@
-% Tile a 4D light field into a 2D array of 2D slices, and optionally display it to the screen.
+% LFDispTiles - Tile a 4D light field into a 2D array of 2D slices, optionally display to the screen
 %
 % Usage: 
 %     [Img, XL,YL,XTick,YTick,XLabels,YLabels] = 
@@ -62,8 +62,7 @@
 % 
 % See also: LFDispTilesSubfigs, LFDispProj, LFDispProjSubfigs, LFDispVidCirc, LFDispMousePan
 
-% Part of LF Toolbox xxxVersionTagxxx
-% Copyright (C) 2012-2018 by Donald G. Dansereau
+% Copyright (c) 2012-2020 Donald G. Dansereau
 
 function [Img, XL,YL,XTick,YTick,XLabels,YLabels] = LFDispTiles( LF, DimOrder, BorderSize, BorderColor, SubsampRate, SubsampMethod, varargin )
 

@@ -119,8 +119,7 @@
 % LFColourCorrect, LFHistEqualize, LFFindFilesRecursive, LFLytroDecodeImage, LFDecodeLensletImageSimple,
 % LFSelectFromDatabase
 
-% Part of LF Toolbox xxxVersionTagxxx
-% Copyright (c) 2013-2015 Donald G. Dansereau
+% Copyright (c) 2013-2020 Donald G. Dansereau
 
 function LFUtilDecodeLytroFolder( InputPath, FileOptions, DecodeOptions, RectOptions )
 

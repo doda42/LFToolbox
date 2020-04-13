@@ -1,4 +1,4 @@
-% LFFilt4DFFT -Applies a 4D frequency-domain filter using the FFT
+% LFFilt4DFFT - Applies a 4D frequency-domain filter using the FFT
 %
 % Usage:
 %
@@ -39,8 +39,7 @@
 % LFBuild4DFreqDualFan, LFBuild4DFreqHypercone, LFBuild4DFreqHyperfan, LFBuild4DFreqPlane, LFFilt2DFFT, LFFilt4DFFT,
 % LFFiltShiftSum
 
-% Part of LF Toolbox xxxVersionTagxxx
-% Copyright (c) 2013-2015 Donald G. Dansereau
+% Copyright (c) 2013-2020 Donald G. Dansereau
 
 function [LF, FiltOptions] = LFFilt4DFFT( LF, H, FiltOptions )
 

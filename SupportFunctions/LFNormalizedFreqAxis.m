@@ -3,8 +3,7 @@
 % Construct a frequency axis matching the fftshifted output of the fft algorithm,
 % for a normalized sampling rate, i.e. for a Nyquist frequency of 0.5.
 
-% Part of LF Toolbox xxxVersionTagxxx
-% Copyright (c) 2013-2015 Donald G. Dansereau
+% Copyright (c) 2013-2020 Donald G. Dansereau
 
 function f = LFNormalizedFreqAxis( NSamps, Precision )
 
