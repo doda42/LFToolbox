@@ -3,7 +3,7 @@
 %
 % Usage:
 %
-%   [LF, LFWeight, DecodeOptions, DebayerLensletImage, CorrectedLensletImage] = ...
+%   [LF, LFWeight, DecodeOptions, DebayerLensletImage] = ...
 %      LFDecodeLensletImageSimple( LensletImage, WhiteImage, LensletGridModel, DecodeOptions )
 %
 % This function follows the simple decode process described in:
@@ -48,16 +48,11 @@
 % lenslet image is the result of devignetting and debayering, with no further processing. Omitting
 % this output variable saves memory.
 %
-% Optional output CorrectedLensletImage is useful for inspecting intermediary results. The
-% corrected lenslet image has been rotated and scaled such that lenslet centers lie on straight lines, and
-% every lenslet center lies on an integer pixel spacing. See [1] for more detail. Omitting
-% this output variable saves memory.
-%
 % See also:  LFLytroDecodeImage, LFUtilDecodeLytroFolder
 
 % Copyright (c) 2013-2020 Donald G. Dansereau
 
-function [LF, LFWeight, DecodeOptions, DebayerLensletImage, CorrectedLensletImage] = ...
+function [LF, LFWeight, DecodeOptions, DebayerLensletImage] = ...
     LFDecodeLensletImageDirect( LensletImage, WhiteImage, LensletGridModel, DecodeOptions )
 
 %---Defaults---
@@ -137,8 +132,10 @@ RTrans(end,1:2) = XformTrans;
 % The following rotation can rotate parts of the lenslet image out of frame.
 % todo[optimization]: attempt to keep these regions, offer greater user-control of what's kept
 FixAll = RRot*RScale*RTrans;
-LF = SliceXYImage( FixAll, NewLensletGridModel, LensletImage, WhiteImage, DecodeOptions );
-clear WhiteImage LensletImage
+LensletImage(:,:,4) = WhiteImage;
+clear WhiteImage
+LF = SliceXYImage( FixAll, NewLensletGridModel, LensletImage, DecodeOptions );
+clear LensletImage
 
 %---Correct for hex grid and resize to square u,v pixels---
 LFSize = size(LF);
@@ -275,7 +272,7 @@ end
 end
 
 %------------------------------------------------------------------------------------------------------
-function LF = SliceXYImage( ImXform, NewSize, LensletGridModel, LensletImage, WhiteImage, DecodeOptions )
+function LF = SliceXYImage( ImXform, LensletGridModel, LensletImage, DecodeOptions )
 % todo[optimization]: The SliceIdx and ValidIdx variables could be precomputed
 
 fprintf('\nSlicing lenslets into LF...');
@@ -287,6 +284,12 @@ SSize = MaxSpacing + 1; % force odd for centered middle pixel -- H,VSpacing are 
 TSize = MaxSpacing + 1;
 
 LF = zeros(TSize, SSize, VSize, USize, DecodeOptions.NColChans + DecodeOptions.NWeightChans, DecodeOptions.Precision);
+
+for( chan=1:4 )
+	Interpolant{chan} = griddedInterpolant( LensletImage(:,:,chan) );
+	Interpolant{chan}.Method = 'linear';
+	Interpolant{chan}.ExtrapolationMethod = 'none';
+end
 
 TVec = cast(floor((-(TSize-1)/2):((TSize-1)/2)), 'int16');
 SVec = cast(floor((-(SSize-1)/2):((SSize-1)/2)), 'int16');
@@ -313,20 +316,19 @@ for( UStart = 0:UBlkSize:USize-1 )  % note zero-based indexing
     %---try going back to uncorrected lenslet img---
     ImCoords = double([LFSliceIdxX(:), LFSliceIdxY(:), ones(size(LFSliceIdxX(:)))]);
     ImCoords = (ImXform'^-1) * ImCoords';
+	ImCoords = ImCoords([2,1],:)';
 
     InValidIdx = find(R >= LensletGridModel.HSpacing/2  );%| ...
-%         LFSliceIdxX < 1 | LFSliceIdxY < 1 | LFSliceIdxX > NewSize(2) | LFSliceIdxY > NewSize(1) );
+	%         LFSliceIdxX < 1 | LFSliceIdxY < 1 | LFSliceIdxX > NewSize(2) | LFSliceIdxY > NewSize(1) );
 
-    for( ColChan=1:3 )
-        IDirect = interpn( squeeze(LensletImage(:,:,ColChan)), ImCoords(2,:),ImCoords(1,:) );
+    for( ColChan=1:4 )
+		%         IDirect = interpn( squeeze(LensletImage(:,:,ColChan)), ImCoords(2,:),ImCoords(1,:) );
+% 		ImCoords(3,:) = ColChan;
+		IDirect = Interpolant{ColChan}( ImCoords );
         IDirect(isnan(IDirect)) = 0;
         IDirect(InValidIdx) = 0;
         LF(:,:,:,1 + (UStart:UStop),ColChan) = reshape(IDirect, size(ss));
 	end
-	IDirect = interpn( squeeze(WhiteImage), ImCoords(2,:),ImCoords(1,:) );
-	IDirect(isnan(IDirect)) = 0;
-	IDirect(InValidIdx) = 0;
-	LF(:,:,:,1 + (UStart:UStop),4) = reshape(IDirect, size(ss));
         
     fprintf('.');
 end
