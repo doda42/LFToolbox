@@ -27,18 +27,18 @@
 
 % Copyright (c) 2013-2020 Donald G. Dansereau
 
-function LF = LFReadESLF( FName, LensletSize_pix, HasAlpha )
+function LF = LFReadESLF( FName, LensletSize_pix, HasAlpha, varargin )
 
 LensletSize_pix = LFDefaultVal('LensletSize_pix',[14,14]);
 HasAlpha = LFDefaultVal('HasAlpha',false);
 NChans = 3;
 
 if( HasAlpha )
-	[Img,ColorMap, Alpha] = imread( FName ); % note: requesting Alpha sets bg to black
+	[Img,ColorMap, Alpha] = imread( FName, varargin{:} ); % note: requesting Alpha sets bg to black
 	Img(:,:,4) = Alpha;
 	NChans = NChans + 1;
 else
-	[Img,ColorMap] = imread( FName );
+	[Img,ColorMap] = imread( FName, varargin{:} );
 end
 
 if( ~isempty(ColorMap) )  % indexed colour image
