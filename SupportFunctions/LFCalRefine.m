@@ -280,7 +280,7 @@ function [PtPlaneDists, JacobPattern] = FindError(Params, CheckerObs, IdealCheck
                     Direction = CurCheckerObs_Ray(3:4,:);
                     Direction = bsxfun(@minus, Direction, [b1dir;b2dir]);
                     DirectionR2 = sum(Direction.^2);
-                    Direction = Direction .* repmat((1 + k1.*DirectionR2 + k2.*DirectionR2.^2 + k3.*DirectionR2.^4),2,1);
+                    Direction = Direction .* repmat((1 + k1.*DirectionR2 + k2.*DirectionR2.^2 + k3.*DirectionR2.^3),2,1);
                     Direction = bsxfun(@plus, Direction, [b1dir;b2dir]);
                     CurCheckerObs_Ray(3:4,:) = Direction;
                 end

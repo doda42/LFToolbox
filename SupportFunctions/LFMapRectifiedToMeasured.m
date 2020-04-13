@@ -46,7 +46,7 @@ DesiredDirection = InterpIdx(3:4,:);
 for( InverseIters = 1:RectOptions.NInverse_Distortion_Iters )
     R2 = sum(InterpIdx(3:4,:).^2); % compute radius^2 for the current estimate
     % update estimate based on inverse of distortion model
-    InterpIdx(3:4,:) = DesiredDirection ./ repmat((1 + k1.*R2 + k2.*R2.^2 + k3.*R2.^4),2,1);
+    InterpIdx(3:4,:) = DesiredDirection ./ repmat((1 + k1.*R2 + k2.*R2.^2 + k3.*R2.^3),2,1);
 end
 clear R2 DesiredDirection
 
