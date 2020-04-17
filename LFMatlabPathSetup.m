@@ -1,6 +1,8 @@
 % LFMatlabPathSetup - convenience function to add the light field toolbox to matlab's path
 %
 % It may be convenient to add this to your startup.m file.
+%
+% User guide: <a href="matlab:which LFToolbox.pdf; open('LFToolbox.pdf')">LFToolbox.pdf</a>
 
 % Copyright (c) 2013-2020 Donald G. Dansereau
 

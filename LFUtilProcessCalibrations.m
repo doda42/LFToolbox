@@ -32,6 +32,7 @@
 % 
 % Output takes the form of a saved calibration database.
 % 
+% User guide: <a href="matlab:which LFToolbox.pdf; open('LFToolbox.pdf')">LFToolbox.pdf</a>
 % See also: LFUtilDecodeLytroFolder, LFCalRectifyLF, LFSelectFromDatabase, LFUtilCalLensletCam,
 % LFUtilProcessWhiteImages
 

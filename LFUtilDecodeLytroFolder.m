@@ -115,6 +115,7 @@
 %     Any of these, run from the top level of the 'Samples' folder, will decode the matching files.  See
 %     LFFindFilesRecursive.
 %
+% User guide: <a href="matlab:which LFToolbox.pdf; open('LFToolbox.pdf')">LFToolbox.pdf</a>
 % See also: LFUtilExtractLFPThumbs, LFUtilProcessWhiteImages, LFUtilProcessCalibrations, LFUtilCalLensletCam,
 % LFColourCorrect, LFHistEqualize, LFFindFilesRecursive, LFLytroDecodeImage, LFDecodeLensletImageSimple,
 % LFSelectFromDatabase

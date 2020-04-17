@@ -60,6 +60,7 @@
 %     % subsample by 4 in u,v using 'max' subsample method
 %     LFDispTiles( LF, 'sutv', [], [], [1,1,4,4], 'max' )
 % 
+% User guide: <a href="matlab:which LFToolbox.pdf; open('LFToolbox.pdf')">LFToolbox.pdf</a>
 % See also: LFDispTilesSubfigs, LFDispProj, LFDispProjSubfigs, LFDispVidCirc, LFDispMousePan
 
 % Copyright (c) 2012-2020 Donald G. Dansereau

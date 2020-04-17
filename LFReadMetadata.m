@@ -14,6 +14,7 @@
 % in the Light Field Toolbox, and to tolerate the sha keys appearing at the end of some Lytro JSON
 % files
 %
+% User guide: <a href="matlab:which LFToolbox.pdf; open('LFToolbox.pdf')">LFToolbox.pdf</a>
 % See also: LFWriteMetadata
 
 % Copyright (c) 2013-2020 Donald G. Dansereau

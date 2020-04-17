@@ -65,6 +65,7 @@
 %
 % Output takes the form of saved grid model files and a white image database.
 %
+% User guide: <a href="matlab:which LFToolbox.pdf; open('LFToolbox.pdf')">LFToolbox.pdf</a>
 % See also: LFBuildLensletGridModel, LFUtilDecodeLytroFolder, LFUtilProcessCalibrations
 
 % Copyright (c) 2013-2020 Donald G. Dansereau

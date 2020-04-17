@@ -6,6 +6,7 @@ function h = LFFigure(h, varargin)
 % originally published at sfigure
 % Daniel Eaton, 2005
 %
+% User guide: <a href="matlab:which LFToolbox.pdf; open('LFToolbox.pdf')">LFToolbox.pdf</a>
 % See also: figure
 
 if nargin>=1 

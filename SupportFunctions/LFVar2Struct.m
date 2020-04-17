@@ -13,6 +13,7 @@
 %            Apples: 3
 %            Oranges: 4
 %
+% User guide: <a href="matlab:which LFToolbox.pdf; open('LFToolbox.pdf')">LFToolbox.pdf</a>
 % See also: LFStruct2Var
 
 % Copyright (c) 2013-2020 Donald G. Dansereau

@@ -18,6 +18,7 @@
 % 
 %     LF : Subsampled light field
 % 
+% User guide: <a href="matlab:which LFToolbox.pdf; open('LFToolbox.pdf')">LFToolbox.pdf</a>
 % See also: LFDispTiles
 
 % Copyright (C) 2012-2020 Donald G. Dansereau

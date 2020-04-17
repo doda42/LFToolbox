@@ -38,6 +38,7 @@
 %                  LensletGridModel, where N and M are the estimated number of lenslets in the
 %                  horizontal and vertical directions, respectively.
 %
+% User guide: <a href="matlab:which LFToolbox.pdf; open('LFToolbox.pdf')">LFToolbox.pdf</a>
 % See also:  LFUtilProcessWhiteImages
 
 % Copyright (c) 2013-2020 Donald G. Dansereau

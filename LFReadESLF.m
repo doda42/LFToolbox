@@ -23,7 +23,8 @@
 %   LF: a 4D light field with index order [t,s,v,u,c], where s,t are horizontal and vertical
 %   subaperture index; u,v are horizontal and vertical pixel index; and c is colour channel.
 %
-% See also LFWriteESLF, LFReadGantryArray, LFUtilDecodeLytroFolder
+% User guide: <a href="matlab:which LFToolbox.pdf; open('LFToolbox.pdf')">LFToolbox.pdf</a>
+% See also: LFWriteESLF, LFReadGantryArray, LFUtilDecodeLytroFolder
 
 % Copyright (c) 2013-2020 Donald G. Dansereau
 

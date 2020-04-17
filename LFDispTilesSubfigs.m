@@ -18,6 +18,7 @@
 %     LFDispTilesSubfigs(  LF, 1, -0.1  ); % ... uses a border size of 1 and color -1
 % 
 % 
+% User guide: <a href="matlab:which LFToolbox.pdf; open('LFToolbox.pdf')">LFToolbox.pdf</a>
 % See also: LFDispTiles, LFDispProj, LFDispProjSubfigs, LFDispVidCirc, LFDispMousePan
 
 % Copyright ( C ) 2012-2018 by Donald G. Dansereau

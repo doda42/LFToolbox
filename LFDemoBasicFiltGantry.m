@@ -8,6 +8,8 @@
 % more information.
 %
 % To change input light fields, uncomment the appropriate line below.
+%
+% User guide: <a href="matlab:which LFToolbox.pdf; open('LFToolbox.pdf')">LFToolbox.pdf</a>
 
 % Copyright (c) 2013-2020 Donald G. Dansereau
 

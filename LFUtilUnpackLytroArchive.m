@@ -29,6 +29,7 @@
 %     multiple cameras, place each multi-volume archve in its own sub-folder, then call this from the top-level folder
 %     to expand them all.
 % 
+% User guide: <a href="matlab:which LFToolbox.pdf; open('LFToolbox.pdf')">LFToolbox.pdf</a>
 % See also: LFUtilProcessWhiteImages, LFReadLFP, LFUtilExtractLFPThumbs
 
 % Copyright (c) 2013-2020 Donald G. Dansereau

@@ -40,6 +40,8 @@
 %   LFFindFilesRecursive('Images/IMG_0001.LFR')
 %   LFFindFilesRecursive('IMG_0001.LFR')
 %   LFFindFilesRecursive('*.png',[],[],struct('IncludeRecursion',false))
+%
+% User guide: <a href="matlab:which LFToolbox.pdf; open('LFToolbox.pdf')">LFToolbox.pdf</a>
 
 % Copyright (c) 2013-2020 Donald G. Dansereau
 

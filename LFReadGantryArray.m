@@ -54,6 +54,7 @@
 %     LF = LFReadGantryArray('humvee-tree', struct('STSize', [16,16]));
 %     LF(1:2:end,:,:,:,:) = LF(1:2:end,end:-1:1,:,:,:);
 
+% User guide: <a href="matlab:which LFToolbox.pdf; open('LFToolbox.pdf')">LFToolbox.pdf</a>
 % See also: LFDispMousePan, LFDispVidCirc
 
 % Copyright (c) 2013-2020 Donald G. Dansereau

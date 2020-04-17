@@ -35,6 +35,7 @@
 % Usage for setting up default function arguments is demonstrated in most of the LF Toolbox
 % functions.
 % 
+% User guide: <a href="matlab:which LFToolbox.pdf; open('LFToolbox.pdf')">LFToolbox.pdf</a>
 % See also: LFDefaultField
 
 % Copyright (c) 2013-2020 Donald G. Dansereau

@@ -63,6 +63,7 @@
 %     equalization, then display the result in a shifting-perspective display with x2 magnification.
 %     LFUtilProcessWhiteImages and LFUtilDecodeLytroFolder must be run to decode the light field.
 %
+% User guide: <a href="matlab:which LFToolbox.pdf; open('LFToolbox.pdf')">LFToolbox.pdf</a>
 % See also: LFUtilDecodeLytroFolder, LFUtilProcessWhiteImages, LFColourCorrect
 
 % Copyright (c) 2013-2020 Donald G. Dansereau

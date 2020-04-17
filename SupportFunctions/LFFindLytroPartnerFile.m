@@ -17,6 +17,7 @@
 % Output:
 %   PartnerFilename is the name of the first file found matching the specified extension
 % 
+% User guide: <a href="matlab:which LFToolbox.pdf; open('LFToolbox.pdf')">LFToolbox.pdf</a>
 % See also:  LFUtilProcessWhiteImages, LFUtilProcessCalibrations
 
 % Copyright (c) 2013-2020 Donald G. Dansereau

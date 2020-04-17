@@ -20,6 +20,7 @@
 %   RectOptions : struct controlling rectification, the following fields are added
 %     .CalInfoFname : Name of the calibration file that was loaded
 % 
+% User guide: <a href="matlab:which LFToolbox.pdf; open('LFToolbox.pdf')">LFToolbox.pdf</a>
 % See also: LFUtilProcessCalibrations, LFSelectFromDatabase
 
 % Copyright (c) 2013-2020 Donald G. Dansereau

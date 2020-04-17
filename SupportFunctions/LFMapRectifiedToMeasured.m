@@ -18,6 +18,7 @@
 % 
 %      InterpIdx : continuous-domain indices for interpolating from the measured light field
 %
+% User guide: <a href="matlab:which LFToolbox.pdf; open('LFToolbox.pdf')">LFToolbox.pdf</a>
 % See also: LFCalRectifyLF
 
 % Copyright (c) 2013-2020 Donald G. Dansereau

@@ -22,6 +22,7 @@
 %                             range 0-1
 %
 % 
+% User guide: <a href="matlab:which LFToolbox.pdf; open('LFToolbox.pdf')">LFToolbox.pdf</a>
 % See also:  LFUtilCalLensletCam
 
 % Copyright (c) 2013-2020 Donald G. Dansereau

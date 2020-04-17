@@ -33,6 +33,7 @@
 %     RectOptions : RectOptions updated with any defaults that were applied
 %              LF : The light field with visualized sample pattern
 % 
+% User guide: <a href="matlab:which LFToolbox.pdf; open('LFToolbox.pdf')">LFToolbox.pdf</a>
 % See also:  LFCalRectifyLF, LFRecenterIntrinsics, LFUtilCalLensletCam, LFUtilDecodeLytroFolder
 
 % Copyright (c) 2013-2020 Donald G. Dansereau

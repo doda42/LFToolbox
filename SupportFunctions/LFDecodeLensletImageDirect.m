@@ -48,6 +48,7 @@
 % lenslet image is the result of devignetting and debayering, with no further processing. Omitting
 % this output variable saves memory.
 %
+% User guide: <a href="matlab:which LFToolbox.pdf; open('LFToolbox.pdf')">LFToolbox.pdf</a>
 % See also:  LFLytroDecodeImage, LFUtilDecodeLytroFolder
 
 % Copyright (c) 2013-2020 Donald G. Dansereau

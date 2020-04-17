@@ -18,6 +18,7 @@
 %     LFDispProjSubfigs( LF, 'max' ); % ... uses max for projection method
 % 
 % 
+% User guide: <a href="matlab:which LFToolbox.pdf; open('LFToolbox.pdf')">LFToolbox.pdf</a>
 % See also: LFDispProj, LFDispTiles, LFDispTilesSubfigs, LFDispVidCirc, LFDispMousePan
 
 % Copyright (c) 2012-2020 Donald G. Dansereau

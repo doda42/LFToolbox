@@ -64,6 +64,7 @@
 %                    .NPoses : Number of poses in the dataset
 % 
 % 
+% User guide: <a href="matlab:which LFToolbox.pdf; open('LFToolbox.pdf')">LFToolbox.pdf</a>
 % See also:  LFUtilCalLensletCam, LFCalFindCheckerCorners, LFCalInit, LFUtilDecodeLytroFolder
 
 % Part of LF Toolbox xxxVersionTagxxx

@@ -37,6 +37,7 @@
 %     % project onto dims 1,2 with default projection method, enable renormalisation in LFDisp
 %     LFDispProj( LF, 1,2, [], 'Renormalize' );
 % 
+% User guide: <a href="matlab:which LFToolbox.pdf; open('LFToolbox.pdf')">LFToolbox.pdf</a>
 % See also: LFDispProjSubfigs, LFDispTiles, LFDispTilesSubfigs, LFDispVidCirc, LFDispMousePan
 
 % Copyright (c) 2012-2020 Donald G. Dansereau

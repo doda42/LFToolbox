@@ -11,6 +11,7 @@
 % Minor modifications by Donald G. Dansereau, 2013, to simplify the interface as appropriate for use
 % in the Light Field Toolbox.
 %
+% User guide: <a href="matlab:which LFToolbox.pdf; open('LFToolbox.pdf')">LFToolbox.pdf</a>
 % See also: LFReadMetadata
 
 % Copyright (c) 2013-2020 Donald G. Dansereau

@@ -57,6 +57,7 @@
 %     Run from the top level of the light field samples will decode the respective raw or lfp light fields.
 %     LFUtilProcessWhiteImages must be run before decoding will work.
 % 
+% User guide: <a href="matlab:which LFToolbox.pdf; open('LFToolbox.pdf')">LFToolbox.pdf</a>
 % See also: LFUtilDecodeLytroFolder, LFUtilProcessWhiteImages, LFDecodeLensletImageSimple, LFSelectFromDatabase
 
 % Copyright (c) 2013-2020 Donald G. Dansereau

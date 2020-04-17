@@ -38,6 +38,7 @@
 %               .Sha1 : Unique hash identifying the section
 %         .SectHeader : Header bytes identifying the section as a table of contents or data
 % 
+% User guide: <a href="matlab:which LFToolbox.pdf; open('LFToolbox.pdf')">LFToolbox.pdf</a>
 % See also: LFUtilExtractLFPThumbs, LFUtilUnpackLytroArchive, LFUtilDecodeLytroFolder
 
 % Copyright (c) 2013-2020 Donald G. Dansereau

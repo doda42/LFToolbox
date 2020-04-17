@@ -28,6 +28,7 @@
 % 
 %     Img : an array of uint16 gray levels. No demosaicing (decoding Bayer pattern) is performed.
 %
+% User guide: <a href="matlab:which LFToolbox.pdf; open('LFToolbox.pdf')">LFToolbox.pdf</a>
 % See also: LFReadLFP, LFDecodeLensletImageSimple, demosaic
 
 % Copyright (c) 2013-2020 Donald G. Dansereau

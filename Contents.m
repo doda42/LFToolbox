@@ -1,8 +1,7 @@
 % Light Field Toolbox
 % Version 0.5.0 06-Apr-2020  xxxtodoxxx
 %
-% User guide
-%   <a href="matlab:which LFToolbox.pdf; open('LFToolbox.pdf')">LFToolbox.pdf</a>
+% User guide: <a href="matlab:which LFToolbox.pdf; open('LFToolbox.pdf')">LFToolbox.pdf</a>
 % 
 % Setup
 %   LFMatlabPathSetup         - convenience function to add the light field toolbox to matlab's path

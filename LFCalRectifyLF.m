@@ -46,6 +46,7 @@
 %     LF : The rectified light field
 %     RectOptions : The rectification options as applied, including any default values employed.
 %
+% User guide: <a href="matlab:which LFToolbox.pdf; open('LFToolbox.pdf')">LFToolbox.pdf</a>
 % See also: LFCalDispRectIntrinsics, LFUtilCalLensletCam, LFUtilDecodeLytroFolder, LFUtilProcessWhiteImages
 
 % Copyright (c) 2013-2020 Donald G. Dansereau

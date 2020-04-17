@@ -16,6 +16,7 @@
 % The output SelectedCamInfo includes all fields in the database's CamInfo struct, including the
 % filename of the selected calibration or white image. This facilitates decoding / rectification.
 % 
+% User guide: <a href="matlab:which LFToolbox.pdf; open('LFToolbox.pdf')">LFToolbox.pdf</a>
 % See also: LFUtilProcessWhiteImages, LFUtilProcessCalibrations, LFUtilDecodeLytroFolder, LFLytroDecodeImage
 
 % Copyright (c) 2013-2020 Donald G. Dansereau
