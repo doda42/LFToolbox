@@ -40,10 +40,16 @@ ScaleFactor = LFDefaultVal('ScaleFactor', 1);
 RenderOptions = LFDefaultField( 'RenderOptions', 'FrameDelay', 1/30 );
 RenderOptions = LFDefaultField( 'RenderOptions', 'NumCycles', inf );
 
+%---Check for a light field with only one spatial dim---
+if( ndims(LF) == 3 || (ndims(LF)==4 && (size(LF,4)==3 || size(LF,4)==4)) )
+	LF = reshape(LF, [1, size(LF)]);
+end
+LFSize = size(LF);
+
 %---Check for mono and clip off the weight channel if present---
-Mono = (ndims(LF) == 4);
-if( ~Mono )
-	LF = LF(:,:,:,:,1:3);
+HasWeight = (ndims(LF)>2 && (LFSize(end)==2 || LFSize(end)==4));
+if( HasWeight )
+	LF = LF(:,:,:,:,1:end-1);
 end
 
 %---Rescale for 8-bit display---
