@@ -23,7 +23,7 @@
 
 % Copyright (C) 2012-2020 Donald G. Dansereau
 
-function LF2 = LFSubsamp( LF, SubsampRate, SubsampMethod )
+function [LF2, SampGrid] = LFSubsamp( LF, SubsampRate, SubsampMethod )
 
 SubsampMethod = LFDefaultVal('SubsampMethod', 'skip');
 
@@ -44,8 +44,10 @@ VVec = 1:SubsampRate(3):LFSize(3);
 UVec = 1:SubsampRate(4):LFSize(4);
 LF2 = LF(TVec, SVec, VVec, UVec, :);
 
+SampGrid = LFVar2Struct( SVec, TVec, UVec, VVec );
+
 %---Apply remaining samples---
-if( ~strcmp( lower(SubsampMethod), 'skip' ) )
+if( ~strcmpi( SubsampMethod, 'skip' ) )
 	for( iIter = 2:size(SubsampIter,1) )
 		TVec = SubsampIter(iIter,1):SubsampRate(1):size(LF,1);
 		SVec = SubsampIter(iIter,2):SubsampRate(2):size(LF,2);
