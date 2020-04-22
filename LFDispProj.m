@@ -1,4 +1,4 @@
-% LFDispProj - Project a 4D light field onto two planes, and optionally display it to the screen
+% LFDispProj - Project a 4D light field onto a plane, and optionally display it to the screen
 %
 % Usage: 
 %     [Img,XL,YL] = LFDispProj( LF, [Dim1], [Dim2], [ProjectionMethod], [<LFDisp options>] )
