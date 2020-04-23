@@ -68,6 +68,12 @@ end
 %---Setup the display---
 [ImageHandle,FigureHandle] = LFDispSetup( squeeze(LF(InitialViewIdx(1),InitialViewIdx(2),:,:,:)), ScaleFactor );
 
+% Turn off zoom, pan
+hZ=zoom(FigureHandle);
+hZ.Enable='off';
+hP=pan(FigureHandle);
+hP.Enable='off';
+
 BDH = @(varargin) ButtonDownCallback(FigureHandle, varargin);
 BUH = @(varargin) ButtonUpCallback(FigureHandle, varargin);
 set(FigureHandle, 'WindowButtonDownFcn', BDH );
