@@ -5,12 +5,16 @@ Please refer to README.md and LFToolbox.pdf for installation instructions and fu
 
 ---v0.5------------------------------------------------------------------------
 New Features :
-- Linear super-resolution via LFFiltShiftSum parameter UpsampRate
+- Linear refocus super-resolution via LFFiltShiftSum parameter UpsampRate, see LFDemoRefocusSuperres
 - New display functions LFDispLawnmower, LFDispTiles, LFDispTilesSubfigs, LFDispProj, LFDispProjSubfigs
 - LFReadESLF, LFWriteESLF: Read / write ESLF files
 - LFDispMousePan verbose mode, InitialViewIdx parameter
 - LFDisp: optional renormalize, weight channel output
 - Contents.m: lists functions by category, type "help <LFToolbox folder name>"
+- Updated sample pack v0.5, to match new decode; added ESLF example
+
+Interface changes:
+- LFDispVidCirc: parameters changed to allow finer control over animation
 
 Bug Fixes :
 - Calibration: correction to radial distortion model polynomial highest term
@@ -19,16 +23,16 @@ Bug Fixes :
 - LFMatlabPathSetup.m: compatible with deployed code
 
 Performance and behaviour changes :
-- Decoding Lytro images is up to 2x as fast, excluding saving to disk
-- LFDispVidCirc: parameters changed, finer control over animation
+- Decoding now has improved alignment with rotated lenslet grids, impacts decoding and calibration
+- Decoding Lytro images is up to 2x faster, excluding saving to disk
 - LFDisp* functions now display in the active figure window, allowing multiple open interactive displays; scale changes work without closing the window
-- LFBuildLensletGridModel: added CropOffset to control region of interest; more informative debug display; improved alignment with rotated lenslet grids
+- LFBuildLensletGridModel: added CropOffset to control region of interest; more informative debug display; 
 - LFUtilProcessWhiteImages: more compact grid display
 - LFFiltShiftSum: optional masking via weight channel threshold; more consistent weight treatment / edge appearance for 'median' flattening
 - Filtering: added sinc rolloff shape for 2D and 4D filter construction; improved frequency-domain symmetry for 4D filters
 - LFFindFilesRecursive: optional verbosity; recursion is now optional; option to search for folders
 - LFHistEqualize: more consistent type treatment; accepts 2-channel weighted monochrome images; new parameters for verbose operation, weight cutoff
-- Misc readability, consistency, speed improvements
+- Misc readability, consistency, documentation, and speed improvements throughout
 
 ---v0.4------------------------------------------------------------------------
 Features:

@@ -2,43 +2,49 @@
 
 Copyright (c) 2013-2020 Donald G. Dansereau
 
-This is a toolbox for working with light field imagery in MATLAB. Features include decoding, calibration, rectification, filtering, and visualization of light field images.
+This is a toolbox for working with light field imagery in MATLAB. Features include loading, visualizing, and filtering light fields, and decoding, calibration, and rectification of lenslet-based imagery.
 
-The toolbox is under active development. The most recent release and development versions are here:
-[https://github.com/doda42/LFToolbox](https://github.com/doda42/LFToolbox)
-
-## Installation and Sample Data
-Please refer to LFToolbox.pdf for installation and usage instructions. 
-
-Sample data:
-
-* [LFToolbox v0.3 Sample Pack 1](http://www-personal.acfr.usyd.edu.au/ddan1654/LFToolbox0.3_Samples1.zip)
-* [Small Sample Calibration](http://www-personal.acfr.usyd.edu.au/ddan1654/PlenCalSmallExample.zip)
-* Additional datasets and community links at [dgd.vision](http://dgd.vision/Tools/LFToolbox)
+The most recent release and development versions are here: [https://github.com/doda42/LFToolbox](https://github.com/doda42/LFToolbox). The latest release version is also available at the Mathworks File Exchange.
 
 The complementary LiFF light field feature toolbox is here: [http://dgd.vision/Tools/LiFF](http://dgd.vision/Tools/LiFF)
 
-## What's New / Development Plan
-Release 0.5 contains usability and performance improvements, new display functions, ESLF file read and write, and linear super-resolution. Interface and default behaviour changes were kept to a minimum. See CHANGELOG.txt.
+## Installation and Sample Data
+Please refer to LFToolbox.pdf for installation and usage instructions.
 
-A major new release 1.0 is coming which will introduce changes to interface and default behaviours. Plans include improved decode and calibration, and support for a broader range of lenslet-based cameras.
+Sample data:
+
+* [LFToolbox v0.5 Sample Pack](http://www-personal.acfr.usyd.edu.au/donald/LFToolbox0.5_Samples.zip)
+* [Small Sample Calibration](http://www-personal.acfr.usyd.edu.au/ddan1654/PlenCalSmallExample.zip)
+* Additional datasets and community links at [dgd.vision](http://dgd.vision/Tools/LFToolbox)
+
+## What's New / Development Plan
+v0.5 introduces new features, bug fixes, and performance improvements. Highlights:
+* Linear refocus super-resolution using LFFiltShiftSum.
+* New display functions LFDispLawnmower, LFDispTiles, LFDispTilesSubfigs, LFDispProj, LFDispProjSubfigs
+* LFReadESLF, LFWriteESLF
+* Improved decode performance and speed
+* Improved calibration accuracy
+* LFDisp* functions are better behaved, now display in the active figure window
+
+For a complete list, see CHANGELOG.txt.
+
+A major release v1.0 is planned which will introduce more significant changes. Plans include significant changes to decode and calibration, and support for a broader range of cameras.
 
 ## Compatibility
-LFToolbox 0.5 was written in MATLAB 2020a, but may be compatible with earlier versions.
 
-Users upgrading from earlier toolbox versions may need to re-run decoding and calibration and update some parameter names. See CHANGELOG.txt.
+**Reverse-compatibility**: Changes to interfaces have been minimised, so v0.5 is mostly reverse-compatible with v0.4. LFDispVidCirc is the main exception, with a new parameter structure.
 
-Much of the toolbox is camera-agnostic, e.g. filtering and display of light fields. Functions are also included for loading specific file formats, and for working with specific camera models.
+To benefit from performance improvements to decoding and calibration, users upgrading from earlier toolbox versions should re-process white images and re-process calibration data prior to decoding and rectification of lenslet-based light fields.
 
-**Light Field File Formats**
-The toolbox can load gantry / array-style folders of images, ESLF files, and raw lenslet-based images.
+**Matlab**: LFToolbox 0.5 was written in MATLAB 2020a, but should be compatible with earlier versions.
+
+**File Formats**: The toolbox can load gantry / array-style folders of images, ESLF files, and raw lenslet-based images.
 
 **Plenoptic 1.0** cameras are supported through decoding, calibration, and rectification of imagery. Functions are most easily applied to Lytro imagery. The toolbox can also be applied to other lenslet-based Plenoptic 1.0 cameras, but this is not yet well documented. Calibration of Lytro Illum cameras is experimental.
 
-**Plenoptic 2.0** cameras are not well supported. Use with some cameras is possible but not well documented. Multi-focal lenslet-based cameras like the Raytrix are not well supported.
+**Plenoptic 2.0** cameras are not well supported. Use with some cameras is possible but not well documented. Multi-focal lenslet-based cameras are not well supported.
 
-**Lytro Software** 
-The original Lytro camera and the Lytro Illum are supported under Lytro Desktop 4 and 3. The toolbox will also load ESLF files generated by Lytro Power Tools.
+**Lytro Software**: The toolbox is compatible with files generated using Lytro Desktop 4 and 3, and will load ESLF files generated using the Lytro Power Tools.
 
 ## Contributing / Feedback
 Suggestions, bug reports, code improvements and new functionality are welcome -- email Donald.Dansereau+LFToolbox {at} gmail dot com.
@@ -50,7 +56,6 @@ Suggestions, bug reports, code improvements and new functionality are welcome --
 * develop: experimental functionality
 
 Code in the develop branches is incomplete, unstable, undocumented, and unsupported. Use at your own risk. Functions named LFX* are new/experimental and may not be included in the next release.
-
 
 ## Acknowledgements
 Parts of the code were taken with permission from the Camera Calibration Toolbox for MATLAB by Jean-Yves Bouguet, with contributions from Pietro Perona and others; and from the JSONlab Toolbox by Qianqian Fang and others. LFFigure was originally by Daniel Eaton. The LFP reader is based in part on Nirav Patel and Doug Kelley's LFP readers. Thanks to Michael Tao for help and samples for decoding Illum imagery.

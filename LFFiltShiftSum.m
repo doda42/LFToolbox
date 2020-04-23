@@ -1,4 +1,4 @@
-% LFFiltShiftSum - A spatial-domain depth-selective filter with optional super-resolution
+% LFFiltShiftSum - A spatial-domain depth-selective filter with optional refocus super-resolution
 %
 % Usage:
 %
@@ -37,7 +37,7 @@
 %                             this occurs, default is 10 * the numerical precision of the output, as returned by eps
 %                      Mask : ignore samples with weights below MaskThresh; default false
 %                MaskThresh : if Mask is true, samples with weights below this value are ignored
-%                UpsampRate : linear super-resolution. Each slice is upscaled by this factor before
+%                UpsampRate : linear refocus super-resolution. Each slice is upscaled by this factor before
 %                             the flattening step. Default 1, i.e. no upsampling; values of 2 or 3 yield good resuls.
 %
 % Outputs:

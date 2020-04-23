@@ -13,7 +13,7 @@
 % 
 % Optional Inputs: 
 % 
-%     RenderOptions
+%     RenderOptions : struct controlling rendering
 %        .PathRadius_percent : radius of the circular path taken by the viewpoint. Values that are
 %                              too high can result in collision with the edges of the lenslet image,
 %                              while values that are too small result in a less impressive
