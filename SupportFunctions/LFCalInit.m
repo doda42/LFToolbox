@@ -30,10 +30,10 @@
 % 
 %     The checkerboard info file and calibration info file are the key outputs of this function.
 % 
+% User guide: <a href="matlab:which LFToolbox.pdf; open('LFToolbox.pdf')">LFToolbox.pdf</a>
 % See also:  LFUtilCalLensletCam, LFCalFindCheckerCorners, LFCalRefine
 
-% Part of LF Toolbox v0.4 released 12-Feb-2015
-% Copyright (c) 2013-2015 Donald G. Dansereau
+% Copyright (c) 2013-2020 Donald G. Dansereau
 
 function CalOptions = LFCalInit( InputPath, CalOptions )
 
@@ -67,11 +67,11 @@ fprintf('Found :\n');
 disp(CalOptions.FileList)
 
 %---Initial estimate of focal length---
-fprintf('Initial estimate of focal length...\n');
 SkippedFileCount = 0;
 ValidSuperPoseCount = 0;
 ValidCheckerCount = 0;
-%---Process each checkerboard corner file---
+%---Load each checkerboard corner file---
+fprintf('Loading corner observations...\n');
 for( iFile = 1:length(CalOptions.FileList) )
     ValidSuperPoseCount = ValidSuperPoseCount + 1;
     CurFname = CalOptions.FileList{iFile};
@@ -96,26 +96,52 @@ for( iFile = 1:length(CalOptions.FileList) )
                 Centroid = mean( CurChecker,2 );
                 IsTopLeft = all(CurChecker(:,1) < Centroid);
                 IsTopRight = (CurChecker(1,1) > Centroid(1) && CurChecker(2,1) < Centroid(2));
+				IsBotLeft = (CurChecker(1,1) < Centroid(1) && CurChecker(2,1) > Centroid(2));
+				IsBotRight = all(CurChecker(:,1) > Centroid);
                 if( IsTopRight )
                     CurChecker = reshape(CurChecker, [2, CalOptions.ExpectedCheckerSize]);
                     CurChecker = CurChecker(:, end:-1:1, :);
                     CurChecker = permute(CurChecker, [1,3,2]);
                     CurChecker = reshape(CurChecker, 2, []);
-                end
+				elseif( IsBotLeft )
+                    CurChecker = reshape(CurChecker, [2, CalOptions.ExpectedCheckerSize]);
+                    CurChecker = CurChecker(:, :, end:-1:1);
+                    CurChecker = permute(CurChecker, [1,3,2]);
+                    CurChecker = reshape(CurChecker, 2, []);
+				elseif( IsBotRight )
+                    CurChecker = reshape(CurChecker, [2, CalOptions.ExpectedCheckerSize]);
+                    CurChecker = CurChecker(:, end:-1:1, end:-1:1);
+                    CurChecker = reshape(CurChecker, 2, []);
+				end
                 IsTopLeft = all(CurChecker(:,1) < Centroid);
                 assert( IsTopLeft, 'Error: unexpected point order from detectCheckerboardPoints' );
                 
                 CheckerObs{ValidSuperPoseCount, TIdx, SIdx} = CurChecker;
-                
-                %---Compute homography for each subcam pose---
-                CurH = compute_homography( CurChecker, IdealChecker(1:2,:) );
-                H(ValidCheckerCount, :,:) = CurH;
             end
         end
     end
     CalOptions.ValidSubimageCount(iFile) = PerImageValidCount;
     fprintf(' %d / %d valid.\n', PerImageValidCount, prod(LFSize(1:2)));
 end
+
+%---Compute homography for each subcam pose---
+fprintf('Initial estimate of focal length...\n');
+ValidCheckerCount = 0;
+for( iFile = 1:length(CalOptions.FileList) )
+    for( TIdx = 1:size(CheckerObs,3) )
+        for( SIdx = 1:size(CheckerObs,2) )
+			CurChecker = CheckerObs{iFile, TIdx, SIdx};
+			if( ~isempty(CurChecker) )
+				ValidCheckerCount = ValidCheckerCount + 1;			
+				%---Compute homography for each subcam pose---
+				CurH = compute_homography( CurChecker, IdealChecker(1:2,:) );
+				H(ValidCheckerCount, :,:) = CurH;
+			end
+        end
+    end
+    fprintf('.');
+end
+fprintf('\n');
 
 A = [];
 b = [];

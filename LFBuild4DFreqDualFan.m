@@ -2,8 +2,8 @@
 % 
 % Usage: 
 % 
-%     [H, FiltOptions] = LFBuild4DFreqDualFan( LFSize, Slope, BW, FiltOptions )
-%     H = LFBuild4DFreqDualFan( LFSize, Slope, BW )
+%     [H, FiltOptions] = LFBuild4DFreqDualFan( LFSize, Slope1, Slope2, BW, FiltOptions )
+%     H = LFBuild4DFreqDualFan( LFSize, Slope1, Slope2, BW )
 % 
 % This file constructs a real-valued magnitude response in 4D, for which the passband is a dual-fan,
 % the intersection of 2 2D fans.
@@ -53,12 +53,12 @@
 %       FiltOptions : The filter options including defaults, with an added PassbandInfo field
 %                     detailing the function and time of construction of the filter
 %
+% User guide: <a href="matlab:which LFToolbox.pdf; open('LFToolbox.pdf')">LFToolbox.pdf</a>
 % See also:  LFDemoBasicFiltGantry, LFDemoBasicFiltIllum, LFDemoBasicFiltLytroF01,
 % LFBuild2DFreqFan, LFBuild2DFreqLine, LFBuild4DFreqDualFan, LFBuild4DFreqHypercone,
 % LFBuild4DFreqHyperfan, LFBuild4DFreqPlane, LFFilt2DFFT, LFFilt4DFFT, LFFiltShiftSum
 
-% Part of LF Toolbox v0.4 released 12-Feb-2015
-% Copyright (c) 2013-2015 Donald G. Dansereau
+% Copyright (c) 2013-2020 Donald G. Dansereau
 
 function [H, FiltOptions] = LFBuild4DFreqDualFan( LFSize, Slope1, Slope2, BW, FiltOptions )
 

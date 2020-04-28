@@ -14,10 +14,10 @@
 % in the Light Field Toolbox, and to tolerate the sha keys appearing at the end of some Lytro JSON
 % files
 %
+% User guide: <a href="matlab:which LFToolbox.pdf; open('LFToolbox.pdf')">LFToolbox.pdf</a>
 % See also: LFWriteMetadata
 
-% Part of LF Toolbox v0.4 released 12-Feb-2015
-% Copyright (c) 2013-2015 Donald G. Dansereau
+% Copyright (c) 2013-2020 Donald G. Dansereau
 
 function data = LFReadMetadata( JsonFileFname )
 

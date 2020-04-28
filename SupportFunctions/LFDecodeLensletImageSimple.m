@@ -52,15 +52,19 @@
 % every lenslet center lies on an integer pixel spacing. See [1] for more detail. Omitting
 % this output variable saves memory.
 %
-% See also:  LFLytroDecodeImage, LFUtilDecodeLytroFolder
+% A more direct version of this function LFDecodeLensletImageDirect does not generate the 
+% intermediate corrected lenslet image.
+%
+% User guide: <a href="matlab:which LFToolbox.pdf; open('LFToolbox.pdf')">LFToolbox.pdf</a>
+% See also:  LFLytroDecodeImage, LFUtilDecodeLytroFolder, LFDecodeLensletImageDirect
 
-% Part of LF Toolbox v0.4 released 12-Feb-2015
-% Copyright (c) 2013-2015 Donald G. Dansereau
+% Copyright (c) 2013-2020 Donald G. Dansereau
 
 function [LF, LFWeight, DecodeOptions, DebayerLensletImage, CorrectedLensletImage] = ...
     LFDecodeLensletImageSimple( LensletImage, WhiteImage, LensletGridModel, DecodeOptions )
 
 %---Defaults---
+ % LevelLimits defaults are a failsafe, should be passed in / come from the white image metadata
 DecodeOptions = LFDefaultField( 'DecodeOptions', 'LevelLimits', [min(WhiteImage(:)), max(WhiteImage(:))] );
 DecodeOptions = LFDefaultField( 'DecodeOptions', 'ResampMethod', 'fast' ); %'fast', 'triangulation'
 DecodeOptions = LFDefaultField( 'DecodeOptions', 'Precision', 'single' );

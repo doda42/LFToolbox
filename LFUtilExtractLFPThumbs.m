@@ -32,10 +32,10 @@
 %   LFUtilExtractLFPThumbs('Images/IMG_0001.LFR')
 %   LFUtilExtractLFPThumbs('IMG_0001.LFR')
 % 
+% User guide: <a href="matlab:which LFToolbox.pdf; open('LFToolbox.pdf')">LFToolbox.pdf</a>
 % See also:  LFFindFilesRecursive
 
-% Part of LF Toolbox v0.4 released 12-Feb-2015
-% Copyright (c) 2013-2015 Donald G. Dansereau
+% Copyright (c) 2013-2020 Donald G. Dansereau
 
 function LFUtilExtractLFPThumbs( InputPath )
 

@@ -5,9 +5,10 @@
 %
 % Before running this you must download and decode the sample light field pack. Run the demo from
 % the top of the samples folder. Please see the accompanying documentation for more information.
+%
+% User guide: <a href="matlab:which LFToolbox.pdf; open('LFToolbox.pdf')">LFToolbox.pdf</a>
 
-% Part of LF Toolbox v0.4 released 12-Feb-2015
-% Copyright (c) 2013-2015 Donald G. Dansereau
+% Copyright (c) 2013-2020 Donald G. Dansereau
 
 clearvars
 

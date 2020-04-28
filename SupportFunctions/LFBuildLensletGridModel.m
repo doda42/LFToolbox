@@ -11,9 +11,15 @@
 %                                   computation
 %           .FilterDiskRadiusMult : Filter disk radius for prefiltering white image for locating
 %                                   lenslets; expressed relative to lenslet spacing; e.g. a
-%                                   value of 1/3 means a disk filte with a radius of 1/3 the
+%                                   value of 1/3 means a disk filter with a radius of 1/3 the
 %                                   lenslet spacing
-%                        .CropAmt : Image edge pixels to ignore when finding the grid
+%                        .CropAmt : Defines a region of interest: CropAmt determines image edge 
+%                                   pixels to ignore when finding the grid; works with CropOffset;
+%                                   default 0; a 1D entry gets repeated to apply to horizontal and
+%                                   vertical directions
+%                     .CropOffset : Defines a decentering for the region of interest; default 0; a
+%                                   1D entry gets repeated to apply to horizontal and vertical
+%                                   directions
 %                       .SkipStep : As a speed optimization, not all lenslet centers contribute
 %                                   to the grid estimate; <SkipStep> pixels are skipped between
 %                                   lenslet centers that get used; a value of 1 means use all
@@ -32,20 +38,30 @@
 %                  LensletGridModel, where N and M are the estimated number of lenslets in the
 %                  horizontal and vertical directions, respectively.
 %
+% User guide: <a href="matlab:which LFToolbox.pdf; open('LFToolbox.pdf')">LFToolbox.pdf</a>
 % See also:  LFUtilProcessWhiteImages
 
-% Part of LF Toolbox v0.4 released 12-Feb-2015
-% Copyright (c) 2013-2015 Donald G. Dansereau
+% Copyright (c) 2013-2020 Donald G. Dansereau
 
 function [LensletGridModel, GridCoords] = LFBuildLensletGridModel( WhiteImg, GridModelOptions, DebugDisplay )
 
 %---Defaults---
 GridModelOptions = LFDefaultField( 'GridModelOptions', 'Precision', 'single' );
+GridModelOptions = LFDefaultField( 'GridModelOptions', 'CropAmt', 0 );
+GridModelOptions = LFDefaultField( 'GridModelOptions', 'CropOffset', 0 );
 DebugDisplay = LFDefaultVal( 'DebugDisplay', false );
+if( numel(GridModelOptions.CropAmt) == 1 )
+	GridModelOptions.CropAmt = GridModelOptions.CropAmt .* [1,1];
+end
+if( numel(GridModelOptions.CropOffset) == 1 )
+	GridModelOptions.CropOffset = GridModelOptions.CropOffset .* [1,1];
+end
 
 %---Optionally rotate for vertically-oriented grids---
 if( strcmpi(GridModelOptions.Orientation, 'vert') )
     WhiteImg = WhiteImg';
+	GridModelOptions.CropAmt = GridModelOptions.CropAmt([2,1]);
+	GridModelOptions.CropOffset = GridModelOptions.CropOffset([2,1]);
 end
 
 % Try locating lenslets by convolving with a disk
@@ -75,8 +91,11 @@ PeakIdx = find(Peaks==1);
 clear Peaks
 
 % Crop to central peaks; eliminates edge effects
-InsidePts = find(PeakIdxY>GridModelOptions.CropAmt & PeakIdxY<size(WhiteImg,1)-GridModelOptions.CropAmt & ...
-    PeakIdxX>GridModelOptions.CropAmt & PeakIdxX<size(WhiteImg,2)-GridModelOptions.CropAmt);
+InsidePts = find( ...
+	PeakIdxY-GridModelOptions.CropOffset(2) > GridModelOptions.CropAmt(2) & ...
+	PeakIdxY-GridModelOptions.CropOffset(2) < (size(WhiteImg,1)-GridModelOptions.CropAmt(2)) & ...
+    PeakIdxX-GridModelOptions.CropOffset(1) > GridModelOptions.CropAmt(1) & ...
+	PeakIdxX-GridModelOptions.CropOffset(1) < size(WhiteImg,2)-GridModelOptions.CropAmt(1) );
 PeakIdxY = PeakIdxY(InsidePts);
 PeakIdxX = PeakIdxX(InsidePts);
 
@@ -94,11 +113,11 @@ end
 
 %--Traverse vertically--
 fprintf('Vertical fit...\n');
-YStart = GridModelOptions.CropAmt*2;
-YStop = size(WhiteImg,1)-GridModelOptions.CropAmt*2;
+YStart = GridModelOptions.CropAmt(2)*2 + GridModelOptions.CropOffset(2);
+YStop = size(WhiteImg,1)-GridModelOptions.CropAmt(2)*2 + GridModelOptions.CropOffset(2);
 
 XIdx = 1;
-for( XStart = GridModelOptions.CropAmt*2:GridModelOptions.SkipStep:size(WhiteImg,2)-GridModelOptions.CropAmt*2 )
+for( XStart = GridModelOptions.CropAmt(1)*2+GridModelOptions.CropOffset(1) : GridModelOptions.SkipStep : size(WhiteImg,2)-GridModelOptions.CropAmt(1)*2+GridModelOptions.CropOffset(1) )
     CurPos = [XStart, YStart];
     YIdx = 1;
     while( 1 )
@@ -106,7 +125,10 @@ for( XStart = GridModelOptions.CropAmt*2:GridModelOptions.SkipStep:size(WhiteImg
         ClosestPt = [PeakIdxX(ClosestLabel), PeakIdxY(ClosestLabel)];
 
         RecPtsY(XIdx,YIdx,:) = ClosestPt;
-        if( DebugDisplay ) plot( ClosestPt(1), ClosestPt(2), 'r.' ); end
+        if( DebugDisplay ) 
+			plot( CurPos(1), CurPos(2), 'kx' );
+			plot( ClosestPt(1), ClosestPt(2), 'r.' ); 
+		end
         
         CurPos = ClosestPt;
         CurPos(2) = round(CurPos(2) + GridModelOptions.ApproxLensletSpacing * sqrt(3));
@@ -123,10 +145,10 @@ if( DebugDisplay ) drawnow; end
 
 %--Traverse horizontally--
 fprintf('Horizontal fit...\n');
-XStart = GridModelOptions.CropAmt*2;
-XStop = size(WhiteImg,2)-GridModelOptions.CropAmt*2;
+XStart = GridModelOptions.CropAmt(1)*2 + GridModelOptions.CropOffset(1);
+XStop = size(WhiteImg,2)-GridModelOptions.CropAmt(1)*2 + GridModelOptions.CropOffset(1);
 YIdx = 1;
-for( YStart = GridModelOptions.CropAmt*2:GridModelOptions.SkipStep:size(WhiteImg,1)-GridModelOptions.CropAmt*2 )
+for( YStart = GridModelOptions.CropAmt(2)*2+GridModelOptions.CropOffset(2):GridModelOptions.SkipStep:size(WhiteImg,1)-GridModelOptions.CropAmt(2)*2+GridModelOptions.CropOffset(2) )
     CurPos = [XStart, YStart];
     XIdx = 1;
     while( 1 )
@@ -134,7 +156,10 @@ for( YStart = GridModelOptions.CropAmt*2:GridModelOptions.SkipStep:size(WhiteImg
         ClosestPt = [PeakIdxX(ClosestLabel), PeakIdxY(ClosestLabel)];
 
         RecPtsX(XIdx,YIdx,:) = ClosestPt;
-        if( DebugDisplay ) plot( ClosestPt(1), ClosestPt(2), 'y.' ); end
+        if( DebugDisplay ) 
+			plot( CurPos(1), CurPos(2), 'x','color',[0,0.7,0] );
+			plot( ClosestPt(1), ClosestPt(2), 'bo' ); 
+		end
         
         CurPos = ClosestPt;
         CurPos(1) = round(CurPos(1) + GridModelOptions.ApproxLensletSpacing);
@@ -148,6 +173,9 @@ for( YStart = GridModelOptions.CropAmt*2:GridModelOptions.SkipStep:size(WhiteImg
     YIdx = YIdx + 1;
 end
 if( DebugDisplay ) drawnow; end
+
+% record top-left pt
+FirstPt = squeeze(RecPtsY(1,1,:));
 
 %--Trim ends to wipe out alignment, initial estimate artefacts--
 RecPtsY = RecPtsY(3:end-2, 3:end-2,:);  
@@ -175,11 +203,11 @@ XSpacing = XSpacing / cos(EstAngle);
 YSpacing = YSpacing / cos(EstAngle);
 
 %--Build initial grid estimate, starting with CropAmt for the offsets--
-LensletGridModel = struct('HSpacing',XSpacing, 'VSpacing',YSpacing*sqrt(3)/2, 'HOffset',GridModelOptions.CropAmt, ...
-    'VOffset',GridModelOptions.CropAmt, 'Rot',-EstAngle, 'Orientation', GridModelOptions.Orientation, ...
+LensletGridModel = struct('HSpacing',XSpacing, 'VSpacing',YSpacing*sqrt(3)/2, 'HOffset',FirstPt(1), ...
+    'VOffset',FirstPt(2), 'Rot',-EstAngle, 'Orientation', GridModelOptions.Orientation, ...
     'FirstPosShiftRow', 2 );
-LensletGridModel.UMax = ceil( (size(WhiteImg,2)-GridModelOptions.CropAmt*2)/XSpacing );
-LensletGridModel.VMax = ceil( (size(WhiteImg,1)-GridModelOptions.CropAmt*2)/YSpacing/(sqrt(3)/2) );
+LensletGridModel.UMax = ceil( (size(WhiteImg,2)-GridModelOptions.CropAmt(1)*2-LensletGridModel.HOffset)/XSpacing );
+LensletGridModel.VMax = ceil( (size(WhiteImg,1)-GridModelOptions.CropAmt(2)*2-LensletGridModel.VOffset)/YSpacing/(sqrt(3)/2) );
 GridCoords = LFBuildHexGrid( LensletGridModel );
 
 %--Find offset to nearest peak for each--
@@ -197,35 +225,44 @@ LensletGridModel.HOffset = LensletGridModel.HOffset + EstOffset(1);
 LensletGridModel.VOffset = LensletGridModel.VOffset + EstOffset(2);
 
 %--Remove crop offset / find top-left lenslet--
-NewVOffset = mod( LensletGridModel.VOffset, LensletGridModel.VSpacing );
-VSteps = round( (LensletGridModel.VOffset - NewVOffset) / LensletGridModel.VSpacing ); % should be a whole number
+% project onto rotated direction vectors to find top-leftmost lenslet
+UVVec = [1,0,0; 0,1,0]';
+R = LFRotz(LensletGridModel.Rot);
+UVVec = R*UVVec;
+OffsetVec = [LensletGridModel.HOffset, LensletGridModel.VOffset, 0]';
+HProj = dot( OffsetVec, UVVec(:,1) );
+VProj = dot( OffsetVec, UVVec(:,2) );
+
+NewVProj = mod( VProj, LensletGridModel.VSpacing );
+VSteps = round( (VProj - NewVProj) / LensletGridModel.VSpacing ); % should be a whole number
 
 VStepParity = mod( VSteps, 2 );
 if( VStepParity == 1 )
-    LensletGridModel.HOffset = LensletGridModel.HOffset + LensletGridModel.HSpacing/2;
+    HProj = HProj + LensletGridModel.HSpacing/2;
 end
 
-NewHOffset = mod( LensletGridModel.HOffset, LensletGridModel.HSpacing/2 );
-HSteps = round( (LensletGridModel.HOffset - NewHOffset) / (LensletGridModel.HSpacing/2) ); % should be a whole number
+NewHProj = mod( HProj, LensletGridModel.HSpacing/2 );
+HSteps = round( (HProj - NewHProj) / (LensletGridModel.HSpacing/2) ); % should be a whole number
+
+NewOffsetVec = NewHProj*UVVec(:,1) + NewVProj * UVVec(:,2);
 
 HStepParity = mod( HSteps, 2 );
 LensletGridModel.FirstPosShiftRow = 2-HStepParity;
 
 if( DebugDisplay )
     plot( LensletGridModel.HOffset, LensletGridModel.VOffset, 'ro' );
-    plot( NewHOffset, NewVOffset, 'yx');
+    plot( NewOffsetVec(1), NewOffsetVec(2), 'yx');
     drawnow
 end
 
-LensletGridModel.HOffset = NewHOffset;
-LensletGridModel.VOffset = NewVOffset;
+LensletGridModel.HOffset = NewOffsetVec(1);
+LensletGridModel.VOffset = NewOffsetVec(2);
 
 %---Finalize grid---
 LensletGridModel.UMax = floor((size(WhiteImg,2)-LensletGridModel.HOffset)/LensletGridModel.HSpacing) + 1;
 LensletGridModel.VMax = floor((size(WhiteImg,1)-LensletGridModel.VOffset)/LensletGridModel.VSpacing) + 1;
 
 GridCoords = LFBuildHexGrid( LensletGridModel );
-
 fprintf('...Done.\n');
 
 end
@@ -233,14 +270,10 @@ end
 
 function [GridCoords] = LFBuildHexGrid( LensletGridModel )
 
-RotCent = eye(3);
-RotCent(1:2,3) = [LensletGridModel.HOffset, LensletGridModel.VOffset];
-
 ToOffset = eye(3);
 ToOffset(1:2,3) = [LensletGridModel.HOffset, LensletGridModel.VOffset];
 
-R = ToOffset * RotCent * LFRotz(LensletGridModel.Rot) * RotCent^-1;
-
+R = ToOffset * LFRotz(LensletGridModel.Rot);
 
 [vv,uu] = ndgrid((0:LensletGridModel.VMax-1).*LensletGridModel.VSpacing, (0:LensletGridModel.UMax-1).*LensletGridModel.HSpacing);
 

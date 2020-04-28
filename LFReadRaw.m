@@ -17,21 +17,21 @@
 % 
 %     Fname : path to raw file to read
 %
-%     [optional] BitPacking : one of '12bit', '10bit' or '16bit'; default is '12bit'
+%     [optional] BitPacking : one of '12bit', '10bit', '8bit' or '16bit'; default is '12bit'
 % 
-%     [optional] ImgSize : a 2D vector defining the size of the image, in pixels. The default value varies according to
+%     [optional] ImgSize : a 2-element vector defining the size of the image, in pixels. The default value varies according to
 %     the value of 'BitPacking', to correspond to commonly-found Lytro file formats: 12 bit images are employed by the
-%     Lytro F01, producing images of size 3280x3280, while 10-bit images are produced by the Illum at a resolutio of
+%     Lytro F01, producing images of size 3280x3280, while 10-bit images are produced by the Illum at a resolution of
 %     7728x5368; 16-bit images default to 3280x3280.
 %
 % Outputs:
 % 
 %     Img : an array of uint16 gray levels. No demosaicing (decoding Bayer pattern) is performed.
 %
+% User guide: <a href="matlab:which LFToolbox.pdf; open('LFToolbox.pdf')">LFToolbox.pdf</a>
 % See also: LFReadLFP, LFDecodeLensletImageSimple, demosaic
 
-% Part of LF Toolbox v0.4 released 12-Feb-2015
-% Copyright (c) 2013-2015 Donald G. Dansereau
+% Copyright (c) 2013-2020 Donald G. Dansereau
 
 function Img = LFReadRaw( Fname, BitPacking, ImgSize )
 

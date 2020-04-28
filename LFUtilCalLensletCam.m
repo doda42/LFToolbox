@@ -81,10 +81,10 @@
 %   of dimensions 35.1x35.0 mm, will carry out all the stages of a calibration. See the toolbox
 %   documentation for a more complete example.
 %
+% User guide: <a href="matlab:which LFToolbox.pdf; open('LFToolbox.pdf')">LFToolbox.pdf</a>
 % See also:  LFCalFindCheckerCorners, LFCalInit, LFCalRefine, LFUtilDecodeLytroFolder, LFSelectFromDatabase
 
-% Part of LF Toolbox v0.4 released 12-Feb-2015
-% Copyright (c) 2013-2015 Donald G. Dansereau
+% Copyright (c) 2013-2020 Donald G. Dansereau
 
 function LFUtilCalLensletCam( InputPath, CalOptions )
 

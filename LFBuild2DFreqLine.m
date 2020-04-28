@@ -52,12 +52,12 @@
 %       FiltOptions : The filter options including defaults, with an added PassbandInfo field
 %                     detailing the function and time of construction of the filter
 %
+% User guide: <a href="matlab:which LFToolbox.pdf; open('LFToolbox.pdf')">LFToolbox.pdf</a>
 % See also:  LFDemoBasicFiltGantry, LFDemoBasicFiltIllum, LFDemoBasicFiltLytroF01,
 % LFBuild2DFreqFan, LFBuild2DFreqLine, LFBuild4DFreqDualFan, LFBuild4DFreqHypercone,
 % LFBuild4DFreqHyperfan, LFBuild4DFreqPlane, LFFilt2DFFT, LFFilt4DFFT, LFFiltShiftSum
 
-% Part of LF Toolbox v0.4 released 12-Feb-2015
-% Copyright (c) 2013-2015 Donald G. Dansereau
+% Copyright (c) 2013-2020 Donald G. Dansereau
 
 function [H, FiltOptions] = LFBuild2DFreqLine( LFSize, Slope, BW, FiltOptions )
 
@@ -73,6 +73,8 @@ end
 
 %-----------------------------------------------------------------------------------------------------------------------
 function Dist = DistFunc_2DLine( P, Slope, FiltOptions )
+
+% Build a transformation, either skew or rotation, to xform the plane to the desired slope
 switch( lower(FiltOptions.SlopeMethod) )
 	case 'skew'
 		R = eye(2);
@@ -86,8 +88,13 @@ switch( lower(FiltOptions.SlopeMethod) )
 	otherwise
 		error('Unrecognized slope method');
 end
+
+% Apply the trasformation
 P = R * P;
+
+% Find the distance
 Dist = P(1,:).^2;
+
 end
 
 

@@ -2,8 +2,8 @@
 % 
 % Usage: 
 % 
-%     [H, FiltOptions] = LFBuild4DFreqHyperfan( LFSize, Slope, BW, FiltOptions )
-%     H = LFBuild4DFreqHyperfan( LFSize, Slope, BW )
+%     [H, FiltOptions] = LFBuild4DFreqHyperfan( LFSize, Slope1, Slope2, BW, FiltOptions )
+%     H = LFBuild4DFreqHyperfan( LFSize, Slope1, Slope2, BW )
 % 
 % This file constructs a real-valued magnitude response in 4D, for which the passband is a hyperfan.
 % This is useful for selecting objects over a range of depths from a lightfield, i.e. volumetric
@@ -30,6 +30,12 @@
 %     BW : 3-db Bandwidth of the planar passband.
 % 
 %     [optional] FiltOptions : struct controlling filter construction
+%            HyperfanMethod : 'sweep' or 'direct', controls how the hyperfan is constructed. 'sweep'
+%                             concatenates frequency planes, while 'direct' evaluates a single 4D 
+%                             equation; default 'direct'. Warning: sweep can be very slow.
+%               HyperconeBW : Sets the underlying hypercone's BW separately from the dual-fan,
+%                             default is to use the BW parameter for both; only applies when
+%                             HyperfanMethod is 'direct'
 %               SlopeMethod : 'Skew' or 'Rotate' default 'skew'
 %                 Precision : 'single' or 'double', default 'single'
 %                   Rolloff : 'Gaussian' or 'Butter', default 'Gaussian'
@@ -47,6 +53,7 @@
 %                             increase processing time dramatically, e.g. Extent4D = [2,2,2,2] 
 %                             requires a 2^4 = 16-fold increase in time to construct the filter. 
 %                             Useful when passband content is aliased, see [2].
+%                SweepSteps : For HyperfanMethod 'sweep', how many steps to use in the sweep.
 % 
 % Outputs:
 % 
@@ -54,12 +61,12 @@
 %       FiltOptions : The filter options including defaults, with an added PassbandInfo field
 %                     detailing the function and time of construction of the filter
 %
+% User guide: <a href="matlab:which LFToolbox.pdf; open('LFToolbox.pdf')">LFToolbox.pdf</a>
 % See also:  LFDemoBasicFiltGantry, LFDemoBasicFiltIllum, LFDemoBasicFiltLytroF01,
 % LFBuild2DFreqFan, LFBuild2DFreqLine, LFBuild4DFreqDualFan, LFBuild4DFreqHypercone,
 % LFBuild4DFreqHyperfan, LFBuild4DFreqPlane, LFFilt2DFFT, LFFilt4DFFT, LFFiltShiftSum
 
-% Part of LF Toolbox v0.4 released 12-Feb-2015
-% Copyright (c) 2013-2015 Donald G. Dansereau
+% Copyright (c) 2013-2020 Donald G. Dansereau
 
 function [H, FiltOptions] = LFBuild4DFreqHyperfan( LFSize, Slope1, Slope2, BW, FiltOptions )
 

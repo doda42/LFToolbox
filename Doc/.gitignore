@@ -1,0 +1,13 @@
+*.brf
+*.glg
+*.gls
+*.ist
+*.aux
+*.bbl
+*.blg
+*.log
+*.out
+*.spl
+*.toc
+*~
+*.bak

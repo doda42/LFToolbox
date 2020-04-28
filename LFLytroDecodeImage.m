@@ -57,10 +57,10 @@
 %     Run from the top level of the light field samples will decode the respective raw or lfp light fields.
 %     LFUtilProcessWhiteImages must be run before decoding will work.
 % 
+% User guide: <a href="matlab:which LFToolbox.pdf; open('LFToolbox.pdf')">LFToolbox.pdf</a>
 % See also: LFUtilDecodeLytroFolder, LFUtilProcessWhiteImages, LFDecodeLensletImageSimple, LFSelectFromDatabase
 
-% Part of LF Toolbox v0.4 released 12-Feb-2015
-% Copyright (c) 2013-2015 Donald G. Dansereau
+% Copyright (c) 2013-2020 Donald G. Dansereau
 
 function [LF, LFMetadata, WhiteImageMetadata, LensletGridModel, DecodeOptions] = ...
     LFLytroDecodeImage( InputFname, DecodeOptions )
@@ -173,5 +173,5 @@ WhiteImage = LFReadRaw( WhiteRawFname, BitPacking );
 
 %---Decode---
 fprintf('Decoding lenslet image :');
-[LF, LFWeight, DecodeOptions] = LFDecodeLensletImageSimple( LensletImage, WhiteImage, LensletGridModel, DecodeOptions );
+[LF, LFWeight, DecodeOptions] = LFDecodeLensletImageDirect( LensletImage, WhiteImage, LensletGridModel, DecodeOptions );
 LF(:,:,:,:,4) = LFWeight;

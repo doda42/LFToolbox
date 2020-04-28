@@ -25,10 +25,10 @@
 %     Checker corner files are the key outputs of this function -- one file is generated fore each
 %     input file, containing the list of extracted checkerboard corners.
 % 
+% User guide: <a href="matlab:which LFToolbox.pdf; open('LFToolbox.pdf')">LFToolbox.pdf</a>
 % See also:  LFUtilCalLensletCam, LFCalInit, LFCalRefine
 
-% Part of LF Toolbox v0.4 released 12-Feb-2015
-% Copyright (c) 2013-2015 Donald G. Dansereau
+% Copyright (c) 2013-2020 Donald G. Dansereau
 
 function CalOptions = LFCalFindCheckerCorners( InputPath, CalOptions )
 

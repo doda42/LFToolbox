@@ -23,10 +23,10 @@
 % 
 % See LFUtilProcessCalibrations and LFUtilProcessWhiteImages for example usage.
 % 
+% User guide: <a href="matlab:which LFToolbox.pdf; open('LFToolbox.pdf')">LFToolbox.pdf</a>
 % See also:  LFUtilProcessWhiteImages, LFUtilProcessCalibrations
 
-% Part of LF Toolbox v0.4 released 12-Feb-2015
-% Copyright (c) 2013-2015 Donald G. Dansereau
+% Copyright (c) 2013-2020 Donald G. Dansereau
 
 function CamInfo = LFGatherCamInfo( FilePath, FilenamePattern )
 

@@ -58,16 +58,16 @@
 %            .IJVecToOptOver : Which samples in i and j were included in the optimization
 %           .IntrinsicsToOpt : Which intrinsics were optimized, these are indices into the 5x5
 %                              lenslet camera intrinsic matrix
-%     .DistortionParamsToOpt : Which distortion paramst were optimized
+%     .DistortionParamsToOpt : Which distortion params were optimized
 %     .PreviousCamIntrinsics : Previous estimate of the camera's intrinsics
 %     .PreviousCamDistortion : Previous estimate of the camera's distortion parameters
 %                    .NPoses : Number of poses in the dataset
 % 
 % 
+% User guide: <a href="matlab:which LFToolbox.pdf; open('LFToolbox.pdf')">LFToolbox.pdf</a>
 % See also:  LFUtilCalLensletCam, LFCalFindCheckerCorners, LFCalInit, LFUtilDecodeLytroFolder
 
-% Part of LF Toolbox v0.4 released 12-Feb-2015
-% Copyright (c) 2013-2015 Donald G. Dansereau
+% Copyright (c) 2013-2020 Donald G. Dansereau
 
 function CalOptions = LFCalRefine( InputPath, CalOptions ) 
 
@@ -115,7 +115,6 @@ IdealChecker = [IdealChecker; ones(1,size(IdealChecker,2))]; % homogeneous coord
 CalOptions.NPoses = size(EstCamPosesV,1);
 [Params0, ParamsInfo, JacobSensitivity] = EncodeParams( EstCamPosesV, EstCamIntrinsicsH, EstCamDistortionV, CalOptions );
 
-% Params0 = EncodeParams(EstCamPosesV, EstCamIntrinsicsH, EstCamDistortionV, CalOptions);
 [PtPlaneDist0,JacobPattern] = FindError( Params0, CheckerObs, IdealChecker, CalOptions, ParamsInfo, JacobSensitivity );
 if( numel(PtPlaneDist0) == 0 )
     error('No valid grid points found -- possible grid parameter mismatch');
@@ -282,14 +281,16 @@ function [PtPlaneDists, JacobPattern] = FindError(Params, CheckerObs, IdealCheck
                     Direction = CurCheckerObs_Ray(3:4,:);
                     Direction = bsxfun(@minus, Direction, [b1dir;b2dir]);
                     DirectionR2 = sum(Direction.^2);
-                    Direction = Direction .* repmat((1 + k1.*DirectionR2 + k2.*DirectionR2.^2 + k3.*DirectionR2.^4),2,1);
+                    Direction = Direction .* repmat((1 + k1.*DirectionR2 + k2.*DirectionR2.^2 + k3.*DirectionR2.^3),2,1);
                     Direction = bsxfun(@plus, Direction, [b1dir;b2dir]);
                     CurCheckerObs_Ray(3:4,:) = Direction;
                 end
                 
                 %---Find 3D point-ray distance---
                 STPlaneIntersect = [CurCheckerObs_Ray(1:2,:); zeros(1,NCornerObs)];
-                RayDir = [CurCheckerObs_Ray(3:4,:); ones(1,NCornerObs)];
+				% Here interpret u,v as relative, at a distance of 1 m
+				% Thus we use a relative 2pp, with D = 1m.
+                RayDir = [CurCheckerObs_Ray(3:4,:); ones(1,NCornerObs)];  
                 CurDist3D = LFFind3DPtRayDist( STPlaneIntersect, RayDir, IdealChecker_CamFrame );
                 
                 PtPlaneDists(OutputIdx + (1:NCornerObs)) = CurDist3D;

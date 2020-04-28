@@ -115,12 +115,12 @@
 %     Any of these, run from the top level of the 'Samples' folder, will decode the matching files.  See
 %     LFFindFilesRecursive.
 %
+% User guide: <a href="matlab:which LFToolbox.pdf; open('LFToolbox.pdf')">LFToolbox.pdf</a>
 % See also: LFUtilExtractLFPThumbs, LFUtilProcessWhiteImages, LFUtilProcessCalibrations, LFUtilCalLensletCam,
 % LFColourCorrect, LFHistEqualize, LFFindFilesRecursive, LFLytroDecodeImage, LFDecodeLensletImageSimple,
 % LFSelectFromDatabase
 
-% Part of LF Toolbox v0.4 released 12-Feb-2015
-% Copyright (c) 2013-2015 Donald G. Dansereau
+% Copyright (c) 2013-2020 Donald G. Dansereau
 
 function LFUtilDecodeLytroFolder( InputPath, FileOptions, DecodeOptions, RectOptions )
 
@@ -305,7 +305,7 @@ end
 
 %---------------------------------------------------------------------------------------------------
 function Thumb = DispThumb( LF, CurFname, CompletedTasks)
-Thumb = squeeze(LF(floor(end/2),floor(end/2),:,:,:)); % including weight channel for hist equalize
+Thumb = squeeze(LF(round(end/2),round(end/2),:,:,:)); % including weight channel for hist equalize
 Thumb = uint8(LFHistEqualize(Thumb).*double(intmax('uint8')));
 Thumb = Thumb(:,:,1:3); % strip off weight channel
 LFDispSetup(Thumb);

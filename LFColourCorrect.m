@@ -26,10 +26,10 @@
 %     LF, of the same dimensionality as the input.
 % 
 % 
+% User guide: <a href="matlab:which LFToolbox.pdf; open('LFToolbox.pdf')">LFToolbox.pdf</a>
 % See also: LFHistEqualize, LFUtilDecodeLytroFolder
 
-% Part of LF Toolbox v0.4 released 12-Feb-2015
-% Copyright (c) 2013-2015 Donald G. Dansereau
+% Copyright (c) 2013-2020 Donald G. Dansereau
 
 function LF = LFColourCorrect(LF, ColMatrix, ColBalance, Gamma)
 
