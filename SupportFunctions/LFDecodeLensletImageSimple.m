@@ -52,8 +52,11 @@
 % every lenslet center lies on an integer pixel spacing. See [1] for more detail. Omitting
 % this output variable saves memory.
 %
+% A more direct version of this function LFDecodeLensletImageDirect does not generate the 
+% intermediate corrected lenslet image.
+%
 % User guide: <a href="matlab:which LFToolbox.pdf; open('LFToolbox.pdf')">LFToolbox.pdf</a>
-% See also:  LFLytroDecodeImage, LFUtilDecodeLytroFolder
+% See also:  LFLytroDecodeImage, LFUtilDecodeLytroFolder, LFDecodeLensletImageDirect
 
 % Copyright (c) 2013-2020 Donald G. Dansereau
 

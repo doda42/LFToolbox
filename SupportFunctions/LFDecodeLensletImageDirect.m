@@ -1,10 +1,9 @@
-% todo: doc
-% LFDecodeLensletImageSimple - decodes a 2D lenslet image into a 4D light field, called by LFUtilDecodeLytroFolder
+% LFDecodeLensletImageDirect - decodes a 2D lenslet image into a 4D light field, called by LFUtilDecodeLytroFolder
 %
 % Usage:
 %
 %   [LF, LFWeight, DecodeOptions, DebayerLensletImage] = ...
-%      LFDecodeLensletImageSimple( LensletImage, WhiteImage, LensletGridModel, DecodeOptions )
+%      LFDecodeLensletImageDirect( LensletImage, WhiteImage, LensletGridModel, DecodeOptions )
 %
 % This function follows the simple decode process described in:
 % D. G. Dansereau, O. Pizarro, and S. B. Williams, "Decoding, calibration and rectification for
@@ -48,8 +47,11 @@
 % lenslet image is the result of devignetting and debayering, with no further processing. Omitting
 % this output variable saves memory.
 %
+% A less direct / slower version of this function LFDecodeLensletImageSimple also generates an
+% intermediate CorrectedLensletImage that has been rotated and scaled to an integer-spaced grid.
+%
 % User guide: <a href="matlab:which LFToolbox.pdf; open('LFToolbox.pdf')">LFToolbox.pdf</a>
-% See also:  LFLytroDecodeImage, LFUtilDecodeLytroFolder
+% See also:  LFLytroDecodeImage, LFUtilDecodeLytroFolder, LFDecodeLensletImageSimple
 
 % Copyright (c) 2013-2020 Donald G. Dansereau
 
@@ -274,7 +276,7 @@ end
 
 %------------------------------------------------------------------------------------------------------
 function LF = SliceXYImage( ImXform, LensletGridModel, LensletImage, DecodeOptions )
-% todo[optimization]: The SliceIdx and ValidIdx variables could be precomputed
+% todo[optimization]: The SliceIdx and InvalidIdx variables could be precomputed
 
 fprintf('\nSlicing lenslets into LF...');
 
@@ -319,12 +321,9 @@ for( UStart = 0:UBlkSize:USize-1 )  % note zero-based indexing
     ImCoords = (ImXform'^-1) * ImCoords';
 	ImCoords = ImCoords([2,1],:)';
 
-    InValidIdx = find(R >= LensletGridModel.HSpacing/2  );%| ...
-	%         LFSliceIdxX < 1 | LFSliceIdxY < 1 | LFSliceIdxX > NewSize(2) | LFSliceIdxY > NewSize(1) );
+    InValidIdx = find(R >= LensletGridModel.HSpacing/2  );
 
     for( ColChan=1:4 )
-		%         IDirect = interpn( squeeze(LensletImage(:,:,ColChan)), ImCoords(2,:),ImCoords(1,:) );
-% 		ImCoords(3,:) = ColChan;
 		IDirect = Interpolant{ColChan}( ImCoords );
         IDirect(isnan(IDirect)) = 0;
         IDirect(InValidIdx) = 0;

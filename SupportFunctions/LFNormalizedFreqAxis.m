@@ -7,7 +7,7 @@
 
 function f = LFNormalizedFreqAxis( NSamps, Precision )
 
-Precision = LFDefaultVal( 'Precision', 'double' );  % todo: check: double?
+Precision = LFDefaultVal( 'Precision', 'double' );
 
 df = 1/NSamps;
 f = (0:df:(1-df)) - (1-mod(NSamps,2)*df)/2;

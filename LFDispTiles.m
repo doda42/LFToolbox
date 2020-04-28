@@ -77,7 +77,7 @@
 
 % Copyright (c) 2012-2020 Donald G. Dansereau
 
-% todo[optimisation]: whole function could use refactoring, updating to use recent matlab tricks
+% todo[refactoring]: whole function could use refactoring, updating to use recent matlab tricks
 
 function [Img, XAxisLabel,YAxisLabel,XTicks,YTicks,XTickLabels,YTickLabels] = ...
 	LFDispTiles( LF, DimOrder, RenderOptions, varargin )

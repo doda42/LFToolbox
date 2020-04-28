@@ -47,7 +47,7 @@ clear s t u v ss tt uu vv
 if( ~FiltOptions.IncludeAliased )
 	Tiles = [0,0,0,0];
 else
-	Tiles = ceil(ExtentWithAspect) % todo: optimization possible for large extents
+	Tiles = ceil(ExtentWithAspect) % todo[optimization]: optimization possible for large extents
 end
 
 if( FiltOptions.IncludeAliased )

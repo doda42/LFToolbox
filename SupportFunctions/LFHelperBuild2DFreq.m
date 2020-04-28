@@ -105,4 +105,4 @@ H = ifftshift(H);
 % force symmetric
 H = max(H, H(mod(LFSize(1):-1:1,LFSize(1))+1, mod(LFSize(2):-1:1,LFSize(2))+1));
 
-% todo: check whether this is always sufficient
+% todo: confirm this is sufficient

@@ -1,5 +1,5 @@
 % Light Field Toolbox
-% Version 0.5.0 06-Apr-2020  xxxtodoxxx
+% Version 0.5.0
 %
 % User guide: <a href="matlab:which LFToolbox.pdf; open('LFToolbox.pdf')">LFToolbox.pdf</a>
 % 
