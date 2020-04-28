@@ -4,7 +4,7 @@ Copyright (c) 2013-2020 Donald G. Dansereau
 
 This is a toolbox for working with light field imagery in MATLAB. Features include loading, visualizing, and filtering light fields, and decoding, calibration, and rectification of lenslet-based imagery.
 
-The most recent release and development versions are here: [https://github.com/doda42/LFToolbox](https://github.com/doda42/LFToolbox). The latest release version is also available at the Mathworks File Exchange.
+The most recent release and development versions are here: [https://github.com/doda42/LFToolbox](https://github.com/doda42/LFToolbox).
 
 The complementary LiFF light field feature toolbox is here: [http://dgd.vision/Tools/LiFF](http://dgd.vision/Tools/LiFF)
 
@@ -28,13 +28,13 @@ v0.5 introduces new features, bug fixes, and performance improvements. Highlight
 
 For a complete list, see CHANGELOG.txt.
 
-A major release v1.0 is planned which will introduce more significant changes. Plans include significant changes to decode and calibration, and support for a broader range of cameras.
+Future plans include more significant changes to lenslet-based decode and calibration, and support for a broader range of cameras.
 
 ## Compatibility
 
-**Reverse-compatibility**: Changes to interfaces have been minimised, so v0.5 is mostly reverse-compatible with v0.4. LFDispVidCirc is the main exception, with a new parameter structure.
+**Reverse-compatibility**: Changes to interfaces have been minimised, LFDispVidCirc is the main exception, with a new parameter structure.
 
-To benefit from performance improvements to decoding and calibration, users upgrading from earlier toolbox versions should re-process white images and re-process calibration data prior to decoding and rectification of lenslet-based light fields.
+Previously generated calibration files should be re-generated, and to benefit from performance improvements to decoding, white images should be re-generated. See LFToolbox.pdf for details.
 
 **Matlab**: LFToolbox 0.5 was written in MATLAB 2020a, but should be compatible with earlier versions.
 
@@ -52,10 +52,11 @@ Suggestions, bug reports, code improvements and new functionality are welcome --
 ## Branch Structure
 * tags: keep track of each release
 * master: always the most recent release
-* develop<version #>: preparing a new release, to be merged into master when complete
+* develop<version #>: developing new functionality for specific release
 * develop: experimental functionality
+* release<version #>: soon-to-be-released branch, to be merged into master
 
-Code in the develop branches is incomplete, unstable, undocumented, and unsupported. Use at your own risk. Functions named LFX* are new/experimental and may not be included in the next release.
+Code in the develop branches is incomplete, unstable, undocumented, and unsupported. Use at your own risk. Functions named LFX* are new/experimental.
 
 ## Acknowledgements
 Parts of the code were taken with permission from the Camera Calibration Toolbox for MATLAB by Jean-Yves Bouguet, with contributions from Pietro Perona and others; and from the JSONlab Toolbox by Qianqian Fang and others. LFFigure was originally by Daniel Eaton. The LFP reader is based in part on Nirav Patel and Doug Kelley's LFP readers. Thanks to Michael Tao for help and samples for decoding Illum imagery.
