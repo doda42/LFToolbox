@@ -3,4 +3,4 @@
 % Copyright (c) 2013-2020 Donald G. Dansereau
 
 function VersionStr = LFToolboxVersion
-VersionStr = 'experimental development branch';
+VersionStr = 'v0.5.0';
