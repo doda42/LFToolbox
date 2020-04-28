@@ -288,7 +288,9 @@ function [PtPlaneDists, JacobPattern] = FindError(Params, CheckerObs, IdealCheck
                 
                 %---Find 3D point-ray distance---
                 STPlaneIntersect = [CurCheckerObs_Ray(1:2,:); zeros(1,NCornerObs)];
-                RayDir = [CurCheckerObs_Ray(3:4,:); ones(1,NCornerObs)];
+				% Here interpret u,v as relative, at a distance of 1 m
+				% Thus we use a relative 2pp, with D = 1m.
+                RayDir = [CurCheckerObs_Ray(3:4,:); ones(1,NCornerObs)];  
                 CurDist3D = LFFind3DPtRayDist( STPlaneIntersect, RayDir, IdealChecker_CamFrame );
                 
                 PtPlaneDists(OutputIdx + (1:NCornerObs)) = CurDist3D;

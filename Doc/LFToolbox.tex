@@ -1,14 +1,13 @@
-% todo: check for "new in 0.4" "new in 0.3" etc
-
 \documentclass[onecolumn]{article}
+\usepackage[T1]{fontenc} % make copy/paste of ^ in verbatim work properly in code
+\usepackage{lmodern}     % make copy/paste of ^ in verbatim work properly in code
 \usepackage{graphicx,color,psfrag}
 \usepackage[caption=false,font=footnotesize]{subfig}
 \usepackage{amsmath,amssymb}
 \usepackage{cite}
 \usepackage{verbatim}
 \usepackage{listings}
-\usepackage{upquote} % Make copy/paste of single quotes work properly % use \char"0D inside text
-% todo: make ^ copy/paste correctly also
+\usepackage{upquote}   % Make copy/paste of single quotes in verbatim work properly in code, use \char"0D inside text
 \usepackage{paralist}  % single-spaced lists via compactitem
 \usepackage{enumitem}  % single-spaced enumerations via manual control
 
@@ -60,6 +59,7 @@ Light Field Toolbox for Matlab\\
 
 % Shortcuts for building the function reference
 \newcommand{\NewTag}{\protect{~\color{red} \tiny NEW}}
+\newcommand{\NewText}{\protect{~\color{red} \footnotesize NEW}}
 \newcommand{\DeclareFunction}[1]{\hypertarget{#1}{#1}}
 \newcommand{\CiteFunc}[1]{\hyperlink{#1}{\small #1}}
 \newcommand{\SupFunction}[1]{{\small #1}}
@@ -205,6 +205,7 @@ To check your installation:
 
 %-----------------------------
 \section{Conventions}
+\label{sect_Conventions}
 
 \subsection{Optional Function Arguments}
 
@@ -232,6 +233,9 @@ LFUtilDecodeLytroFolder('Images', [], struct('OptionalTasks', 'ColourCorrect'))
 
 See the help for \CiteFunc{LFUtilDecodeLytroFolder} for more examples of these argument-passing conventions.
 
+\subsubsection{Continuous vs Discrete Indices}
+In formal presentation, discrete indices $i,j,k,l$ are distinct from continuous spatial coordinates $s,t,u,v$. In the toolbox, when it is clear that the light field is sampled, the latter is generally understood to refer to sample indices.
+
 \subsection{Light Field Indexing}
 
 In MATLAB, to index a 2D colour image $I$ at the coordinates $x, y, c$ corresponding to horizontal position, vertical position, and colour, we use the indexing order $I( y,x, c )$. 
@@ -244,8 +248,10 @@ Colour light fields have at least three colour channels, one for each of red, gr
 
 For light fields that also have per-pixel weight information, there is an additional colour channel. Weight indicates confidence, so for example a pixel that is significantly amplified to compensate for vignetting will have a proportionally lower weight because we are less confident of its true value. A weight of zero means we do not know the value of the pixel.
 
-\subsubsection{Continuous vs Discrete Indices}
-In formal presentation, indices $i,j,k,l$ are distinct from spatial coordinates $s,t,u,v$. In the toolbox, the latter is generally used and it is understood that the light fields are sampled and indexed.
+\subsection{Two-Plane Parameterization}
+
+The intrinsic matrices generated through calibration use a \emph{relative} two-plane parameterization, with a plane separation $D = 1 \const{m}$. This maps each pixel index $[i,j,k,l]$ to a corresponding ray in space $[s,t,u,v]$, where each of $s,t,u$ and $v$ is measured in meters. This combination unambiguously defines each ray in metric space including scale.
+
 
 %-----------------------------
 \section{A Quick Tour}
@@ -391,13 +397,13 @@ load('Images/Illum/Lorikeet__Decoded.mat','LF');
 LFDisp( LF )
 axis image    % for correct aspect ratio
 \end{Verbatim}
-To brighten the display through simple gamma correction, we can raise the light field to a power, but this first requires us to convert the light field to a floating point format.
+To brighten the display through simple gamma correction, we can raise the light field to a power, but this first requires us to convert the light field to a floating point format first:
 \begin{Verbatim}
 LF = LFConvertToFloat(LF);
 LFDisp( LF.^0.5 )
 axis image
 \end{Verbatim}
-This is not very efficient, as it raises the entire light field to the power 0.5, then displays only the central view. You can use the following trick to chain LFDisp commands:
+This is not very efficient, as it raises the entire light field to the power 0.5, then displays only the central view. You can use the following trick to nest LFDisp commands:
 \begin{Verbatim}
 LFDisp( LFDisp(LF).^0.5 )
 axis image
@@ -416,7 +422,7 @@ LFDispMousePan( LF )
 \item \textbf{Run \CiteFunc{LFDisp}} to display other slices of the light field:
 \begin{Verbatim}
 load('Images/Illum/Lorikeet__Decoded.mat','LF');
-LFDisp(LF(9,:,226,:,:));
+LFDisp( LF(9,:,226,:,:) );
 \end{Verbatim}
 displays a slice in $s,u$ at $t = 9$, $v = 226$. This is best viewed with a non-square aspect ratio by expanding the window horizontally.
 \begin{Verbatim}
@@ -435,20 +441,20 @@ LFDispTiles( LF, 'stuv', struct('SubsampRate',2))
 \end{Verbatim}
 which will display every other sample in each of the four dimensions, or 
 \begin{Verbatim}
-LFDispTiles(LF(:,:, 85:100, 230:245, :))
+LFDispTiles( LF(:,:, 85:100, 230:245, :) )
 \end{Verbatim}
-to display a crop in $u,v$. As with \CiteFunc{LFDisp}, \CiteFunc{LFDispTiles} returns the displayed image, allowing chaining:
+to display a crop in $u,v$. As with \CiteFunc{LFDisp}, \CiteFunc{LFDispTiles} returns the displayed image, allowing nesting:
 \begin{Verbatim}
 LFDisp( LFHistEqualize( LFDispTiles( LF(:,:,85:100, 230:245,:) ) ) )
 \end{Verbatim}
 stretches the contrast of the previous example.
 \begin{Verbatim}
-LFDispTiles(LF, 'uvst')
+LFDispTiles( LF, 'uvst' )
 axis image
 \end{Verbatim}
 will display a tiling of $s,t$ slices in $u,v$. Zoom in on the display to see individual lenslet images, or crop the light field when calling the display function, as in
 \begin{Verbatim}
-LFDispTiles(LF(:,:,85:100, 230:245,:),'uvst')
+LFDispTiles( LF(:, :, 85:100, 230:245, :), 'uvst' )
 \end{Verbatim}
 
 \item \textbf{Run \CiteFunc{LFDispProj}} to visualize the light field as a projection onto a 2D plane
@@ -478,11 +484,7 @@ We can also project onto $s,u$ or $t,v$ slices
 LFDispProj( LF, 2,4 )
 axis normal
 \end{Verbatim}
-this is best viewed with a non-square aspect ratio by resizing the window. The contrast on this image is low since all the differently sloped parts of the scene are adding together. We expect slices in $s,u$ to look like this:
-\begin{Verbatim}
-LFDisp(LF(9,:,226,:,:))
-\end{Verbatim}
-and so to get more of the structure apparent in the projection onto $s,u$, we can find the max along $s,v$ rather than the mean
+this is best viewed with a non-square aspect ratio by resizing the window. The contrast on this image is low since all the differently sloped parts of the scene are adding together. To get more of the structure apparent in the projection onto $s,u$, find the max along $s,v$ rather than the mean:
 \begin{Verbatim}
 LFDispProj( LF, 2,4, 'max' )
 \end{Verbatim}
@@ -498,19 +500,19 @@ Camera gantries and camera arrays yield ordered collections of individual image 
 
 \begin{enumerate}[leftmargin=1.5em,rightmargin=0.5cm]
 
-\item \textbf{Download} an image archive from the Stanford light field archive \url{http://lightfield.stanford.edu}, e.g.\ the LegoKnights light field.  Download the ``Rectified and cropped'' version.
+\item \textbf{Download} an image archive from the Stanford gantry-based light field archive \url{http://lightfield.stanford.edu}, e.g.\ the LegoKnights light field.  Download the ``Rectified and cropped'' version.
 
 \item \textbf{Unzip} the archive into a dedicated folder for Stanford samples. Following a structure like the following will allow \CiteFunc{LFDemoBasicFiltGantry} to run unmodified.
 
 \NewAnnotatedTree{6}
-\AnnotatedTreeEntry{0}{7}{Stanford}{Top of Stanford light fields}\\
+\AnnotatedTreeEntry{0}{7}{StanfordGantry}{Top of Stanford gantry light fields}\\
 \AnnotatedTreeEntry{1}{6}{JellyBeans}{}\\
 \AnnotatedTreeEntry{2}{5}{rectified}{Rectified and cropped image files}\\
 \AnnotatedTreeEntry{1}{6}{LegoKnights}{}\\
 \AnnotatedTreeEntry{2}{5}{rectified}{Rectified and cropped image files}
 \EndAnnotatedTree
 
-\item \textbf{Run \CiteFunc{LFReadGantryArray}} from the top-level of the Stanford samples:
+\item \textbf{Run \CiteFunc{LFReadGantryArray}} from the top-level of the Stanford gantry samples:
 \begin{Verbatim}
 cd <path to top of Stanford gantry samples>
 LF = LFReadGantryArray('LegoKnights/rectified', struct('UVLimit', 256));
@@ -523,7 +525,7 @@ The \SymbolText{UVLimit} option scales the images as they're read to a size of 2
 
 \end{enumerate}
 
-It's possible to read the Stanford light fields at full resolution, e.g.\ the following yields a 17 x 17 x 1024 x 1024 x 3 array, occupying 909 MBytes of RAM:
+It's possible to read the Stanford gantry light fields at full resolution, e.g.\ the following yields a 17 x 17 x 1024 x 1024 x 3 array, occupying 909 MBytes of RAM:
 \begin{Verbatim}
 LF = LFReadGantryArray('LegoKnights/rectified');
 \end{Verbatim}
@@ -531,17 +533,22 @@ LF = LFReadGantryArray('LegoKnights/rectified');
 Some gantry imagery follows a lawnmower pattern rather than direct raster scan order.  These can be read and adjusted as follows:
 \begin{Verbatim}
 LF = LFReadGantryArray('humvee-tree', struct('STSize', [16,16]));
-LF(1:2:end,:,:,:,:) = LF(1:2:end,end:-1:1,:,:,:);  % correct lawnmower ordering
+LF(1:2:end,:,:,:,:) = ...
+  LF(1:2:end,end:-1:1,:,:,:);  % correct lawnmower ordering
 \end{Verbatim}
 
-Some gantry imagery follows a different handedness in horizontal and vertical directions, effectively flipping the order of images in $s$ or $t$.  The demo function \CiteFunc{LFDemoBasicFiltGantry} contains a list of Stanford light fields and demonstrates how to flip the appropriate ones along $s$.
+Some gantry imagery follows a different handedness in horizontal and vertical directions, effectively flipping the order of images in $s$ or $t$.  The demo function \CiteFunc{LFDemoBasicFiltGantry} contains a list of Stanford gantry light fields and demonstrates how to flip the appropriate ones along $s$.
 
 %----------------------------]-
-\subsection{Loading ESLF Light Fields}
-\label{sect_LoadingESLFTour}
+\subsection{Working with ESLF Files}
+\label{sect_ESLFTour}
 %-----------------------------
 
 Many of the large online datasets are stored as ESLF files. These collapse the light field into a 2D image by tiling $s,t$ slices in $u,v$. Because they are 2D images, they can be saved using any 2D image format. Popular choices are 8-bit and 16-bit \SymbolText{png} files for their lossless compression, and \SymbolText{jpg} files, for their compact size.  
+
+\SymbolText{png} files support storage of an `alpha' channel, and some tools use this as a binary mask to indicate which pixels are valid. The toolbox can also save weight values in the alpha channel, indicating per-pixel confidence. By default, \CiteFunc{LFReadESLF} will load the alpha channel as a weight channel if it is present, but \CiteFunc{LFWriteESLF} will only write to the alpha channel if this is requested via the command arguments.
+
+\subsubsection{Reading ESLF Files}
 
 \begin{enumerate}[leftmargin=1.5em,rightmargin=0.5cm]
 
@@ -556,9 +563,43 @@ LF = LFReadESLF('Images/ESLF/Plant.eslf.jpg');
 \begin{Verbatim}
 LFDispMousePan(LF);
 \end{Verbatim}
+
+\item To load an ESLF file with a different number of pixels per lenslet, \textbf{Run \CiteFunc{LFReadESLF}} with the appropriate option, e.g. after writing \SymbolText{Jacaranda.eslf.png} in the next section, read it using
+\begin{Verbatim}
+LF = LFReadESLF('Jacaranda.eslf.png', [15,15]);
+\end{Verbatim}
 \end{enumerate}
 
-Some file formats, including \SymbolText{png}, support storage of an `alpha' channel, essentially a weight channel indicating which pixels are valid. This is useful for lenslet-camera imagery, to cope with darkened / inactive pixels. By default, \CiteFunc{LFReadESLF} will load the alpha channel as a weight channel if it is present, and use it when applying filters like \CiteFunc{LFFiltShiftSum}.
+\subsubsection{Writing ESLF Files}
+
+\begin{enumerate}[leftmargin=1.5em,rightmargin=0.5cm]
+\item Load a light field, and \textbf{Run \CiteFunc{LFWriteESLF}} to save it a PNG-compressed ESLF:
+\begin{Verbatim}
+load('Images/Illum/Jacaranda__Decoded.mat','LF');
+WriteAlpha = true;
+LFWriteESLF( LF, 'Jacaranda.eslf.png', WriteAlpha );
+\end{Verbatim}
+Because the loaded light field is 16-bit and has a weight channel, and we requested the alpha channel be written, the output \SymbolText{png} is 16-bit and has four channels, occupying 418~MBytes. If we do not request the alpha channel be written, 
+\begin{Verbatim}
+LFWriteESLF( LF, 'Jacaranda.eslf.png' );
+\end{Verbatim}
+the file occupies 300~MBytes. If we first convert to 8-bit pixels using \CiteFunc{LFConvertToInt} and omit the alpha channel, 
+\begin{Verbatim}
+LF = LFConvertToInt( LF, 'uint8' );
+LFWriteESLF( LF, 'Jacaranda.eslf.png' );
+\end{Verbatim}
+the file occupies 102~MBytes. 
+
+\item After converting the light field to 8-bit format as above, \textbf{Run \CiteFunc{LFWriteESLF}} to save a ligt field as a JPEG-compressed ESLF:
+\begin{Verbatim}
+LFWriteESLF( LF, 'Jacaranda.eslf.jpg' );
+\end{Verbatim}
+The resulting 8-bit lossily compressed light field without a weight channel occupies only 16~MBytes, but upon loading and displaying it you may notice strong compression artefacts. Adjust the JPEG compression rate to increase quality
+\begin{Verbatim}
+LFWriteESLF( LF, 'Jacaranda.eslf.jpg', [], 'Quality', 95 );
+\end{Verbatim}
+looks significantly better and occupies 38~MBytes.
+\end{enumerate}
 
 %-----------------------------
 \subsection{Basic Filters}
@@ -594,35 +635,30 @@ The toolbox comes with a spatial shift-and-sum filter for planar focus and refoc
 
 Run one of \CiteFunc{LFDemoBasicFiltLytroF01} or \CiteFunc{LFDemoBasicFiltIllum} for a demo of some of the filters operating on Lytro imagery. This should be done from the top level of the Samples folder, after decoding the light fields as described in Sect.~\ref{sect_DecodingLytro}.  The best performance is obtained with rectified light fields.
 
-Run \CiteFunc{LFDemoBasicFiltGantry} for a demo filtering the Stanford light fields.  This should be done from the top of the Stanford light fields folder, after downloading and unzipping the samples following the instructions in Sect.~\ref{sect_LoadingGantryTour}. Uncomment the appropriate line near the top of \CiteFunc{LFDemoBasicFiltGantry} to select from the 12 input light fields.
+Run \CiteFunc{LFDemoBasicFiltGantry} for a demo filtering the Stanford gantry light fields.  This should be done from the top of the Stanford gantry light fields folder, after downloading and unzipping the samples following the instructions in Sect.~\ref{sect_LoadingGantryTour}. Uncomment the appropriate line near the top of \CiteFunc{LFDemoBasicFiltGantry} to select from the 12 input light fields.
 
 Examples of filtering output are shown in Figs.~\ref{fig_ExampleFilterOutputLytro}, \ref{fig_ExampleFilterOutputGantry}, and~\ref{fig_ExampleFilterOutputIllum}.
 
 
 \subsubsection{Linear Refocus Super-Resolution}
-New in v0.5 is linear refocus super-resolution. This is a way to combine information from across the light field to simultaneously focus at a single depth and boost the effective resolution. Note that this effect only works at refocus slopes other than zero, as there is no super-resolution information at zero slope.
+\label{sect_SuperResTour}
+New in v0.5 is linear refocus super-resolution. This is a way to simultaneously focus at a single depth and boost the resolution of the result. The method modifies \CiteFunc{LFFiltShiftSum} to upsample each image prior to shifting, effectively allowing fractional shifts, and boosting resolution in the merged image. 
 
-\begin{enumerate}[leftmargin=1.5em,rightmargin=0.5cm]
-\item \textbf{Load} a light field
-\begin{Verbatim}
-load('Images/F01/IMG_0006__Decoded.mat','LF');
-\end{Verbatim}
-\item \textbf{Run \CiteFunc{LFFiltShiftSum}} to focus 
-\begin{Verbatim}
-LFFBase = LFFiltShiftSum(LF  todo
-\end{Verbatim}
+Note that this approach only adds information for fractional slopes, images focused at integer slopes will see no benefit. Note also that the upsampling ratio does not reflect the effective resolution increase: upsampling by $10 \times$ might only increase effective resolution by $1.5 - 2 \times$, for example.
 
-\end{enumerate}
+Typical results are shown in Fig.~\ref{fig_RefocusSuperResolution}, for an upsampling rate of $10 \times$. These are tight crops on the Flowers sample ESLF and \SymbolText{IMG\_6201.eslf.png} from the Flowers category of the Stanford Multi-View Light Field dataset at \url{http://lightfields.stanford.edu}.
 
+From the figure, we clearly see a dramatic improvement in the visual appearance of the `Super-res' result compared with the `Focus' result. Comparing with `2D Interp' cubic interpolation, we see a less dramatic but still noticeable improvement more representative of the effective resolution increase offered by this approach. Better camera calibration and light field rectification will increase the effectiveness of this form of super-resolution.
+
+For a demonstration of linear refocus super-resolution, see \CiteFunc{LFDemoRefocusSuperres}.
 
 \begin{figure}[tbh]
 	\centering
 	\includegraphics[width=1\textwidth]{Figs/RefocusSuperRes}
-	\caption{Linear super-resolution using \protect\CiteFunc{LFFiltShiftSum}. The inputs are small crops from larger light fields; `Focus' shows focus alone, mostly removing noise and limiting depth of field; '2D Interp' shows 2D cubic interpolation for comparison; and `Super-res' shows linear super-resolution with noticeably finer detail than focus alone or 2D interpolation. See \protect\CiteFunc{LFDemoRefocusSuperres} for usage.}
+	\caption{Linear super-resolution using \protect\CiteFunc{LFFiltShiftSum}. The inputs are small crops from larger light fields; `Focus' shows focus alone, mostly removing noise and limiting depth of field; '2D Interp' shows 2D cubic interpolation applied to the focus image, for comparison; and `Super-res' shows linear super-resolution with noticeably finer detail than focus alone or 2D interpolation. See \protect\CiteFunc{LFDemoRefocusSuperres} for usage.}
 	\label{fig_RefocusSuperResolution}
 \end{figure}
 
-%These are tight crops on the Flowers sample ESLF and \SymbolText{IMG_6201.eslf.png} from the Flowers category of Stanford Multi-View Light Field dataset at \url{http://lightfields.stanford.edu}.
 
 %-----------------------------
 \subsection{Running the Small Sample Calibration}
@@ -638,7 +674,7 @@ The example below assumes you've completed the Decoding tour above, including ge
 \item There is insufficient diversity in the checkerboard poses -- ten or more diverse images would be appropriate
 \end{itemize}
 
-More realistic (and larger) datasets are available at \url{http://marine.acfr.usyd.edu.au/plenoptic-imaging}. Good results have been obtained using a $19 \times 19$ grid with a 3.6~mm spacing, with at least ten diverse poses.
+More realistic (and larger) datasets are available at \url{http://dgd.vision/Tools/LFToolbox}. Good results have been obtained using a $19 \times 19$ grid with a 3.6~mm spacing, with at least ten diverse poses.
 
 
 \begin{figure}[tbh]
@@ -658,7 +694,7 @@ More realistic (and larger) datasets are available at \url{http://marine.acfr.us
 \AnnotatedTreeEntry{1}{6}{Cameras}{Stores info for one or more cameras}\\
 \AnnotatedTreeEntry{2}{5}{A000424242}{The camera used to measure the samples}\\
 \AnnotatedTreeEntry{3}{4}{CalZoomedOutFixedFoc}{A single calibration result}\\
-\AnnotatedTreeEntry{3}{4}{\normalsize{PlenCalSmallExample}}{\textbf{The newly-added calibration}}\\
+\AnnotatedTreeEntry{3}{4}{\normalsize{\textbf{PlenCalSmallExample}}}{\textbf{The newly-added calibration}}\\
 \AnnotatedTreeEntry{3}{4}{WhiteImages}{White images for the sample camera}\\
 \AnnotatedTreeEntry{1}{6}{Images}{Sample light field images}\\
 \EndAnnotatedTree
@@ -689,7 +725,7 @@ These options tell the calibration function that the checkerboard spacing is $35
 	\label{fig_SampleCalibrationPoseEstimates}
 \end{figure}
 
-During the parameter initialization step, a pose estimate display is drawn resembling that shown in  Fig.~\ref{fig_SampleCalibrationPoseEstimates}. This display is updated throughout the remaining stages, reflecting the refinement of the pose and camera model estimates.  Reprojection errors are also shown in the textual output.  Typical final root mean squared error (RMSE) values for the small calibration example are in the vicinity of 0.2~mm. 
+During the parameter initialization step, a pose estimate display is drawn resembling that shown in  Fig.~\ref{fig_SampleCalibrationPoseEstimates}. This display is updated throughout the remaining stages, reflecting the refinement of the pose and camera model estimates.  Reprojection errors are also shown in the text output.  Typical final root mean squared error (RMSE) values for the small calibration example are in the vicinity of 0.2~mm. 
 
 The ultimate product of the calibration process is the calibration information file, \SymbolText{CalInfo.json}, which contains pose, intrinsic and distortion parameters, as well as the lenslet grid model used to decode the checkerboard light fields.
 
@@ -713,9 +749,9 @@ LFUtilDecodeLytroFolder('Images/PlenCalSmallExample', ...
     [], DecodeOptions);
 \end{Verbatim}
 
-Examining the textual output, notice that the rectification has automatically selected the small sample calibration for these images, based on their zoom and focus settings.
+Examining the text output, notice that the rectification has automatically selected the small sample calibration for these images, based on their zoom and focus settings.
 
-A visual inspection of the rectified images probably shows poor results, due to the limitations of the small calibration dataset.  
+A visual inspection of the rectified images probably shows poor results, due to the limitations of the small calibration dataset.  When calibrating with your own camera, rectification should ideally show good results.
 
 \end{enumerate}
 
@@ -737,7 +773,7 @@ As discussed earlier in this section, the \SymbolText{CalInfo.json} generated fr
 \subsection{Beyond the Samples:\\Working with Your Own Light Fields}
 %-----------------------------
 
-Processing images from your own camera closely mirrors the examples covered so far.  First, create a new folder parallel to the \SymbolText{Cameras/A000424242} folder, to contain your camera's white images and any calibrations you perform. A good naming convention is to name this folder to match your camera's serial number.  Next, create a sub-folder for your white images. Your tree structure should now look like:
+Processing images from your own camera closely mirrors the examples covered so far.  First, create a new folder parallel to the \SymbolText{Cameras/A000424242} folder, to contain your camera's white images and any calibrations you perform. A good convention is to name this folder to match your camera's serial number.  Next, create a sub-folder for your white images. Your tree structure should now look like:
 
 \NewAnnotatedTree{6}
 \AnnotatedTreeEntry{0}{7}{Samples}{Top level of samples}\\
@@ -759,6 +795,9 @@ You may end up with a complex tree structure with many sub-folders under \Symbol
 To rectify your own images, you will need to calibrate your camera.  Follow the procedure described in the tour above, except using your own images stored within your own camera's folder.  Your first calibrations might, for example, go in \SymbolText{Samples/A123412123/CalZoomedOut}.
 
 
+\subsection{Calibrating the Illum}
+
+Calibration for the Lytro Illum remains experimental, and the toolbox can struggle for certain focal lengths.  Samples near the edges of lenslets are especially challenging, and short focal lengths (with the camera zoomed out) are also more challenging. To make things easier for calibration, try calibrating with the lens zoomed in somewhat, and increasing \SymbolText{CalOptions.LensletBorderSize} to 2 or 3 pixels. Future toolbox versions will address this shortcoming.
 
 
 %-----------------------------
@@ -766,22 +805,24 @@ To rectify your own images, you will need to calibrate your camera.  Follow the 
 \label{sect_DecodingInDetail}
 %-----------------------------
 
-This toolbox decodes lenslet-based light field images into a 4D light field structure following the decode process described in [1]. At its core, the inputs to this process are a white image and a lenslet image. The white image is an image taken through a diffuser, and is used to correct for vignetting (darkening near the edges of images), and to build a grid representing the locations of lenslet centers.
+The toolbox decodes lenslet-based light field images into a 4D light field structure following the process described in [1]. At its core, the inputs to this process are a white image and a lenslet image. 
+
+The white image is a flat-field image that reveals the vignetting pattern of the camera, the darkening near the edges of images and lenslets.  White images are measured by taking an image of an evenly-illuminated white surface, by taking an image through a diffuser, or by using a specialized tool like an internally illuminated integrating sphere. The toolbox uses these images to correct for vignetting and to build a grid representing the locations of lenslet centers.
 
 Each Lytro camera comes preloaded with a unique set of white images corresponding to a variety of zoom and focus settings. When decoding a light field picture, the white image is selected which most closely matches the zoom and focus settings of the camera when it took the picture. The white images can be extracted from the Lytro files following the instructions in Sect.~\ref{sect_LytroFiles_Cal}.
 
-Before decoding light field pictures, the white images must be analyzed. This builds a series of grid models, one per white image, and a database listing available images. This only needs to be done once per camera, and the utility function \CiteFunc{LFUtilProcessWhiteImages} is provided to automate the process.
+Before decoding light field pictures, the white images must be analyzed. This builds a series of grid models, one per white image, and a database listing available images. This only needs to be done once per camera, and the utility function \CiteFunc{LFUtilProcessWhiteImages} automates the process.
 
-For each picture to decode, a white image appropriate to that picture is selected based on the camera serial number, and zoom and focus settings, and the white image and raw lenslet image are passed to a decoding function which builds the 4D light field. The function \SupFunction{LFSelectFromDatabase} is provided to aid in selecting the appropriate white image for a light field, as demonstrated by \CiteFunc{LFLytroDecodeImage}.
+For each picture to decode, a white image appropriate to that picture is selected based on the camera serial number and zoom and focus settings. The white image and raw lenslet image are passed to a decoding function which builds the 4D light field. The function \SupFunction{LFSelectFromDatabase} selects the appropriate white image for a light field, and is used by \CiteFunc{LFLytroDecodeImage}.
 
 The following sections describe this workflow in more detail, and assumes that you have extracted the white images and copied light fields into a folder structure similar to that used in the quick tour, above. See Appendix~\ref{sect_LytroFiles} for details on dealing with the Lytro files.
 
 %-----------------------------
 \subsection{Analyzing White Images}
 \label{sect_AnalyzingWhiteImages}
-Each white image needs to be analyzed once in order to match a grid model to the lenslet locations. The utility \CiteFunc{LFUtilProcessWhiteImages} automatically builds a grid model for each white image in your white image folder. If you wish to store your white images in a structure other than the default, simply change the \SymbolText{WhiteImageDatabasePath} variable in \CiteFunc{LFUtilProcessWhiteImages} to point to your white images folder, or pass an argument \SymbolText{FileOptions} with the \SymbolText{WhiteImageDatabasePath} field set.
+Each white image needs to be analyzed once in order to match a grid model to the lenslet locations. The utility \CiteFunc{LFUtilProcessWhiteImages} builds a grid model for each white image in your white image folder. If you wish to store your white images in a structure other than the default, change the \SymbolText{WhiteImageDatabasePath} variable in \CiteFunc{LFUtilProcessWhiteImages} to point to your white images folder, or use the function argument \SymbolText{FileOptions.WhiteImageDatabasePath}.
 
-In the F01 camera, the white images come in two exposure levels. Both exposures are not needed, and only the brighter of the two is used by this toolbox. An examination of the white images also generally reveals some extra, very dark images. These are not useful, and are automatically ignored.
+In the F01 camera, the white images come in two exposure levels. Only the brighter of the two is used by this toolbox. The set of white images also generally includes some very dark images. These are not ignored by the toolbox.
 
 As \CiteFunc{LFUtilProcessWhiteImages} steps through the white images, it saves the grid models as \SymbolText{.grid.json} files in the white images folder. It simultaneously builds a database keeping track of the serial number, zoom and focus settings associated with each white image. It saves this as \SymbolText{WhiteFileDatabase.mat}.  This is utilized by the function \SupFunction{LFSelectFromDatabase} to select the white image appropriate for decoding a given light field picture.
 
@@ -799,11 +840,11 @@ Some of the specifics of the decode process can be controlled, see the help text
 %-----------------------------
 \subsection{Structure of the Decoded Light Field}
 
-A light field is fundamentally a four-dimensional structure. Roughly speaking, each pixel corresponds to a ray, and two dimensions define that ray's position, while the other two define its direction. In the case of the the images measured by a lenslet-based camera such as the Lytro, two dimensions select a lenslet image, and two select a pixel within that lenslet's image. By the convention followed in [1], the lenslet is indexed by the pair $k, l$ (k is horizontal), and the pixel within the lenslet is indexed by $i, j$ (i is horizontal).
+A light field is fundamentally a four-dimensional structure. Roughly speaking, each pixel corresponds to a ray, and two dimensions define that ray's position, while the other two define its direction. In the case of the the images measured by a lenslet-based camera such as the Lytro, two dimensions select a lenslet image, and two select a pixel within that lenslet's image. By the convention followed in [1], the lenslet is indexed by the pair $k, l$ ($k$ is horizontal), and the pixel within the lenslet is indexed by $i, j$ ($i$ is horizontal). When it is clear that discrete indices are being discussed, these are often referred to using their continuous-domain equivalents, $s,t$ for $i,j$, and $u,v$ for $k,l$.
 
-The Lytro's lenslets each yield approximately $9 \times 9$ useful pixels, and so the output of \CiteFunc{LFUtilDecodeLytroFolder} has a size approximately 9 in $i$ and $j$. Similarly, after removing the hexagonal sampling associated with the hexagonal lenslet array, the Lytro imagery yields approximately $380$ pixels in both $k$ and $l$.  The actual number of samples depends on how the lenslet grid is aligned with the sensor, and will vary by camera.
+The Lytro F01's lenslets each yield approximately $9 \times 9$ useful pixels, and so the output of \CiteFunc{LFUtilDecodeLytroFolder} has a size approximately 9 in $i$ and $j$. Similarly, after removing the hexagonal sampling associated with the hexagonal lenslet array, the Lytro imagery yields approximately $380$ pixels in both $k$ and $l$.  The Illum has more lenslets and more pixels per lenslet. The actual number of samples in a light field depends on how the lenslet grid is aligned with the sensor, and can vary by a few samples between cameras.
 
-Examining the output of \SupFunction{LFDecodeLensletImageSimple}, we see that it yields a light field \SymbolText{LF} which is a 5D array of size around $9\times9\times380\times380\times3$. Importantly, \textbf{the indexing order for \SymbolText{LF} is $j, i, l, k, c$}, where c is the RGB colour channel. 
+Examining the output of \SupFunction{LFDecodeLensletImageSimple}, we see that it yields a light field \SymbolText{LF} which is a 5D array of size around $9\times9\times380\times380\times3$. As discussed in Sect.~\ref{sect_Conventions}, \textbf{the indexing order for \SymbolText{LF} is $j, i, l, k, c$}, where c is the RGB colour channel. 
 
 \begin{figure}[tbh]
 	\centering
@@ -813,29 +854,27 @@ Examining the output of \SupFunction{LFDecodeLensletImageSimple}, we see that it
 	\label{fig_STSlice}
 \end{figure}
 
-To examine a slice through the $k$ and $l$ dimensions, you might use the command \SymbolText{imshow(squeeze(LF(5,5,:,:,:)))}, yielding a view from the center of the $i$ and $j$ dimensions. This looks very much like the examples shown in Fig.~\ref{fig_ExampleDecodeAndColourCorrectOutput}.
-
-To examine a slice through the $i$ and $j$ dimensions, you might use the command \SymbolText{imshow(squeeze(LF(:,:,380/2,380/2,:)))}, yielding an output similar to that shown in Fig.~\ref{fig_STSlice}. Notice that this shows the shape of the image under a lenslet, and features darkened corner pixels that contain little or no information. Methods exist for ``filling in'' these regions of the light field, and may be explored in future releases of the toolbox.
+To examine a slice through the $k$ and $l$ dimensions, you might use the command \SymbolText{imshow(squeeze(LF(5,5,:,:,:)))}, yielding a view from the center of the $i$ and $j$ dimensions similar to the output of \SymbolText{LFDisp(LF)}. To examine a slice through the $i$ and $j$ dimensions, you might use the command \SymbolText{imshow(squeeze(LF(:,:,380/2,380/2,:)))}, with an output similar to that shown in Fig.~\ref{fig_STSlice}. Notice this shows the shape of the image under a lenslet, with darkened corner pixels that contain little or no information. See Sect.~\ref{sect_DisplayingTour} for more ways of displaying light fields.
 
 \SupFunction{LFDecodeLensletImageSimple} provides a weight channel \SymbolText{LFWeight}, which represents the confidence associated with each pixel. A slice in $i$ and $j$ of such a channel is shown in Fig.~\ref{fig_STSlice}. The weight channel is useful in filtering applications which accept a weighting term.
 
-Note that \CiteFunc{LFLytroDecodeImage} tacks the weight channel onto the variable \SymbolText{LF} to yield a four-channel structure, and it is in this four-channel format that \CiteFunc{LFUtilDecodeLytroFolder} saves light fields. This is a convenient format for the light field, as the weight channel is often useful in processing light fields.  \CiteFunc{LFHistEqualize}, for example, uses this channel to ignore zero-weight pixels. It is likely that the weight channel will be useful in filtering operations in future versions of the toolbox.
+Note that \CiteFunc{LFLytroDecodeImage} tacks the weight channel onto the variable \SymbolText{LF} to yield a four-channel structure, and it is in this four-channel format that \CiteFunc{LFUtilDecodeLytroFolder} saves light fields. This is a convenient format for the light field, as the weight channel is often useful in processing light fields.  \CiteFunc{LFHistEqualize}, for example, uses this channel to ignore zero-weight pixels. 
 
-To work with a light field without the weight channel -- for example to visualize slices -- simply index the first three channels, as in\\ \SymbolText{imshow(squeeze(LF(5,5,:,:,1:3)))}
+To work with a light field without the weight channel -- for example to visualize slices -- simply index the first three channels, as in\\ \SymbolText{imshow(squeeze(LF(5,5,:,:,1:3)))}.
 
 %-----------------------------
 \section{Calibration in Detail}
 \label{sect_Calibration}
 %-----------------------------
-The \CiteFunc{LFUtilCalLensletCam} automatically progresses through the following calibration stages:
+\CiteFunc{LFUtilCalLensletCam} progresses through the following calibration stages:
 
 \textbf{Checkerboard corner} identification.  Corner finding is the most time-consuming step, especially for dense checkerboards.  First the zoom and focus settings of all the input images are compared, and a warning message is displayed if any of them differ.  Next corners are automatically located in 2D slices of the checkerboard light fields.  Output resembling that shown on the right in Fig.~\ref{fig_CheckerboardAndCorners} allows visual confirmation that the extracted corners are sensible. It is normal that not all sub-images will have all corners successfully identified, due to vignetting and bleedthrough between lenslet images.  Checkerboard corners for each image are stored in \SymbolText{*\_CheckerCorners.mat} files alongside each input file.
 
 \textbf{Initialization} of pose and intrinsic parameters. This begins by summarizing the checkerboard corner information into a single file at the top level of the calibration, \SymbolText{Cameras/A000424242/PlenCalSmallExample/CheckerboardCorners.mat}. Initial pose and intrinsic estimates are then computed and stored at the same level, in the calibration info file \SymbolText{CalInfo.json}.
 
-\textbf{Optimization without distortion}.  Intrinsics and poses are optimized, and the results are saved to \SymbolText{CalInfo.json}.  The pose estimate display is updated with the new pose estimates. The textual display shows the progress of the optimization, including the RMSE before and after each stage of the optimization.  Each optimization stage also shows a Matlab-generated optimization display, showing first-order optimality -- see Matlab's documentation for more on this.
+\textbf{Optimization without distortion}.  Intrinsics and poses are optimized, and the results are saved to \SymbolText{CalInfo.json}.  The pose estimate display is updated with the new pose estimates. The text display shows the progress of the optimization, including the RMSE before and after each stage of the optimization.  Each optimization stage also shows a Matlab-generated optimization display, showing first-order optimality -- see Matlab's documentation for more on this.
 
-\textbf{Optimization with distortion}. This completes the camera model by including lens distortion.  Again the pose estimate display and textual output are updated.
+\textbf{Optimization with distortion}. This completes the camera model by including lens distortion.  Again the pose estimate display and text output are updated.
  
 \textbf{Refinement}.  This simply repeats optimization with distortion to further refine the camera model and pose estimates.
 
@@ -848,7 +887,7 @@ The calibration results are stored in the calibration information file, \SymbolT
 
 \item \textbf{Lenslet grid model}: describes the rotation, spacing and offset of the lenslet images on the sensor.
 
-\item \textbf{Plenoptic intrinsic model}: a $5 \times 5$ matrix $\mat{H}$ relating a pixel index $\vect{n} = \trans{[i,j,k,l,1]}$ to an undistorted ray $\vect{\phi}\super{u} = \trans{[s,t,u,v,1]}$, following $\vect{\phi}\super{u} = \mat{H} \vect{n}$.
+\item \textbf{Plenoptic intrinsic model}: a $5 \times 5$ matrix $\mat{H}$ relating a pixel index $\vect{n} = \trans{[i,j,k,l,1]}$ to an undistorted ray $\vect{\phi}\super{u} = \trans{[s,t,u,v,1]}$, following $\vect{\phi}\super{u} = \mat{H} \vect{n}$. As described in Sect.~\ref{sect_Conventions}, the intrinsic model follows a relative two-plane parameterization with plane separation $D=1 \const{m}$.
 
 \item \textbf{Distortion parameters}: describe radial distortion in ray \emph{direction}, employing the small angle assumption such that $\vect{\theta} = [\theta_1, \theta_2] \approx [dx/dz, dy/dz]$ for each ray. The five distortion parameters are $\vect{b} = [b_s,b_t]$ and $\vect{k} = [k_{1..3}]$, where $\vect{b}$ captures decentering and $\vect{k}$ are radial distortion coefficients.  The complete distortion vector is in the order $\vect{d} = [\vect{b}, \vect{k}]$. If $\vect{\theta}^u$ and $\vect{\theta}^d$ are the undistorted and distorted 2D ray directions, respectively, then\\ 
 $
@@ -861,12 +900,15 @@ $
 \end{pmatrix}
 +
 \vect{b},
+\quad
 r = \sqrt{\theta_s^2 + \theta_t^2}.
 $
- 
+
+Toolbox v0.4 and earlier incorrectly employed as the third polynomial term $k_3 r^8$. As of v0.5 this has been corrected to $k_3 r^6$.
 \end{itemize}
 
 Because the lenslet grid model forms part of the calibration, it is crucial that light fields to which a calibration is applied be decoded with the same grid parameters used during the calibration process. The software performs a rudimentary check and raises a warning if the lenslet grid model used to rectify a light field differs significantly from that used to decode it.
+
 
 \subsection{Rectification Results}
 
@@ -880,11 +922,12 @@ p = RectOptions.RectCamIntrinsicsH * n;
 
 Results in the ray $p = \trans{[0.0015,0.0015, -0.34,-0.34, 1]}$. Similarly,\\ $n = [5,5,190.5,190.5,1]'$ yields the ray $p = \trans{[0,0,0,0,1]}$, because this $n$ corresponds to the center of the sampled light field (recall the light field size is $9 \times 9 \times 380 \times 380$), and so corresponds to the central ray.
 
+
 \subsection{Controlling Rectification}
 
 Rectification accepts as an optional parameter the desired intrinsics of the rectified light field -- i.e.\ you can specify the value you want in \SymbolText{RectOptions.RectCamIntrinsicsH}.  By default the calibrated intrinsic matrix takes on a conservative value yielding square pixels in $s,t$ and in $u,v$.  You may wish to change this if, for example, non-square pixels are desired.
 
-New in Version 0.3 is a helper function for building this matrix, \CiteFunc{LFCalDispRectIntrinsics}.  The recommended usage pattern is to load a light field, call \CiteFunc{LFCalDispRectIntrinsics} once to set up the default intrinsic matrix, manipulate the matrix, then visualize the manipulated sampling pattern prior to employing it in one or more rectification calls.  Assuming \SymbolText{IMG\_001} has been decoded but not rectified, a typical process might look like this:
+\CiteFunc{LFCalDispRectIntrinsics} is a helper function for building this matrix. The recommended usage pattern is to load a light field, call \CiteFunc{LFCalDispRectIntrinsics} once to set up the default intrinsic matrix, manipulate the matrix, then visualize the manipulated sampling pattern prior to employing it in one or more rectification calls.  Assuming \SymbolText{IMG\_001} has been decoded but not rectified, a typical process might look like this:
 \begin{Verbatim}
 load('Images/IMG_0001__Decoded.mat');
 RectOptions = ...
@@ -892,7 +935,7 @@ RectOptions = ...
 \end{Verbatim}
 this loads the light field then sets up the default intrinsic matrix, generating a display showing the sampling pattern, as in Fig.~\ref{fig_AdjustRectIntrinsic}.
 
-If we wanted to sample closer to the horizontal $u$ edges of this light field, at the cost on working with non-square pixels, we could increase $\mat{H}(3,3)$, as in:
+If we wanted to sample closer to the horizontal $u$ edges of this light field and work with non-square pixels, we could increase $\mat{H}(3,3)$, as in:
 \begin{Verbatim}
 RectOptions.RectCamIntrinsicsH(3,3) = ...
   1.1 * RectOptions.RectCamIntrinsicsH(3,3);
@@ -932,8 +975,6 @@ Note that the same matrix can be applied to any light field, but that the result
 \section{Working with Lytro Files}
 \label{sect_LytroFiles}
 
-As of version 0.3 of the toolbox, an external tool is no longer required to extract white images, pictures or metadata from the files generated by the Lytro software. 
-
 %----------------
 \subsection{Extracting White Images}
 \label{sect_LytroFiles_Cal}
@@ -943,17 +984,14 @@ Every camera has a unique database of white images needed in decoding.  On Windo
 <drive_letter>:\Users\<username>\AppData\Local\Lytro\cameras\ ...
     sn-<serial_number>
 \end{Verbatim}
-
 while on a MAC, the relevant location is (on Mac OS 10.10.2 running Lytro Desktop 4.1.2)
 \begin{Verbatim} 
 /Users/<username>/Library/Application Support/Lytro/cameras/sn-<serial_number>
 \end{Verbatim}
-
 note that for previous versions of the MAC software these files were stored at
 \begin{Verbatim} 
 /Users/<username>/Lytro.lytrolib/cameras/sn-<serial_number>
 \end{Verbatim}
-
 A concrete example on a Windows machine is
 \begin{Verbatim} 
 C:\Users\Bob\AppData\Local\Lytro\cameras\sn-A000424242
@@ -978,7 +1016,7 @@ The \SymbolText{raw} files are white images corresponding to a variety of zoom a
 \subsection{Locating Picture Files}
 \label{sect_LytroFiles_Pict}
 
-This version of the toolbox can read Lytro LFP files directly, using the function \CiteFunc{LFReadLFP}.  The toolbox is also compatible with \SymbolText{.raw} files extracted using an external LFP tool.
+The toolbox can read Lytro LFP files directly using the function \CiteFunc{LFReadLFP}.  The toolbox is also compatible with \SymbolText{.raw} files extracted using an external LFP tool.
 
 Lytro Desktop version 4 and higher make it easy to find LFP files, as they are stored in your operating system's default Pictures folder -- look for a folder of the form\\ \SymbolText{My Pictures/Lytro Desktop/Libraries/Lytro Library.lytrolibrary/}.  The picture library takes on a complex directory structure, with many sub-folders.  You may copy this structure directly into your working folder -- the toolbox will recursively search sub-folders when decoding light fields.  
 
@@ -990,12 +1028,10 @@ If you're running an older versions of the Lytro Desktop software, Lytro picture
 \begin{Verbatim} 
 <drive_letter>:\Users\<username>\AppData\Local\Lytro\images\*
 \end{Verbatim}
-
 and on a MAC it's
 \begin{Verbatim} 
 /Users/<username>/Lytro.lytrolib/images/*
 \end{Verbatim}
-
 where the `*' at the end takes on numerical values, like \SymbolText{01}, \SymbolText{02} and so on. 
 
 %----------------
@@ -1003,13 +1039,13 @@ where the `*' at the end takes on numerical values, like \SymbolText{01}, \Symbo
 
 The Lytro LFP is a container format, and may contain one of several types of data.  The files containing light fields are generally obvious based on their size -- about 16~MBytes for the F01, and 55~MBytes for the Illum.  The file extension varies based on the source of the files, with exported files, on-camera files and image library files variously taking on the four variants of extension shown in this section's heading.  
 
-By default, \CiteFunc{LFUtilDecodeLytroFolder} recursively searches for files with any of these extensions, as well as the \SymbolText{raw} files employed by previous toolbox versions, and decodes anything it can make sense of.  Focal stacks and other files are also stored as .lfp files, and \CiteFunc{LFUtilDecodeLytroFolder} will ignore these files.
+By default, \CiteFunc{LFUtilDecodeLytroFolder} recursively searches for files with any of these extensions, as well as the \SymbolText{raw} files employed by previous toolbox versions, and decodes anything it can make sense of.  Focal stacks and other files are also stored as \SymbolText{.lfp} files, and \CiteFunc{LFUtilDecodeLytroFolder} will ignore these files.
 
 
 %----------------
 \subsubsection{Thumbnails}
 
-Thumbnails are built into some LFP files.  The function \CiteFunc{LFUtilExtractLFPThumbs} will find thumbnails and save them to disk.
+Thumbnails are built into some LFP files.  The function \CiteFunc{LFUtilExtractLFPThumbs} extracts thumbnails and saves them to disk.
 
 
 
@@ -1025,16 +1061,16 @@ For those not using calibration or rectification, no action is required. Re-doin
 Users employing calibration / rectification should not use previously generated calibration files with the new toolbox, and should reprocess their calibrations.
 
 \subsection{Reprocessing White Images}
-\CiteFunc{LFUtilProcessWhiteImages} fits a grid to each of the white images in the \SymbolText{Cameras} folder. To force it to redo this process, pass in a \SymbolText{FileOptions} parameter with the \SymbolText{ForceRedo} field set to true. Alternatively, delete all the \SymbolText{.grid.mat} files and the \SymbolText{WhiteImageDatabase} file in the Cameras folder, then run white image analysis.
+\CiteFunc{LFUtilProcessWhiteImages} fits a grid to each of the white images in the \SymbolText{Cameras} folder. To force it to redo this process, pass in a \SymbolText{FileOptions} parameter with the \SymbolText{ForceRedo} field set to true. Alternatively, delete all the \SymbolText{.grid.mat} files and the \SymbolText{WhiteImageDatabase.mat} file in the Cameras folder, then run white image analysis.
 
 After new grid models are generated, every future image decode will benefit from the improved grid fit.
 
-\subsection{Redoing Calibrations}
+\subsection{Reprocessing Calibrations}
 It is not recommended to rectify files using calibrations built using earlier toolbox versions, as interpretation of distortion parameters has changed.
 
-First, reprocess white images as above, and re-decode calibration files, to benefit from the improved grid fit. Then, either use function parameters to force the calibration to redo previously complete steps, or delete generated files and re-run calibration. The relevant parameters to \CiteFunc{LFUtilCalLensletCam} are \SymbolText{CalOptions.ForceRedoCornerFinding} and \SymbolText{CalOptions.ForceRedoInit}. 
+First, reprocess white images as above, and re-decode calibration files, to benefit from the improved grid fit. Then, remove \SymbolText{CalibrationDatabase.mat}, and either use function parameters to force the calibration to redo previously complete steps, or delete generated files and re-run calibration. The relevant parameters to \CiteFunc{LFUtilCalLensletCam} are \SymbolText{CalOptions.ForceRedoCornerFinding} and \SymbolText{CalOptions.ForceRedoInit}. Or, if removing files, the relevant files to remove are \SymbolText{CheckerboardCorners.mat},\\ \SymbolText{CalInfo.json}, and \SymbolText{*\_\_CheckerCorners.mat}.
 
-Once calibrations are re-processed, remove \SymbolText{CalibrationDatabase} then run \CiteFunc{LFUtilProcessCalibrations}.
+Once complete, run \CiteFunc{LFUtilProcessCalibrations}.
 
 
 %-----------------------------
@@ -1043,28 +1079,25 @@ Once calibrations are re-processed, remove \SymbolText{CalibrationDatabase} then
 
 This is a partial list of top-level functions organized by task. See also 
 \begin{Verbatim} 
-help LFToolbox
+help <LFToolbox top folder name>
 \end{Verbatim} 
 for a more complete list. Refer to the documentation in each function for further information. The SupportFunctions folder contains additional functions used internally by the toolbox.
 
 %------------------------------------------------------------
-\NewFunctionHeading{Decoding / Input}
+\NewFunctionHeading{Decoding}
 %------------------------------------------------------------
 \NewFunctionEntry{LFLytroDecodeImage}{}
 {Decode a Lytro image from an \SymbolText{LFP} or \SymbolText{raw} file. Can be called directly to decode a single image into memory, or called indirectly through \CiteFunc{LFUtilDecodeLytroFolder}.}
 
-\NewFunctionEntry{LFReadGantryArray}{}
-{Loads gantry-style light fields, e.g.\ the Stanford light fields found at \url{http://lightfield.stanford.edu}.}
-
 \NewFunctionEntry{LFUtilDecodeLytroFolder}{}
-{Utility for decoding, colour correcting and rectifying Lytro imagery. Can process multiple light fields; recursively searches folder structures; accepts filename specifications including wildcards. Automatically selects appropriate white images and calibration files from multiple cameras across multiple zoom and focus settings. Will incrementally apply operations to files so that, for example, previously-decoded light fields can be incrementally colour-corrected, rectified or both without needing to repeat operations. Results are saved to disk. See Figs.~\ref{fig_ExampleDecodeAndColourCorrectOutput}, \ref{fig_RectificationDetail} and \ref{fig_CalibrationExampleRectification} for example output.
+{Utility for decoding, colour correcting and rectifying Lytro imagery. Can process multiple light fields; recursively searches folder structures; accepts filename specifications including wildcards. Selects appropriate white images and calibration files from multiple cameras across multiple zoom and focus settings. Will incrementally apply operations to files so that, for example, previously-decoded light fields can be incrementally colour-corrected, rectified or both without needing to repeat operations. Results are saved to disk. See Figs.~\ref{fig_ExampleDecodeAndColourCorrectOutput}, \ref{fig_RectificationDetail} and \ref{fig_CalibrationExampleRectification} for example output.
 
 Demonstrates \CiteFunc{LFLytroDecodeImage}, \CiteFunc{LFColourCorrect}, \CiteFunc{LFHistEqualize}, and \CiteFunc{LFCalRectifyLF}.
 
 Decoding relies on a white image database having been constructed by \CiteFunc{LFUtilProcessWhiteImages}, and rectification similarly relies on a calibration database having been created by \CiteFunc{LFUtilProcessCalibrations}.}
 
 \NewFunctionEntry{LFUtilProcessWhiteImages}{}
-{Processes a folder populated with white images, generating a grid model (\SymbolText{.grid.json}) for each, and a white image database (\SymbolText{WhiteFileDatabase.mat}) used to select the white image appropriate to a light field. Dark images are automatically detected and skipped.}
+{Processes a folder populated with white images, generating a grid model (\SymbolText{.grid.json}) for each, and a white image database (\SymbolText{WhiteFileDatabase.mat}) used to select the white image appropriate to a light field. Dark images are detected and skipped.}
 
 %------------------------------------------------------------
 \EndFunctionHeading
@@ -1089,13 +1122,16 @@ Decoding relies on a white image database having been constructed by \CiteFunc{L
 {Demonstrates some of the basic filters on Lytro Illum-captured imagery.}
 \NewFunctionEntry{LFDemoBasicFiltGantry}{}
 {Demonstrates some of the basic filters on Stanford light field archive light fields.}
+\NewFunctionEntry{LFDemoRefocusSuperres}{\NewTag}
+{Demonstrates linear refocus-based super-resolution, see Sect.~\ref{sect_SuperResTour}.}
+
 
 \NewFunctionEntry{LFFilt2DFFT}{}
 {Applies a 2D frequency-domain filter to a 4D light field using the FFT.}
 \NewFunctionEntry{LFFilt4DFFT}{}
 {Applies a 4D frequency-domain filter using the FFT.}
-\NewFunctionEntry{LFFiltShiftSum}{\NewTag}
-{The shift sum filter is a spatial-domain depth-selective filter, with an effect similar to planar focus. New: use the UpsampRate parameter for linear refocus super-resolution.}
+\NewFunctionEntry{LFFiltShiftSum}{}
+{The shift sum filter is a spatial-domain depth-selective filter, with an effect similar to planar focus. \NewText: Use the UpsampRate parameter for linear refocus super-resolution.}
 
 
 %------------------------------------------------------------
@@ -1107,36 +1143,35 @@ Decoding relies on a white image database having been constructed by \CiteFunc{L
 {Applies a colour balance vector, an RGB colour correction matrix, and gamma correction. Usage is demonstrated in \CiteFunc{LFUtilDecodeLytroFolder}.}
 
 \NewFunctionEntry{LFHistEqualize}{}
-{Adjusts the brightness of a light field based on histogram equalization. Capable of handling colour and monochrome images -- colour images are converted to HSV, and the value channel is equalized. Capable of handling different input dimensionalities including 2D images and 4D light fields. If a weight channel is present as a fourth colour channel, it is used to ignore zero-weight pixels. Usage is demonstrated in \CiteFunc{LFUtilDecodeLytroFolder}.}
+{Adjusts the brightness of a light field based on histogram stretching. Capable of handling colour and monochrome images -- colour images are converted to HSV, and the value channel is equalized. Capable of handling different input dimensionalities including 2D images and 4D light fields. If a weight channel is present as a fourth colour channel, it is used to ignore zero-weight pixels. Usage is demonstrated in \CiteFunc{LFUtilDecodeLytroFolder}.}
 
 %------------------------------------------------------------
 \EndFunctionHeading
 \NewFunctionHeading{Visualization}
 %------------------------------------------------------------
 \NewFunctionEntry{LFDisp}{}
-{Convenience function to display a static, 2D slice of a light field.  The centermost image is taken in $s$ and $t$.  Also works with 3D arrays of images.}
-
-\NewFunctionEntry{LFDispMousePan}{}
-{Display 2D slices of the light field with a rudimentary parallax effect. Click and drag in the image to change the point of view. An optional parameter controls the display size. Note that darkening at the edges of unfiltered light fields mean that the effect is best near the center of the spatial range. For an automatically animated display, see \CiteFunc{LFDispVidCirc}. The function re-uses previously-opened light field display windows.  Note that changing display size requires that the display window be closed prior to calling this function.}
-
-\NewFunctionEntry{LFDispVidCirc}{}
-{Animated display showing 2D slices of the light field, similar to \CiteFunc{LFDispMousePan} except the motion is preset to a circular path. Optional parameters include the radius of the circular path, animation speed, and display size.}
-
+{Convenience function to display a static, 2D slice of a light field.  The centermost image is taken in $s$ and $t$.  Also works with 3D arrays of images and 2D images. Can be nested as demonstrated in Sect.~\ref{sect_DisplayingTour}.}
 
 \NewFunctionEntry{LFDispLawnmower}{\NewTag}
 {Similar to \CiteFunc{LFDispVidCirc}, but visits every light field view in sequence following horizontal and vertical lawnmower patterns.}
 
-\NewFunctionEntry{LFDispTiles}{\NewTag}
-{Displays the light field as a 2D tiling of 2D images.}
+\NewFunctionEntry{LFDispMousePan}{}
+{Interactively display 2D slices of the light field with a parallax effect. Click and drag in the image to change the point of view. An optional parameter controls the display size. Note that darkening at the edges of lenslet-based light fields mean that the effect is best near the center of the spatial range.}
 
 \NewFunctionEntry{LFDispProj}{\NewTag}
 {Displays the light field by projecting it onto a plane.}
 
+\NewFunctionEntry{LFDispProjSubfigs}{\NewTag}
+{Uses \CiteFunc{LFDispProj} to display six different projections of the light field.}
+
+\NewFunctionEntry{LFDispTiles}{\NewTag}
+{Displays the light field as a 2D tiling of 2D images.}
+
 \NewFunctionEntry{LFDispTilesSubfigs}{\NewTag}
 {Uses \CiteFunc{LFDispTiles} to display six different tilings of the light field.}
 
-\NewFunctionEntry{LFDispProjSubfigs}{\NewTag}
-{Uses \CiteFunc{LFDispProj} to display six different projections of the light field.}
+\NewFunctionEntry{LFDispVidCirc}{}
+{Animated display showing 2D slices of the light field, similar to \CiteFunc{LFDispMousePan} except the motion is preset to a circular path. Optional parameters include the radius of the circular path, animation speed, and display size.}
 
 \NewFunctionEntry{LFFigure}{}
 {Replacement for Matlab's ``figure'' which doesn't steal focus, originally sfigure by Daniel Eaton.}
@@ -1167,8 +1202,15 @@ Decoding relies on a white image database having been constructed by \CiteFunc{L
 \EndFunctionHeading
 \NewFunctionHeading{File I/O}
 %------------------------------------------------------------
+
 \NewFunctionEntry{LFFindFilesRecursive}{}
 {Recursively searches a folder for files matching one or more patterns.  Refer to this to understand the path parameters to \CiteFunc{LFUtilDecodeLytroFolder}, \CiteFunc{LFUtilExtractLFPThumbs} and  \CiteFunc{LFUtilUnpackLytroArchive}.}
+
+\NewFunctionEntry{LFReadESLF}{\NewTag}
+{Reads ESLF light field images, as generated by the Lytro Power Tools.}
+
+\NewFunctionEntry{LFReadGantryArray}{}
+{Loads gantry-style light fields, e.g.\ the Stanford gantry light fields found at \url{http://lightfield.stanford.edu}.}
 
 \NewFunctionEntry{LFReadLFP}{}
 {Reads Lytro \SymbolText{lfp}/\SymbolText{lfr} light field files.}
@@ -1178,9 +1220,6 @@ Decoding relies on a white image database having been constructed by \CiteFunc{L
 
 \NewFunctionEntry{LFReadRaw}{}
 {Reads 10, 12 and 16-bit \SymbolText{raw} image files.}
-
-\NewFunctionEntry{LFReadESLF}{\NewTag}
-{Reads ESLF light field images, as generated by the Lytro Power Tools.}
 
 \NewFunctionEntry{LFWriteESLF}{\NewTag}
 {Writes ESLF light field images.}
@@ -1192,6 +1231,12 @@ Decoding relies on a white image database having been constructed by \CiteFunc{L
 \EndFunctionHeading
 \NewFunctionHeading{Utility / Convenience}
 %------------------------------------------------------------
+\NewFunctionEntry{LFConvertToInt}{\NewTag}
+{Converts to \SymbolText{uint8} or \SymbolText{uint16}, with automatic scaling.}
+
+\NewFunctionEntry{LFConvertToFloat}{}
+{Converts to \SymbolText{single} or \SymbolText{double}, with automatic scaling.}
+
 \NewFunctionEntry{LFMatlabPathSetup}{}
 {Sets up the Matlab path to include the LF Toolbox. This must be re-run every time Matlab restarts, so consider adding a line to \SymbolText{startup.m} as shown in Sect.~\ref{sect_Installation}.
 }
