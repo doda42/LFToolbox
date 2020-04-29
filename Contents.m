@@ -15,14 +15,15 @@
 %   LFDispMousePan            - visualize a 4D light field using the mouse to pan through two dimensions
 %   LFDispVidCirc             - visualize a 4D light field animating a circular path through two dimensions
 %   LFDispLawnmower           - visualize a 4D light field animating a lawnmower path through two dimensions
-%   LFDispProj                - Project a 4D light field onto two planes, and optionally display it to the screen
+%   LFDispProj                - Project a 4D light field onto a plane, and optionally display it to the screen
 %   LFDispProjSubfigs         - Build six subfigures dispaying projections of the LF onto pairs dimensions
 %   LFDispTiles               - Tile a 4D light field into a 2D array of 2D slices, optionally display to the screen
 %   LFDispTilesSubfigs        - Build six subfigures dispaying 2D x 2D tilings of the LF
-%   LFFigure                  - (originally sfigure) Create figure window (minus annoying focus-theft).
+%   LFFigure                  - Create a figure window without stealing focus
 % 
 % File IO
 %   LFReadESLF                - Read ESLF-encoded light fields
+%   LFWriteESLF               - LFWriteESLF.m - Write ESLF-encoded light fields
 %   LFReadGantryArray         - load gantry-style light field, e.g. the Stanford light fields at lightfield.stanford.edu
 %   LFUtilExtractLFPThumbs    - extract thumbnails from LFP files and write to disk
 %   LFReadMetadata            - reads the metadata files in the JSON file format, from a file or a char buffer
@@ -51,7 +52,7 @@
 % Applying Filters and Enhancements
 %   LFFilt2DFFT               - Apply a 2D frequency-domain filter to a 4D light field using the FFT
 %   LFFilt4DFFT               - Applies a 4D frequency-domain filter using the FFT
-%   LFFiltShiftSum            - A spatial-domain depth-selective filter with optional super-resolution
+%   LFFiltShiftSum            - A spatial-domain depth-selective filter with optional refocus super-resolution
 %   LFColourCorrect           - applies a colour correction matrix, balance vector, and gamma, called by LFUtilDecodeLytroFolder
 %   LFHistEqualize            - histogram-based contrast adjustment
 % 
@@ -59,4 +60,5 @@
 %   LFDemoBasicFiltGantry     - demonstrate basic filters on stanford-style gantry light fields
 %   LFDemoBasicFiltIllum      - demonstrate basic filters on illum-captured imagery
 %   LFDemoBasicFiltLytroF01   - demonstrate basic filters on Lytro-F01-captured imagery
+%   LFDemoRefocusSuperres     - Demonstrate super-resolution using LFFiltShiftSum's UpsampRate parameter
  
