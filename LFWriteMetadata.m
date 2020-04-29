@@ -65,6 +65,8 @@ elseif(isstruct(item))
     txt=struct2json(name,item,level,varargin{:});
 elseif(ischar(item))
     txt=str2json(name,item,level,varargin{:});
+elseif(isobject(item))
+    txt=class2json(name,item,level,varargin{:});
 else
     txt=mat2json(name,item,level,varargin{:});
 end
@@ -101,10 +103,23 @@ if(len>1) txt=sprintf('%s\n%s]',txt,padding0); end
 
 %%-------------------------------------------------------------------------
 function txt=struct2json(name,item,level,varargin)
-txt='';
+txt = '';
 if(~isstruct(item))
 	error('input is not a struct');
 end
+txt = object2json(name,item,level,varargin{:});
+
+%%-------------------------------------------------------------------------
+function txt=class2json(name,item,level,varargin)
+txt = '';
+if(~isobject(item))
+	error('input is not a class');
+end
+txt = object2json(name,item,level,varargin{:});
+
+%%-------------------------------------------------------------------------
+function txt=object2json(name,item,level,varargin)
+txt='';
 len=numel(item);
 padding1=repmat(sprintf('\t'),1,level-1);
 padding0=repmat(sprintf('\t'),1,level);
