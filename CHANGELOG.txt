@@ -3,6 +3,11 @@ Copyright (c) 2013-2020 Donald G. Dansereau
 
 Please refer to README.md and LFToolbox.pdf for installation instructions and further information.
 
+---v0.5.1------------------------------------------------------------------------
+Minor bug fixes and improvements
+
+- LFWriteMetadata now supports writing of simple class objects
+
 ---v0.5------------------------------------------------------------------------
 Mostly reverse-compatible. White images and calibrations should be re-processed. See LFToolbox.pdf for details.
 

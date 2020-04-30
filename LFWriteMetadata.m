@@ -5,16 +5,20 @@
 % 
 % This function saves data to a JSON file.
 %
-% Based on JSONlab by Qianqian Fang,
-% http://www.mathworks.com.au/matlabcentral/fileexchange/33381-jsonlab-a-toolbox-to-encodedecode-json-files-in-matlaboctave
-%
-% Minor modifications by Donald G. Dansereau, 2013, to simplify the interface as appropriate for use
-% in the Light Field Toolbox.
-%
 % User guide: <a href="matlab:which LFToolbox.pdf; open('LFToolbox.pdf')">LFToolbox.pdf</a>
 % See also: LFReadMetadata
 
 % Copyright (c) 2013-2020 Donald G. Dansereau
+% 
+% Based on code from JSONlab by Qianqian Fang,
+% http://www.mathworks.com.au/matlabcentral/fileexchange/33381-jsonlab-a-toolbox-to-encodedecode-json-files-in-matlaboctave
+%
+% Minor modifications to simplify the interface as appropriate for use in the Light Field Toolbox,
+% and to tolerate the sha keys appearing at the end of some Lytro JSON files.
+% 2013, Donald G. Dansereau
+% 
+% Enabled writing of class objects
+% 2020, Nuno Monteiro
 
 function LFWriteMetadata( JsonFileFname, DataToSave )
 

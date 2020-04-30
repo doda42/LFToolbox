@@ -18,9 +18,6 @@
 % Minor modifications to simplify the interface as appropriate for use in the Light Field Toolbox,
 % and to tolerate the sha keys appearing at the end of some Lytro JSON files.
 % 2013, Donald G. Dansereau
-% 
-% Enabled writing of class objects
-% 2020, Nuno Monteiro
 
 function data = LFReadMetadata( JsonFileFname )
 
