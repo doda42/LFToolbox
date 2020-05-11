@@ -1,20 +1,18 @@
-% todo: doc
-% LFBuild4DFreqPlane - construct a 4D planar passband filter in the frequency domain
+% LFBuild4DLPF - construct a 4D lowpass filter in the frequency domain
 % 
 % Usage: 
 % 
-%     [H, FiltOptions] = LFBuild4DFreqPlane( LFSize, Slope, BW, FiltOptions )
-%     H = LFBuild4DFreqPlane( LFSize, Slope, BW )
+%     H = LFBuild4DLPF( LFSize, BW )
+%     [H, FiltOptions] = LFBuild4DLPF( LFSize, BW, [FiltOptions] )
 % 
-% This file constructs a real-valued magnitude response in 4D, for which the passband is a plane.
-% This is useful for selecting objects at a single depth from a lightfield, and is similar in effect
-% to refocus using, for example, the shift sum filter LFFiltShiftSum.
+% This file constructs a real-valued lowpass frequency-domain filter in 4D. Anisotropic filtering is
+% possible using FiltOptions.Aspect4D.
 %
-% Once constructed the filter must be applied to a light field, e.g. using LFFilt4DFFT. The 
+% Once constructed the filter may be applied to a light field using LFFilt4DFFT. The
 % LFDemoBasicFilt* files demonstrate how to contruct and apply frequency-domain filters.
 % 
-% A more technical discussion, including the use of filters for denoising and volumetric focus, and
-% the inclusion of aliases components, is included in:
+% A more technical discussion, including the use of filters for denoising and volumetric focus, is
+% included in:
 % 
 % [2] D.G. Dansereau, O. Pizarro, and S. B. Williams, "Linear Volumetric Focus for Light Field
 % Cameras," to appear in ACM Transactions on Graphics (TOG), vol. 34, no. 2, 2015.
@@ -25,15 +23,11 @@
 %     light field to be filtered. If it's larger than the input light field, the input is
 %     zero-padded to match the filter's size by LFFilt4DFFT.
 % 
-%     Slope : The slope of the planar passband. If different slopes are desired in s,t and u,v,
-%     the optional aspect parameter should be used.
-% 
-%     BW : 3-db Bandwidth of the planar passband.
+%     BW : 3-db Bandwidth of the passband.
 % 
 %     [optional] FiltOptions : struct controlling filter construction
-%               SlopeMethod : 'Skew' or 'Rotate' default 'skew'
 %                 Precision : 'single' or 'double', default 'single'
-%                   Rolloff : 'Gaussian' or 'Butter', default 'Gaussian'
+%                   Rolloff : 'Gaussian', 'Butter', or 'Sinc' default 'Gaussian'
 %                     Order : controls the order of the filter when Rolloff is 'Butter', default 3
 %                  Aspect4D : aspect ratio of the light field, default [1 1 1 1]
 %                    Window : Default false. By default the edges of the passband are sharp; this adds 
@@ -54,16 +48,24 @@
 %                 H : real-valued frequency magnitude response
 %       FiltOptions : The filter options including defaults, with an added PassbandInfo field
 %                     detailing the function and time of construction of the filter
-%
+% 
+% Examples: 
+% 
+%     H = LFBuild4DLPF( LFSize(1:4), 0.1 );  % symmetric filter, BW = 0.1
+%     H = LFBuild4DLPF( LFSize(1:4), 0.25, struct('Aspect4D',[8,8,1,1]) ); % anisotropic filter
+% 
+%     Display anisotropic example:
+%     LFDispTilesSubfigs(fftshift(LFBuild4DLPF(11,0.3, struct('Aspect4D',[8,8,1,1])))); 
+% 
+% 
 % User guide: <a href="matlab:which LFToolbox.pdf; open('LFToolbox.pdf')">LFToolbox.pdf</a>
-% See also:  LFDemoBasicFiltGantry, LFDemoBasicFiltIllum, LFDemoBasicFiltLytroF01,
+% See also:  LFBuild2DLPF, LFDemoBasicFiltGantry, LFDemoBasicFiltIllum, LFDemoBasicFiltLytroF01,
 % LFBuild2DFreqFan, LFBuild2DFreqLine, LFBuild4DFreqDualFan, LFBuild4DFreqHypercone,
 % LFBuild4DFreqHyperfan, LFBuild4DFreqPlane, LFFilt2DFFT, LFFilt4DFFT, LFFiltShiftSum
 
-% Part of LF Toolbox xxxVersionTagxxx
-% Copyright (c) 2013-2015 Donald G. Dansereau
+% Copyright (c) 2013-2020 Donald G. Dansereau
 
-function [H, FiltOptions] = BuildLPF( LFSize, BW, FiltOptions )
+function [H, FiltOptions] = LFBuild4DLPF( LFSize, BW, FiltOptions )
 
 FiltOptions = LFDefaultField('FiltOptions', 'Precision', 'single');
 
@@ -77,5 +79,5 @@ end
 
 %-----------------------------------------------------------------------------------------------------------------------
 function Dist = DistFunc_4DPt( P, FiltOptions )
-Dist = sum(P.^2);
+Dist = sum( P.^2 );
 end
