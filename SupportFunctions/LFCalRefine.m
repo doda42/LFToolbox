@@ -265,7 +265,7 @@ function [PtPlaneDists, JacobPattern] = FindError(Params, CheckerObs, IdealCheck
                 CurCheckerObs_Idx = [repmat([SIdx;TIdx], 1, NCornerObs); CurCheckerObs; ones(1, NCornerObs)];
                 
                 %---Transform ideal 3D corner coords into camera's reference frame---
-                IdealChecker_CamFrame = CurEstCamPoseH * IdealChecker;
+                IdealChecker_CamFrame = CurEstCamPoseH * IdealChecker; % todo[refactor]: is CurEstCamPoseH actually the inverse of cam pose?
                 IdealChecker_CamFrame = IdealChecker_CamFrame(1:3,:); % won't be needing homogeneous points
                 
                 %---Project observed corner indices to [s,t,u,v] rays---
