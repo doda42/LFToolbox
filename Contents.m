@@ -44,10 +44,12 @@
 % Building Filters
 %   LFBuild2DFreqFan          - construct a 2D fan passband filter in the frequency domain
 %   LFBuild2DFreqLine         - construct a 2D line passband filter in the frequency domain
+%   LFBuild2DLPF              - construct a 2D lowpass filter in the frequency domain
 %   LFBuild4DFreqDualFan      - construct a 4D dual-fan passband filter in the frequency domain
 %   LFBuild4DFreqHypercone    - construct a 4D hypercone passband filter in the frequency domain
 %   LFBuild4DFreqHyperfan     - construct a 4D hyperfan passband filter in the frequency domain
 %   LFBuild4DFreqPlane        - construct a 4D planar passband filter in the frequency domain
+%   LFBuild4DLPF              - construct a 4D lowpass filter in the frequency domain
 % 
 % Applying Filters and Enhancements
 %   LFFilt2DFFT               - Apply a 2D frequency-domain filter to a 4D light field using the FFT

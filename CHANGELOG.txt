@@ -3,6 +3,11 @@ Copyright (c) 2013-2020 Donald G. Dansereau
 
 Please refer to README.md and LFToolbox.pdf for installation instructions and further information.
 
+
+---v0.6----------------------------------------------------------------------
+New features:
+- LFBuild2DLPF, LFBuild4DLPF for frequency-domain lowpass filters, optionally anisotropic
+
 ---v0.5.1----------------------------------------------------------------------
 Minor bug fixes and improvements
 
