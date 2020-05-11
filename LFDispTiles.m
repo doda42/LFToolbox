@@ -73,7 +73,7 @@
 %     LFDispTiles( LF, 'uvst', struct('SubsampRate',[1,1,10,10]))
 % 
 % User guide: <a href="matlab:which LFToolbox.pdf; open('LFToolbox.pdf')">LFToolbox.pdf</a>
-% See also: LFDispTilesSubfigs, LFDispProj, LFDispProjSubfigs, LFDispVidCirc, LFDispMousePan
+% See also: LFDispTilesSubfigs, LFDisp, LFDispMousePan, LFDispVidCirc, LFDispLawnmower, LFDispProj
 
 % Copyright (c) 2012-2020 Donald G. Dansereau
 

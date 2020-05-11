@@ -38,7 +38,7 @@
 %     LFDispProj( LF, 1,2, [], 'Renormalize' );
 % 
 % User guide: <a href="matlab:which LFToolbox.pdf; open('LFToolbox.pdf')">LFToolbox.pdf</a>
-% See also: LFDispProjSubfigs, LFDispTiles, LFDispTilesSubfigs, LFDispVidCirc, LFDispMousePan
+% See also: LFDispProjSubfigs, LFDisp, LFDispMousePan, LFDispVidCirc, LFDispLawnmower, LFDispTiles
 
 % Copyright (c) 2012-2020 Donald G. Dansereau
 

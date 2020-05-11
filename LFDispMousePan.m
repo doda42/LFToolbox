@@ -29,7 +29,7 @@
 %
 %
 % User guide: <a href="matlab:which LFToolbox.pdf; open('LFToolbox.pdf')">LFToolbox.pdf</a>
-% See also: LFDisp, LFDispVidCirc
+% See also: LFDisp, LFDispVidCirc, LFDispLawnmower, LFDispProj, LFDispTiles
 
 % Copyright (c) 2013-2020 Donald G. Dansereau
 

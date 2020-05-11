@@ -47,10 +47,10 @@
 %
 % This function was written to deal with Lytro imagery, but adapting it to operate with other
 % lenslet-based cameras should be straightforward. For more information on the decoding process,
-% refer to LFDecodeLensletImageSimple, [1], and LFToolbox.pdf.
+% refer to LFDecodeLensletImageDirect, [1], and LFToolbox.pdf.
 %
 % Some optional parameters are not used or documented at this level -- see each of LFCalRectifyLF,
-% LFLytroDecodeImage, LFDecodeLensletImageSimple, and LFColourCorrect for further information.
+% LFLytroDecodeImage, LFDecodeLensletImageDirect, and LFColourCorrect for further information.
 %
 %
 % Inputs -- all are optional, see code below for default values :
@@ -68,7 +68,7 @@
 %        .ThumbFnamePattern : As with SaveFnamePattern, defines the name of the output thumbnail
 %                             image
 %
-%     DecodeOptions : struct controlling the decoding process, see LFDecodeLensletImageSimple for more info
+%     DecodeOptions : struct controlling the decoding process, see LFDecodeLensletImageDirect for more info
 %                    .OptionalTasks : Cell array containing any combination of 'ColourCorrect' and
 %                                     'Rectify'; an empty array "{}" means no additional tasks are
 %                                     requested; case sensitive
@@ -117,7 +117,7 @@
 %
 % User guide: <a href="matlab:which LFToolbox.pdf; open('LFToolbox.pdf')">LFToolbox.pdf</a>
 % See also: LFUtilExtractLFPThumbs, LFUtilProcessWhiteImages, LFUtilProcessCalibrations, LFUtilCalLensletCam,
-% LFColourCorrect, LFHistEqualize, LFFindFilesRecursive, LFLytroDecodeImage, LFDecodeLensletImageSimple,
+% LFColourCorrect, LFHistEqualize, LFFindFilesRecursive, LFLytroDecodeImage, LFDecodeLensletImageDirect,
 % LFSelectFromDatabase
 
 % Copyright (c) 2013-2020 Donald G. Dansereau

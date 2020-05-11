@@ -7,7 +7,7 @@
 %         LFLytroDecodeImage( InputFname )
 %
 % This function decodes a raw lenslet image into a 4D light field. Its purpose is to tailor the core lenslet decoding
-% function, LFDecodeLensletImageSimple, for use with Lytro data. It is envisioned that other camera formats will be
+% function, LFDecodeLensletImageDirect, for use with Lytro data. It is envisioned that other camera formats will be
 % supported by similar functions in future.
 % 
 % Supported file formats include Lytro LFP files and extracted .raw files accompanied by metadata, as extracted by using
@@ -58,7 +58,7 @@
 %     LFUtilProcessWhiteImages must be run before decoding will work.
 % 
 % User guide: <a href="matlab:which LFToolbox.pdf; open('LFToolbox.pdf')">LFToolbox.pdf</a>
-% See also: LFUtilDecodeLytroFolder, LFUtilProcessWhiteImages, LFDecodeLensletImageSimple, LFSelectFromDatabase
+% See also: LFUtilDecodeLytroFolder, LFUtilProcessWhiteImages, LFDecodeLensletImageDirect, LFSelectFromDatabase
 
 % Copyright (c) 2013-2020 Donald G. Dansereau
 
