@@ -7,6 +7,7 @@ Please refer to README.md and LFToolbox.pdf for installation instructions and fu
 Minor bug fixes and improvements
 
 - LFWriteMetadata now supports writing of simple class objects
+- LFGatherCamInfo uses unit_info.json on Lytro cameras that have it, fixes serial number mismatch for these cameras
 
 ---v0.5------------------------------------------------------------------------
 Mostly reverse-compatible. White images and calibrations should be re-processed. See LFToolbox.pdf for details.
