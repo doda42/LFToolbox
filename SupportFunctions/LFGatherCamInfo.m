@@ -46,6 +46,7 @@ disp(FileNames)
 RepairFname    = fullfile(BasePath, 'unit_info.json');
 MetadataRepair = [];
 if exist(RepairFname,'file') > 0
+	fprintf('Note: using unit_info.json to patch serial numbers\n');
     MetadataRepair = LFReadMetadata(RepairFname);
 end
 
