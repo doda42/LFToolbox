@@ -27,6 +27,10 @@
 % See also:  LFUtilProcessWhiteImages, LFUtilProcessCalibrations
 
 % Copyright (c) 2013-2020 Donald G. Dansereau
+% 
+% Read serial from unit_info.json: Some Lytro cameras have a serial number in this file that should
+% be applied to the white images.
+% 2020, Nuno Monteiro
 
 function CamInfo = LFGatherCamInfo( FilePath, FilenamePattern )
 
@@ -37,6 +41,13 @@ if( isempty(FileNames) )
 end
 fprintf('Found :\n');
 disp(FileNames)
+
+% If a unit_info.json file exists, obtain repaired metadata
+RepairFname    = fullfile(BasePath, 'unit_info.json');
+MetadataRepair = [];
+if exist(RepairFname,'file') > 0
+    MetadataRepair = LFReadMetadata(RepairFname);
+end
 
 %---Process each---
 fprintf('Filename, Camera Model / Serial, ZoomStep, FocusStep\n');
@@ -58,6 +69,13 @@ for( iFile = 1:length(FileNames) )
         CurCamInfo.ExposureDuration = CurFileInfo.master.picture.frameArray.frame.metadata.devices.shutter.frameExposureDuration;
         CurCamInfo.CamSerial = CurFileInfo.master.picture.frameArray.frame.privateMetadata.camera.serialNumber;
         CurCamInfo.CamModel = CurFileInfo.master.picture.frameArray.frame.metadata.camera.model;
+
+        %---If there exists a repair to the metadata, perform repair---
+		% todo: the same file contains info about zoom / focus steps and sensor response, 
+		% the zoom / focus step adjusts might be useful for matching white images to captured
+        if ~isempty(MetadataRepair)
+            CurCamInfo.CamSerial = MetadataRepair.camera.serialNumber;
+        end
         
     else
         
