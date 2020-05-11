@@ -831,11 +831,11 @@ As \CiteFunc{LFUtilProcessWhiteImages} steps through the white images, it saves 
 %-----------------------------
 \subsection{Decoding a Lenslet Image}
 
-The decode procedure is demonstrated in \CiteFunc{LFLytroDecodeImage}. This script first loads a lenslet image and associated metadata, selects the appropriate white image using \SupFunction{LFSelectFromDatabase}, then passes the lenslet image, metadata and white image to \SupFunction{LFDecodeLensletImageSimple}, which handles the bulk of the work.
+The decode procedure is demonstrated in \CiteFunc{LFLytroDecodeImage}. This script first loads a lenslet image and associated metadata, selects the appropriate white image using \SupFunction{LFSelectFromDatabase}, then passes the lenslet image, metadata and white image to \SupFunction{LFDecodeLensletImageDirect}, which handles the bulk of the work.
 
 \SupFunction{LFSelectFromDatabase} selects the appropriate white image based on serial number, zoom and focus settings. Presently zoom is prioritized over focus, though whether this is the optimal approach is an open question.
 
-\SupFunction{LFDecodeLensletImageSimple} proceeds as described in [1] to decode the light field. This involves demosaicing, devignetting, transforming and slicing the input lenslet image to yield a 4D structure. More sophisticated approaches exist which combine steps into joint solutions, and they generally yield superior results, particularly near the edges of lenslets. The approach taken here was chosen for its simplicity and flexibility.
+\SupFunction{LFDecodeLensletImageDirect} proceeds as described in [1] to decode the light field. This involves demosaicing, devignetting, transforming and slicing the input lenslet image to yield a 4D structure. More sophisticated approaches exist which combine steps into joint solutions, and they generally yield superior results, particularly near the edges of lenslets. The approach taken here was chosen for its simplicity and flexibility.
 
 Some of the specifics of the decode process can be controlled, see the help text for the above functions.
 
@@ -846,7 +846,7 @@ A light field is fundamentally a four-dimensional structure. Roughly speaking, e
 
 The Lytro F01's lenslets each yield approximately $9 \times 9$ useful pixels, and so the output of \CiteFunc{LFUtilDecodeLytroFolder} has a size approximately 9 in $i$ and $j$. Similarly, after removing the hexagonal sampling associated with the hexagonal lenslet array, the Lytro imagery yields approximately $380$ pixels in both $k$ and $l$.  The Illum has more lenslets and more pixels per lenslet. The actual number of samples in a light field depends on how the lenslet grid is aligned with the sensor, and can vary by a few samples between cameras.
 
-Examining the output of \SupFunction{LFDecodeLensletImageSimple}, we see that it yields a light field \SymbolText{LF} which is a 5D array of size around $9\times9\times380\times380\times3$. As discussed in Sect.~\ref{sect_Conventions}, \textbf{the indexing order for \SymbolText{LF} is $j, i, l, k, c$}, where c is the RGB colour channel. 
+Examining the output of \SupFunction{LFDecodeLensletImageDirect}, we see that it yields a light field \SymbolText{LF} which is a 5D array of size around $9\times9\times380\times380\times3$. As discussed in Sect.~\ref{sect_Conventions}, \textbf{the indexing order for \SymbolText{LF} is $j, i, l, k, c$}, where c is the RGB colour channel. 
 
 \begin{figure}[tbh]
 	\centering
@@ -858,7 +858,7 @@ Examining the output of \SupFunction{LFDecodeLensletImageSimple}, we see that it
 
 To examine a slice through the $k$ and $l$ dimensions, you might use the command \SymbolText{imshow(squeeze(LF(5,5,:,:,:)))}, yielding a view from the center of the $i$ and $j$ dimensions similar to the output of \SymbolText{LFDisp(LF)}. To examine a slice through the $i$ and $j$ dimensions, you might use the command \SymbolText{imshow(squeeze(LF(:,:,380/2,380/2,:)))}, with an output similar to that shown in Fig.~\ref{fig_STSlice}. Notice this shows the shape of the image under a lenslet, with darkened corner pixels that contain little or no information. See Sect.~\ref{sect_DisplayingTour} for more ways of displaying light fields.
 
-\SupFunction{LFDecodeLensletImageSimple} provides a weight channel \SymbolText{LFWeight}, which represents the confidence associated with each pixel. A slice in $i$ and $j$ of such a channel is shown in Fig.~\ref{fig_STSlice}. The weight channel is useful in filtering applications which accept a weighting term.
+\SupFunction{LFDecodeLensletImageDirect} provides a weight channel \SymbolText{LFWeight}, which represents the confidence associated with each pixel. A slice in $i$ and $j$ of such a channel is shown in Fig.~\ref{fig_STSlice}. The weight channel is useful in filtering applications which accept a weighting term.
 
 Note that \CiteFunc{LFLytroDecodeImage} tacks the weight channel onto the variable \SymbolText{LF} to yield a four-channel structure, and it is in this four-channel format that \CiteFunc{LFUtilDecodeLytroFolder} saves light fields. This is a convenient format for the light field, as the weight channel is often useful in processing light fields.  \CiteFunc{LFHistEqualize}, for example, uses this channel to ignore zero-weight pixels. 
 
