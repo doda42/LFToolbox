@@ -42,7 +42,7 @@
 
 \title{
 Light Field Toolbox for Matlab\\
-{\large Version 0.5.0}
+{\large v0.5.1}
 }
 
 
@@ -169,18 +169,20 @@ The appropriate citations for decoding, calibration and rectification and the vo
 
 \subsection{Installing the Toolbox}
 
-Prior to installation, remove / uninstall any previous light field toolbox versions. There are three main options for installation:
+There are three main options for installation:
 \begin{enumerate}[leftmargin=2.2em,itemsep=0em,rightmargin=0.5cm]
-\item Install as a ``toolbox'' via the Mathworks site; this handles path setup automatically
-\item Download a .zip file from either the Mathworks site or Github
-\item Clone the git repo and checkout the release or a development branch
+\item Download a \SymbolText{.zip} file through the Mathworks site \url{https://au.mathworks.com/matlabcentral/fileexchange/75250-light-field-toolbox}
+\item Download a \SymbolText{.zip} file from Github \url{https://github.
+com/doda42/LFToolbox}
+\item Clone the repo from GitHub
 \end{enumerate}
+Options 2 and 3 have the advantage that you may work with the most recent release (the master branch), or a development branch with experimental functionality. 
 
-For options 2 and 3, put the toolbox files in an appropriate location, and run the convenience function \CiteFunc{LFMatlabPathSetup} to set up the Matlab path. This must be re-run every time Matlab restarts, so consider adding a line to \SymbolText{startup.m}, e.g.\ \begin{Verbatim}
+Unzip or clone the files into an appropriate location with a meaningful top-level folder name, e.g. \SymbolText{LFToolbox0.5}. Run the convenience function \CiteFunc{LFMatlabPathSetup} to set up the Matlab path.  This must be run every time Matlab starts, so consider adding a line to \SymbolText{startup.m}, e.g.
+\begin{Verbatim}
 run('~/MyMatlabCode/LFToolbox0.5/LFMatlabPathSetup.m')
 \end{Verbatim}
-
-To check your installation:
+Be sure to remove any similar calls for previous toolbox versions. To check your installation:
 
 \begin{itemize}[leftmargin=2.8em,itemsep=0em,rightmargin=0.5cm]
 \item Run \SymbolText{LFToolboxVersion} to check the toolbox version
