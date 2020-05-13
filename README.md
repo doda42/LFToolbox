@@ -18,15 +18,7 @@ Sample data:
 * Additional datasets and community links at [dgd.vision](http://dgd.vision/Tools/LFToolbox)
 
 ## What's New / Development Plan
-v0.5.1: bug fixes, documentation improvements, see CHANGELOG.txt
-
-v0.5 introduces new features, bug fixes, and performance improvements. Highlights:
-* Linear refocus super-resolution using LFFiltShiftSum.
-* New display functions LFDispLawnmower, LFDispTiles, LFDispTilesSubfigs, LFDispProj, LFDispProjSubfigs
-* LFReadESLF, LFWriteESLF
-* Improved decode performance and speed
-* Improved calibration accuracy
-* LFDisp* functions are better behaved, now display in the active figure window
+v0.6 introduces new features, highlights: todo
 
 For a complete list, see CHANGELOG.txt.
 
