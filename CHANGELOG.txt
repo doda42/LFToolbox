@@ -5,8 +5,14 @@ Please refer to README.md and LFToolbox.pdf for installation instructions and fu
 
 
 ---v0.6----------------------------------------------------------------------
+
+Reverse compatibility:
+- The white images database now tracks a relative path to the white images; delete WhiteImageDatabase.mat and re-run LFUtilProcessWhiteImages to update.
+
 New features:
 - LFBuild2DLPF, LFBuild4DLPF for frequency-domain lowpass filters, optionally anisotropic
+- Allow LFUtilProcessWhiteImages to save in a separate folder, leaving input folder untouched
+- Smarter search for of white image database when calling LFUtilDecodeLytroFolder
 
 ---v0.5.1----------------------------------------------------------------------
 Minor bug fixes and improvements

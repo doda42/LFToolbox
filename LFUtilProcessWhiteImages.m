@@ -41,6 +41,10 @@
 %                       level of the cameras folder.
 %
 %     FileOptions : struct controlling file naming and saving
+%                       .OutputPath : By default files are saved alongside input files; specifying
+%                                     an output path will mirror the folder structure of the input,
+%                                     and save generated files in that structure, leaving the input
+%                                     untouched
 %                       .SaveResult : Set to false to perform a "dry run"
 %                        .ForceRedo : By default, already-processed white images are skipped; set
 %                                     this to true to force reprocessing of already-processed files
@@ -64,6 +68,28 @@
 %                                     the lenslet centers that get used; a value of 1 means use all
 %
 % Output takes the form of saved grid model files and a white image database.
+% 
+% Examples:
+% 
+%   LFUtilProcessWhiteImages
+%   LFUtilDecodeLytroFolder
+% 
+%     Starting from the current folder, look in the default 'Cameras' folder for raw white images,
+%     process them, and save processed results in the same folder structure, alonside the inputs.
+%     Then decode images in the default 'Images' folder.
+% 
+%   LFUtilProcessWhiteImages( 'path/to/cameras' )
+%   LFUtilDecodeLytroFolder([],[],struct('WhiteImageDatabasePath','path/to/cameras'))
+% 
+%     Specify an alternate location for the white image files and database. 
+% 
+%   LFUtilProcessWhiteImages( 'path/to/cameras', struct('OutputPath','path/to/processed/cameras') )
+%   LFUtilDecodeLytroFolder([],[],struct('WhiteImageDatabasePath','path/to/processed/cameras'))
+%
+%     Control both input and output paths. Note that the decode function needs the path to the
+%     processed white images, i.e. where the white image database file is. The white images database
+%     keeps a relative path to the input images, so if you move your processed camera folder, delete
+%     the database and re-run LFUtilProcessWhiteImages with the new output path.
 %
 % User guide: <a href="matlab:which LFToolbox.pdf; open('LFToolbox.pdf')">LFToolbox.pdf</a>
 % See also: LFBuildLensletGridModel, LFUtilDecodeLytroFolder, LFUtilProcessCalibrations
@@ -75,6 +101,7 @@ function LFUtilProcessWhiteImages( WhiteImagesPath, FileOptions, GridModelOption
 %---Defaults---
 WhiteImagesPath = LFDefaultVal( 'WhiteImagesPath', 'Cameras' );
 
+FileOptions = LFDefaultField( 'FileOptions', 'OutputPath', WhiteImagesPath );
 FileOptions = LFDefaultField( 'FileOptions', 'SaveResult', true );
 FileOptions = LFDefaultField( 'FileOptions', 'ForceRedo', false );
 FileOptions = LFDefaultField( 'FileOptions', 'WhiteImageDatabasePath', 'WhiteImageDatabase.mat' );
@@ -93,6 +120,8 @@ DebugBuildGridModel = false; % additional debug display
 
 %---Load white image info---
 fprintf('Building database of white files...\n');
+fprintf('Input from %s\n', WhiteImagesPath);
+fprintf('Output to %s\n', FileOptions.OutputPath);
 WhiteImageInfo = LFGatherCamInfo( WhiteImagesPath, FileOptions.WhiteMetadataFilenamePattern );
 
 % The Lytro F01 database has two exposures per zoom/focus setting -- this eliminates the darker ones
@@ -104,6 +133,14 @@ MeanDuration = mean(ExposureDuration(F01Images));
 DarkF01Images = find(IsF01Image & (ExposureDuration < MeanDuration));
 CamInfoValid = true(size(WhiteImageInfo));
 CamInfoValid(DarkF01Images) = false;
+
+%---Make sure destination folder exists, and record relative path---
+warning('off','MATLAB:MKDIR:DirectoryExists');
+mkdir( FileOptions.OutputPath ); % make sure folder exists
+AbsoluteOutputPath = what( FileOptions.OutputPath ).path;
+AbsoluteWhiteImagePath = what( WhiteImagesPath ).path;
+% we need to be able to find the white images given the path to the database
+RelWhiteImagePath = relativepath( AbsoluteWhiteImagePath, AbsoluteOutputPath );
 
 %---Tagged onto all saved files---
 TimeStamp = datestr(now,'ddmmmyyyy_HHMMSS');
@@ -117,8 +154,9 @@ for( iFile = 1:length(WhiteImageInfo) )
     [CurFnamePath, CurFnameBase] = fileparts( WhiteImageInfo(iFile).Fname );
     fprintf('%s [File %d / %d]:\n', fullfile(CurFnamePath,CurFnameBase), iFile, length(WhiteImageInfo));
     
+	FullOutFolder = fullfile(FileOptions.OutputPath, CurFnamePath);
     ProcessedWhiteFname = sprintf( FileOptions.ProcessedWhiteImagenamePattern, CurFnameBase );
-    ProcessedWhiteFname = fullfile(WhiteImagesPath, CurFnamePath, ProcessedWhiteFname);
+    ProcessedWhiteFname = fullfile(FullOutFolder, ProcessedWhiteFname);
     
     if( ~FileOptions.ForceRedo && exist(ProcessedWhiteFname, 'file') )
         fprintf('Output file %s already exists, skipping.\n', ProcessedWhiteFname);
@@ -223,7 +261,11 @@ for( iFile = 1:length(WhiteImageInfo) )
         %---Optionally save---
         if( FileOptions.SaveResult )
             fprintf('Saving to %s\n', ProcessedWhiteFname);
-            CamInfo = WhiteImageInfo(iFile);       
+            CamInfo = WhiteImageInfo(iFile);
+			
+			% turn off warning when populating existing folders
+			warning('off','MATLAB:MKDIR:DirectoryExists'); 
+			mkdir( FullOutFolder ); % make sure folder exists
             LFWriteMetadata(ProcessedWhiteFname, LFVar2Struct(GeneratedByInfo, GridModelOptions, CamInfo, LensletGridModel));
         end
     end
@@ -232,9 +274,9 @@ end
 CamInfo = WhiteImageInfo(CamInfoValid);
 %---Optionally save the white file database---
 if( FileOptions.SaveResult )
-    FileOptions.WhiteImageDatabasePath = fullfile(WhiteImagesPath, FileOptions.WhiteImageDatabasePath);
+    FileOptions.WhiteImageDatabasePath = fullfile(FileOptions.OutputPath, FileOptions.WhiteImageDatabasePath);
     fprintf('Saving to %s\n', FileOptions.WhiteImageDatabasePath);
-    save(FileOptions.WhiteImageDatabasePath, 'GeneratedByInfo', 'CamInfo');
+    save(FileOptions.WhiteImageDatabasePath, 'GeneratedByInfo', 'CamInfo', 'RelWhiteImagePath');
 end
 
 fprintf('Done\n');

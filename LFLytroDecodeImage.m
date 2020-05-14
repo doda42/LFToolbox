@@ -119,6 +119,8 @@ DesiredCam = struct('CamSerial', LFMetadata.SerialData.camera.serialNumber, ...
     'FocusStep', LFMetadata.devices.lens.focusStep );
 DecodeOptions.WhiteImageInfo = LFSelectFromDatabase( DesiredCam, DecodeOptions.WhiteImageDatabasePath );
 PathToDatabase = fileparts( DecodeOptions.WhiteImageDatabasePath );
+PathToWhiteImages = DecodeOptions.WhiteImageInfo.RelWhiteImagePath;
+PathToWhiteImages = fullfile(PathToDatabase, PathToWhiteImages);
 if( isempty(DecodeOptions.WhiteImageInfo) || ~strcmp(DecodeOptions.WhiteImageInfo.CamSerial, DesiredCam.CamSerial) )
     fprintf('No appropriate white image found, skipping...\n');
     return
@@ -133,8 +135,9 @@ fprintf('Zoom:\t%d\t\t%d\n', DecodeOptions.WhiteImageInfo.ZoomStep, DesiredCam.Z
 fprintf('Focus:\t%d\t\t%d\n\n', DecodeOptions.WhiteImageInfo.FocusStep, DesiredCam.FocusStep);
 
 %---Load white image, white image metadata, and lenslet grid parameters---
-WhiteMetadataFname = fullfile(PathToDatabase, DecodeOptions.WhiteImageInfo.Fname);
-WhiteProcFname = LFFindLytroPartnerFile(WhiteMetadataFname, DecodeOptions.WhiteProcDataFnameExtension);
+WhiteMetadataFnameProc = fullfile(PathToDatabase, DecodeOptions.WhiteImageInfo.Fname);
+WhiteProcFname = LFFindLytroPartnerFile(WhiteMetadataFnameProc, DecodeOptions.WhiteProcDataFnameExtension);
+WhiteMetadataFname = fullfile(PathToWhiteImages, DecodeOptions.WhiteImageInfo.Fname);
 WhiteRawFname = LFFindLytroPartnerFile(WhiteMetadataFname, DecodeOptions.WhiteRawDataFnameExtension);
 
 fprintf('Loading white image and metadata...\n');
