@@ -65,6 +65,8 @@ DecodeOptions = LFDefaultField( 'DecodeOptions', 'ResampMethod', 'fast' ); %'fas
 DecodeOptions = LFDefaultField( 'DecodeOptions', 'Precision', 'single' );
 DecodeOptions = LFDefaultField( 'DecodeOptions', 'DoDehex', true );
 DecodeOptions = LFDefaultField( 'DecodeOptions', 'DoSquareST', true );
+DecodeOptions = LFDefaultField('DecodeOptions', 'WeightedDemosaic', false);
+DecodeOptions = LFDefaultField('DecodeOptions', 'WeightedInterp', false);
 
 %---Rescale image values, remove black level---
 DecodeOptions.LevelLimits = cast(DecodeOptions.LevelLimits, DecodeOptions.Precision);
@@ -79,18 +81,38 @@ LensletImage = LensletImage ./ WhiteImage; % Devignette
 % Clip -- this is aggressive and throws away bright areas; there is a potential for an HDR approach here
 LensletImage = min(1, max(0, LensletImage));
 
+
+if(DecodeOptions.WeightedDemosaic || DecodeOptions.WeightedInterp)
+    [Belonging, MLCenters, ~] = LFMicrolensBelonging(size(LensletImage,1),size(LensletImage,2), LensletGridModel);
+    Weights = cast(WhiteImage.*double(intmax('uint16')), 'uint16');
+    Weights = demosaic(Weights, DecodeOptions.DemosaicOrder);
+    Weights = cast(Weights, DecodeOptions.Precision);
+    Weights = Weights ./  double(intmax('uint16'));
+    Weights = 0.2126 * Weights(:,:,1) + 0.7152 * Weights(:,:,2) + .0722 * Weights(:,:,3);   
+    Weights = Weights.^10;
+else
+     Weights=[];
+     Belonging=[];
+     MLCenters=[];
+end
+
+
 if( nargout < 2 )
     clear WhiteImage
 end
 
 %---Demosaic---
+if DecodeOptions.WeightedDemosaic
+    LensletImage = LFWeightedDemosaic( LensletImage, Weights, Belonging, DecodeOptions );
+else
 % This uses Matlab's demosaic, which is "gradient compensated". This likely has implications near
 % the edges of lenslet images, where the contrast is due to vignetting / aperture shape, and is not
 % a desired part of the image
-LensletImage = cast(LensletImage.*double(intmax('uint16')), 'uint16');
-LensletImage = demosaic(LensletImage, DecodeOptions.DemosaicOrder);
-LensletImage = cast(LensletImage, DecodeOptions.Precision);
-LensletImage = LensletImage ./  double(intmax('uint16'));
+    LensletImage = cast(LensletImage.*double(intmax('uint16')), 'uint16');
+    LensletImage = demosaic(LensletImage, DecodeOptions.DemosaicOrder);
+    LensletImage = cast(LensletImage, DecodeOptions.Precision);
+    LensletImage = LensletImage ./  double(intmax('uint16'));
+end
 DecodeOptions.NColChans = 3;
 
 if( nargout >= 2 )
@@ -137,7 +159,7 @@ RTrans(end,1:2) = XformTrans;
 FixAll = RRot*RScale*RTrans;
 LensletImage(:,:,4) = WhiteImage;
 clear WhiteImage
-LF = SliceXYImage( FixAll, NewLensletGridModel, LensletImage, DecodeOptions );
+LF = SliceXYImage( FixAll, NewLensletGridModel, LensletImage, DecodeOptions, Weights, Belonging, MLCenters);
 clear LensletImage
 
 %---Correct for hex grid and resize to square u,v pixels---
@@ -275,7 +297,7 @@ end
 end
 
 %------------------------------------------------------------------------------------------------------
-function LF = SliceXYImage( ImXform, LensletGridModel, LensletImage, DecodeOptions )
+function LF = SliceXYImage( ImXform, LensletGridModel, LensletImage, DecodeOptions, Weights, Belong, Centers )
 % todo[optimization]: The SliceIdx and InvalidIdx variables could be precomputed
 
 fprintf('\nSlicing lenslets into LF...');
@@ -288,10 +310,16 @@ TSize = MaxSpacing + 1;
 
 LF = zeros(TSize, SSize, VSize, USize, DecodeOptions.NColChans + DecodeOptions.NWeightChans, DecodeOptions.Precision);
 
-for( chan=1:4 )
-	Interpolant{chan} = griddedInterpolant( LensletImage(:,:,chan) );
-	Interpolant{chan}.Method = 'linear';
-	Interpolant{chan}.ExtrapolationMethod = 'none';
+if( DecodeOptions.WeightedInterp )
+    ChansGridInterp = 1+DecodeOptions.NColChans : DecodeOptions.NColChans + DecodeOptions.NWeightChans;
+else
+    ChansGridInterp = 1:DecodeOptions.NColChans + DecodeOptions.NWeightChans;
+end
+
+for( Chan=ChansGridInterp )
+	Interpolant{Chan} = griddedInterpolant( LensletImage(:,:,Chan) );
+	Interpolant{Chan}.Method = 'linear';
+	Interpolant{Chan}.ExtrapolationMethod = 'none';
 end
 
 TVec = cast(floor((-(TSize-1)/2):((TSize-1)/2)), 'int16');
@@ -323,12 +351,18 @@ for( UStart = 0:UBlkSize:USize-1 )  % note zero-based indexing
 
     InValidIdx = find(R >= LensletGridModel.HSpacing/2  );
 
-    for( ColChan=1:4 )
-		IDirect = Interpolant{ColChan}( ImCoords );
+    if( DecodeOptions.WeightedInterp )
+         IDirect = LFWeightedInterp(LensletImage(:,:,1:DecodeOptions.NColChans), Weights, ImCoords, Belong, Centers);
+         IDirect(InValidIdx(:),:)=0;
+         LF(:,:,:,1 + (UStart:UStop),1:DecodeOptions.NColChans) = reshape(IDirect, [size(ss) DecodeOptions.NColChans]);
+    end
+    
+    for( Chan=ChansGridInterp )
+		IDirect = Interpolant{Chan}( ImCoords );
         IDirect(isnan(IDirect)) = 0;
         IDirect(InValidIdx) = 0;
-        LF(:,:,:,1 + (UStart:UStop),ColChan) = reshape(IDirect, size(ss));
-	end
+        LF(:,:,:,1 + (UStart:UStop),Chan) = reshape(IDirect, size(ss));
+    end
         
     fprintf('.');
 end
