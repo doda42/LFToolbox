@@ -81,7 +81,7 @@
 %                                     toolbox will search folders recursively for a file with the
 %                                     name WhiteImageDatabaseFname. If exactly one exists in the
 %                                     specified folder structure, it will be used.
-%          .WhiteImageDatabaseFname : Filename of the white images database, default WhiteImageDatabase.mat
+%          .WhiteImageDatabaseFname : Filename of the white image database, default WhiteImageDatabase.json
 %                          .DoDehex : Controls whether hexagonal sampling is converted to rectangular, default true
 %                       .DoSquareST : Controls whether s,t dimensions are resampled to square pixels, default true
 %                     .ResampMethod : 'fast'(default) or 'triangulation'
@@ -99,7 +99,7 @@
 %     Run from the top level of the 'Samples' folder will decode all the light fields in all the
 %     sub-folders, with default settings as set up in the opening section of the code. The
 %     calibration database created by LFUtilProcessWhiteImages is expected to be in
-%     'Cameras/CaliCalibrationDatabase.mat' by default.
+%     'Cameras/CaliCalibrationDatabase.json' by default.
 %
 %   LFUtilDecodeLytroFolder('Images', [], struct('OptionalTasks', 'ColourCorrect'))
 %
@@ -145,12 +145,12 @@ FileOptions = LFDefaultField('FileOptions', 'ThumbFnamePattern', '%s__Decoded_Th
 DecodeOptions = LFDefaultField('DecodeOptions', 'OptionalTasks', {}); % 'ColourCorrect', 'Rectify'
 DecodeOptions = LFDefaultField('DecodeOptions', 'ColourHistThresh', 0.01);
 
-DecodeOptions = LFDefaultField('DecodeOptions', 'WhiteImageDatabaseFname', 'WhiteImageDatabase.mat');
+DecodeOptions = LFDefaultField('DecodeOptions', 'WhiteImageDatabaseFname', 'WhiteImageDatabase.json');
 DecodeOptions = LFDefaultField('DecodeOptions', 'WhiteImageDatabasePath', 'Cameras');
 DecodeOptions = LocateWhiteImageDatabase( DecodeOptions );
 
 RectOptions = LFDefaultField(...
-	'RectOptions', 'CalibrationDatabaseFname', fullfile('Cameras','CalibrationDatabase.mat'));
+	'RectOptions', 'CalibrationDatabaseFname', fullfile('Cameras','CalibrationDatabase.json'));
 % Used to decide if two lenslet grid models are "close enough"... if they're not a warning is raised
 RectOptions = LFDefaultField( 'RectOptions', 'MaxGridModelDiff', 1e-5 );
 

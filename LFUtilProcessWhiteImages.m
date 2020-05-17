@@ -104,7 +104,7 @@ WhiteImagesPath = LFDefaultVal( 'WhiteImagesPath', 'Cameras' );
 FileOptions = LFDefaultField( 'FileOptions', 'OutputPath', WhiteImagesPath );
 FileOptions = LFDefaultField( 'FileOptions', 'SaveResult', true );
 FileOptions = LFDefaultField( 'FileOptions', 'ForceRedo', false );
-FileOptions = LFDefaultField( 'FileOptions', 'WhiteImageDatabasePath', 'WhiteImageDatabase.mat' );
+FileOptions = LFDefaultField( 'FileOptions', 'WhiteImageDatabasePath', 'WhiteImageDatabase.json' );
 FileOptions = LFDefaultField( 'FileOptions', 'WhiteMetadataFilenamePattern', '*MOD_*.TXT' );
 FileOptions = LFDefaultField( 'FileOptions', 'WhiteRawDataFnameExtension', '.RAW' );
 FileOptions = LFDefaultField( 'FileOptions', 'ProcessedWhiteImagenamePattern', '%s.grid.json' );
@@ -272,11 +272,13 @@ for( iFile = 1:length(WhiteImageInfo) )
 end
 
 CamInfo = WhiteImageInfo(CamInfoValid);
+[CamInfo.RelWhiteImagePath] = deal(RelWhiteImagePath);
+
 %---Optionally save the white file database---
 if( FileOptions.SaveResult )
     FileOptions.WhiteImageDatabasePath = fullfile(FileOptions.OutputPath, FileOptions.WhiteImageDatabasePath);
     fprintf('Saving to %s\n', FileOptions.WhiteImageDatabasePath);
-    save(FileOptions.WhiteImageDatabasePath, 'GeneratedByInfo', 'CamInfo', 'RelWhiteImagePath');
+    LFWriteMetadata(FileOptions.WhiteImageDatabasePath, LFVar2Struct(GeneratedByInfo, CamInfo));
 end
 
 fprintf('Done\n');

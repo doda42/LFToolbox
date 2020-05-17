@@ -44,7 +44,7 @@ function LFUtilProcessCalibrations( CalibrationsPath, FileOptions )
 CalibrationsPath = LFDefaultVal( 'CalibrationsPath', 'Cameras' );
 
 FileOptions = LFDefaultField( 'FileOptions', 'SaveResult', true );
-FileOptions = LFDefaultField( 'FileOptions', 'CalibrationDatabaseFname', 'CalibrationDatabase.mat' );
+FileOptions = LFDefaultField( 'FileOptions', 'CalibrationDatabaseFname', 'CalibrationDatabase.json' );
 FileOptions = LFDefaultField( 'FileOptions', 'CalInfoFilenamePattern', 'CalInfo*.json' );
 
 
@@ -59,5 +59,5 @@ if( FileOptions.SaveResult )
     
     TimeStamp = datestr(now,'ddmmmyyyy_HHMMSS');
     GeneratedByInfo = struct('mfilename', mfilename, 'time', TimeStamp, 'VersionStr', LFToolboxVersion);
-    save(SaveFpath, 'GeneratedByInfo', 'CamInfo');
+    LFWriteMetadata(SaveFpath, LFVar2Struct(GeneratedByInfo, CamInfo));
 end
