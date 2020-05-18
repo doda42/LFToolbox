@@ -92,8 +92,14 @@
 %                        .Precision : 'single'(default) or 'double'
 %
 %     RectOptions : struct controlling the optional rectification process
-%         .CalibrationDatabaseFname : Full path to the calibration file database, as created by
-%                                     LFUtilProcessCalibrations;
+%         .CalibrationDatabasePath  : Path to the calibration file database, as created by
+%                                     LFUtilProcessCalibrations; Default takes vale of
+%                                     DecodeOptions.WhiteImageDatabasePath. This can include the
+%                                     filename or only specify a path. The toolbox will search
+%                                     folders recursively for a file with the name
+%                                     CalibrationDatabaseFname. If exactly one exists in the
+%                                     specified folder structure, it will be used.
+%        .CalibrationDatabaseFname  : Filename of the calibration database, default CalibrationDaatabase.json
 %
 % Examples:
 %
@@ -156,10 +162,12 @@ DecodeOptions = LFDefaultField('DecodeOptions', 'ColourHistThresh', 0.01);
 
 DecodeOptions = LFDefaultField('DecodeOptions', 'WhiteImageDatabaseFname', 'WhiteImageDatabase.json');
 DecodeOptions = LFDefaultField('DecodeOptions', 'WhiteImageDatabasePath', 'Cameras');
-DecodeOptions = LocateWhiteImageDatabase( DecodeOptions );
+DecodeOptions.WhiteImageDatabasePath = ...
+	LFLocateDatabaseFile( DecodeOptions.WhiteImageDatabasePath, DecodeOptions.WhiteImageDatabaseFname );
 
-RectOptions = LFDefaultField(...
-	'RectOptions', 'CalibrationDatabaseFname', fullfile('Cameras','CalibrationDatabase.json'));
+RectOptions = LFDefaultField('RectOptions', 'CalibrationDatabaseFname', 'CalibrationDatabase.json');
+RectOptions = LFDefaultField('RectOptions', 'CalibrationDatabasePath', fileparts(DecodeOptions.WhiteImageDatabasePath));
+
 % Used to decide if two lenslet grid models are "close enough"... if they're not a warning is raised
 RectOptions = LFDefaultField( 'RectOptions', 'MaxGridModelDiff', 1e-5 );
 
@@ -253,6 +261,8 @@ for( iFile = 1:length(FileList) )
 	
 	%---Optionally rectify---
 	if( ismember( 'Rectify', TasksRemaining ) )
+		RectOptions.CalibrationDatabasePath = ...
+			LFLocateDatabaseFile( RectOptions.CalibrationDatabasePath, RectOptions.CalibrationDatabaseFname );
 		[LF, RectOptions, Success] = Rectify( LF, LFMetadata, DecodeOptions, RectOptions, LensletGridModel );
 		if( Success )
 			CompletedTasks = [CompletedTasks, 'Rectify'];
@@ -400,34 +410,3 @@ end
 Success = true;
 end
 
-%---Locate a white image database from one of several user inputs---
-% input options:
-% full path including filename
-% full path no filename
-% base path, with file in a subfolder -> perform search
-% will not return a result in case of ambiguity, e.g. if two databases are found
-function DecodeOptions = LocateWhiteImageDatabase( DecodeOptions )
-if( ~isfile( DecodeOptions.WhiteImageDatabasePath ) )
-	if( isfolder( DecodeOptions.WhiteImageDatabasePath ) )
-		TentativeFullPath =  ...
-			fullfile( DecodeOptions.WhiteImageDatabasePath, DecodeOptions.WhiteImageDatabaseFname );
-		if( ~isfile( TentativeFullPath ) )
-			% try finding a database under the requested location
-			FoundFiles = LFFindFilesRecursive( DecodeOptions.WhiteImageDatabasePath, DecodeOptions.WhiteImageDatabaseFname );
-			NumFound = length(FoundFiles);
-			if( NumFound ~= 1 )
-				ErrorMessage = sprintf( ...
-					'Needed 1 white image database, found %d named ''%s'' under folder ''%s''\n', NumFound, ...
-					DecodeOptions.WhiteImageDatabaseFname, DecodeOptions.WhiteImageDatabasePath );
-				error( ErrorMessage );
-			else
-				TentativeFullPath = fullfile( DecodeOptions.WhiteImageDatabasePath, FoundFiles{1} );
-			end
-		end
-		DecodeOptions.WhiteImageDatabasePath = TentativeFullPath;
-		fprintf('Using %s\n', DecodeOptions.WhiteImageDatabasePath);
-	else
-		error('Unable to locate white image database %s', DecodeOptions.WhiteImageDatabasePath); % shouldn't happen
-	end
-end
-end

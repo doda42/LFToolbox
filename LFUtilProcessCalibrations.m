@@ -26,6 +26,10 @@
 % 
 % 
 %     FileOptions : struct controlling file naming and saving
+%                       .OutputPath : By default files are saved alongside input files; specifying
+%                                     an output path will mirror the folder structure of the input,
+%                                     and save generated files in that structure, leaving the input
+%                                     untouched
 %                       .SaveResult : Set to false to perform a "dry run"
 %         .CalibrationDatabaseFname : Name of file to which white image database is saved
 %           .CalInfoFilenamePattern : File search pattern for finding calibrations
@@ -43,10 +47,10 @@ function LFUtilProcessCalibrations( CalibrationsPath, FileOptions )
 %---Defaults---
 CalibrationsPath = LFDefaultVal( 'CalibrationsPath', 'Cameras' );
 
+FileOptions = LFDefaultField( 'FileOptions', 'OutputPath', CalibrationsPath );
 FileOptions = LFDefaultField( 'FileOptions', 'SaveResult', true );
 FileOptions = LFDefaultField( 'FileOptions', 'CalibrationDatabaseFname', 'CalibrationDatabase.json' );
 FileOptions = LFDefaultField( 'FileOptions', 'CalInfoFilenamePattern', 'CalInfo*.json' );
-
 
 %---Crawl folder structure locating calibrations---
 fprintf('Building database of calibrations in %s\n', CalibrationsPath);
@@ -54,9 +58,18 @@ CamInfo = LFGatherCamInfo( CalibrationsPath, FileOptions.CalInfoFilenamePattern 
 
 %---Optionally save---
 if( FileOptions.SaveResult )
-    SaveFpath = fullfile(CalibrationsPath, FileOptions.CalibrationDatabaseFname);
+    SaveFpath = fullfile(FileOptions.OutputPath, FileOptions.CalibrationDatabaseFname);
     fprintf('Saving to %s\n', SaveFpath);
-    
+
+	%---Make sure destination folder exists, and record relative path---
+	warning('off','MATLAB:MKDIR:DirectoryExists');
+	mkdir( FileOptions.OutputPath ); % make sure folder exists
+	AbsoluteOutputPath = what( FileOptions.OutputPath ).path;
+	AbsoluteCalFilesPath = what( CalibrationsPath ).path;
+	% we need to be able to find the calibration files given the path to the database
+	RelCalFilePath = relativepath( AbsoluteCalFilesPath, AbsoluteOutputPath );
+	[CamInfo.RelCalFilePath] = deal(RelCalFilePath);
+	
     TimeStamp = datestr(now,'ddmmmyyyy_HHMMSS');
     GeneratedByInfo = struct('mfilename', mfilename, 'time', TimeStamp, 'VersionStr', LFToolboxVersion);
     LFWriteMetadata(SaveFpath, LFVar2Struct(GeneratedByInfo, CamInfo));

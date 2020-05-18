@@ -41,6 +41,10 @@
 function [RectOptions, LF] = LFCalDispRectIntrinsics( LF, LFMetadata, RectOptions, PaintColour )
 
 PaintColour = LFDefaultVal( 'PaintColour', [0.5,1,1] );
+
+RectOptions.CalibrationDatabasePath = ...
+	LFLocateDatabaseFile( RectOptions.CalibrationDatabasePath, RectOptions.CalibrationDatabaseFname );
+
 [CalInfo, RectOptions] = LFFindCalInfo( LFMetadata, RectOptions );
 
 %---Discard weight channel---
