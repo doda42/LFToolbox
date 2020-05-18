@@ -7,11 +7,11 @@ Please refer to README.md and LFToolbox.pdf for installation instructions and fu
 ---v0.6----------------------------------------------------------------------
 
 Reverse compatibility:
-- White image and calibration database formats changed, re-run LFUtilProcessWhiteImages and LFUtilProcessCalibrations
+- White image and calibration database formats changed, re-run LFUtilProcessWhiteImages and LFUtilProcessCalibrations; note that grid analysis and calibrations don't need to re-run, only the database file needs to be re-generated.
 
 New features:
 - Using .json file format for white image and calibration file databases
-- Allow LFUtilProcessWhiteImages to save in a separate folder, leaving input folder untouched
+- Allow LFUtilProcessWhiteImages, LFUtilDecodeLytroFolder to save in specified output folders, leaving input folders untouched
 - LFBuild2DLPF, LFBuild4DLPF for frequency-domain lowpass filters, optionally anisotropic
 - Smarter search for of white image database when calling LFUtilDecodeLytroFolder; More informative error messages when locating white image database / files
 

@@ -60,6 +60,9 @@
 %     LFFindFilesRecursive.m for more information and examples of how InputPath is interpreted.
 %
 %     FileOptions : struct controlling file naming and saving
+%               .OutputPath : By default files are saved alongside input files; specifying an output
+%                             path will mirror the folder structure of the input, and save generated
+%                             files in that structure, leaving the input untouched
 %               .SaveResult : Set to false to perform a "dry run"
 %                .ForceRedo : If true previous results are ignored and decoding starts from scratch
 %         .SaveFnamePattern : String defining the pattern used in generating the output filename;
@@ -124,6 +127,11 @@
 % 
 %     Specify an alternative location for the white images normally located in 'Cameras'. See 
 %     LFUtilProcessWhiteImages for more examples.
+% 
+%   LFUtilDecodeLytroFolder([],struct('OutputPath','path/for/processed/images'))
+% 
+%     Specify an output path; input path structure will be mirrored and populated with decoded light
+%     fields.
 %
 % User guide: <a href="matlab:which LFToolbox.pdf; open('LFToolbox.pdf')">LFToolbox.pdf</a>
 % See also: LFUtilExtractLFPThumbs, LFUtilProcessWhiteImages, LFUtilProcessCalibrations, LFUtilCalLensletCam,
@@ -137,6 +145,7 @@ function LFUtilDecodeLytroFolder( InputPath, FileOptions, DecodeOptions, RectOpt
 %---Defaults---
 InputPath = LFDefaultVal( 'InputPath', 'Images' );
 
+FileOptions = LFDefaultField('FileOptions', 'OutputPath', InputPath );
 FileOptions = LFDefaultField('FileOptions', 'SaveResult', true);
 FileOptions = LFDefaultField('FileOptions', 'ForceRedo', false);
 FileOptions = LFDefaultField('FileOptions', 'SaveFnamePattern', '%s__Decoded.mat');
@@ -162,6 +171,14 @@ end
 %---Crawl folder structure locating raw lenslet images---
 DefaultFileSpec = {'*.lfr', '*.lfp', '*.LFR', '*.raw'}; % gets overriden below, if a file spec is provided
 DefaultPath = 'Images';
+fprintf('Input from %s\n', InputPath);
+fprintf('Output to %s\n', FileOptions.OutputPath);
+
+% create output folder; better to have a write permissions error here than after a full decode
+warning('off','MATLAB:MKDIR:DirectoryExists');
+mkdir( FileOptions.OutputPath );
+
+% Find input files
 [FileList, BasePath] = LFFindFilesRecursive( InputPath, DefaultFileSpec, DefaultPath );
 
 fprintf('Found :\n');
@@ -181,7 +198,6 @@ for( iFile = 1:length(FileList) )
 	
 	%---Find current / base filename---
 	CurFname = FileList{iFile};
-	CurFname = fullfile(BasePath, CurFname);
 	
 	% Build filename base without extension, auto-remove '__frame' for legacy .raw format
 	LFFnameBase = CurFname;
@@ -199,12 +215,13 @@ for( iFile = 1:length(FileList) )
 	
 	% First check if a decoded file already exists
 	[SDecoded, FileExists, CompletedTasks, TasksRemaining, SaveFname] = CheckIfExists( ...
-		LFFnameBase, DecodeOptions, FileOptions.SaveFnamePattern, FileOptions.ForceRedo );
+		LFFnameBase, DecodeOptions, FileOptions, FileOptions.ForceRedo );
 	
 	if( ~FileExists )
 		% No previous result, decode
+		InputFname = fullfile(BasePath, CurFname);
 		[LF, LFMetadata, WhiteImageMetadata, LensletGridModel, DecodeOptions] = ...
-			LFLytroDecodeImage( CurFname, DecodeOptions );
+			LFLytroDecodeImage( InputFname, DecodeOptions );
 		if( isempty(LF) )
 			continue;
 		end
@@ -257,12 +274,17 @@ for( iFile = 1:length(FileList) )
 	
 	DecodeOptions.OptionalTasks = CompletedTasks;
 	
-	%---Optionally save---
+	%---Optionally save--- % todo[feature]: make output format user-selected
 	if( SaveRequired && FileOptions.SaveResult )
-		if( isfloat(LF) )
-			LF = uint16( LF .* double(intmax('uint16')) );
-		end
+		LF = LFConvertToInt( LF, 'uint16' ); 
+
+		% make sure output folder exists
+		OutPath = fileparts(SaveFname);
+		warning('off','MATLAB:MKDIR:DirectoryExists');
+		mkdir( OutPath );
+
 		ThumbFname = sprintf(FileOptions.ThumbFnamePattern, LFFnameBase);
+		ThumbFname = fullfile(FileOptions.OutputPath, ThumbFname);
 		fprintf('Saving to:\n\t%s,\n\t%s...\n', SaveFname, ThumbFname);
 		TimeStamp = datestr(now,'ddmmmyyyy_HHMMSS');
 		GeneratedByInfo = struct('mfilename', mfilename, 'time', TimeStamp, 'VersionStr', LFToolboxVersion);
@@ -275,11 +297,12 @@ end
 
 %---------------------------------------------------------------------------------------------------
 function  [SDecoded, FileExists, CompletedTasks, TasksRemaining, SaveFname] = ...
-	CheckIfExists( LFFnameBase, DecodeOptions, SaveFnamePattern, ForceRedo )
+	CheckIfExists( LFFnameBase, DecodeOptions, FileOptions, ForceRedo )
 
 SDecoded = [];
 FileExists = false;
-SaveFname = sprintf(SaveFnamePattern, LFFnameBase);
+SaveFname = sprintf(FileOptions.SaveFnamePattern, LFFnameBase);
+SaveFname = fullfile(FileOptions.OutputPath, SaveFname);
 
 if( ~ForceRedo && exist(SaveFname, 'file') )
 	%---Task previously completed, check if there's more to do---
