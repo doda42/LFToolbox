@@ -1,8 +1,8 @@
 % LFCalFindCheckerCorners - locates corners in checkerboard images, called by LFUtilCalLensletCam
 %
 % Usage: 
-%     CalOptions = LFCalFindCheckerCorners( InputPath, CalOptions )
 %     CalOptions = LFCalFindCheckerCorners( InputPath )
+%     CalOptions = LFCalFindCheckerCorners( InputPath, [CalOptions], [FileOptions] )
 %
 % This function is called by LFUtilCalLensletCam to identify the corners in a set of checkerboard
 % images.
@@ -17,6 +17,11 @@
 %                     .LFFnamePattern : Filename pattern for locating input light fields
 %             .ForceRedoCornerFinding : Forces the function to run, overwriting existing results
 %                        .ShowDisplay : Enables display, allowing visual verification of results
+% 
+%    [optional] FileOptions : struct controlling file naming and saving
+%               .OutputPath : By default files are saved alongside input files; specifying an output
+%                             path will mirror the folder structure of the input, and save generated
+%                             files in that structure, leaving the input untouched
 %
 % Outputs :
 % 
@@ -30,14 +35,20 @@
 
 % Copyright (c) 2013-2020 Donald G. Dansereau
 
-function CalOptions = LFCalFindCheckerCorners( InputPath, CalOptions )
+function CalOptions = LFCalFindCheckerCorners( InputPath, CalOptions, FileOptions )
 
 %---Defaults---
+FileOptions = LFDefaultField( 'FileOptions', 'OutputPath', InputPath );
+
 CalOptions = LFDefaultField( 'CalOptions', 'ForceRedoCornerFinding', false );
 CalOptions = LFDefaultField( 'CalOptions', 'LFFnamePattern', '%s__Decoded.mat' );
 CalOptions = LFDefaultField( 'CalOptions', 'CheckerCornersFnamePattern', '%s__CheckerCorners.mat' );
 CalOptions = LFDefaultField( 'CalOptions', 'ShowDisplay', true );
 CalOptions = LFDefaultField( 'CalOptions', 'MinSubimageWeight', 0.2 * 2^16 ); % for fast rejection of dark frames
+
+%---Make sure dest exists---
+warning('off','MATLAB:MKDIR:DirectoryExists');
+mkdir( FileOptions.OutputPath );
 
 %---Build a regular expression for stripping the base filename out of the full raw filename---
 BaseFnamePattern = regexp(CalOptions.LFFnamePattern, '%s', 'split');
@@ -114,7 +125,8 @@ for( iFile = 1:length(FileList) )
     fprintf(' --- %s [%d / %d]', ShortFname, iFile, length(FileList));
     
     %---Check for already-decoded file---
-    SaveFname = sprintf(CalOptions.CheckerCornersFnamePattern, CurBaseFname);
+    SaveFname = sprintf(CalOptions.CheckerCornersFnamePattern, ShortFname);
+	SaveFname = fullfile( FileOptions.OutputPath, SaveFname );
     if( ~CalOptions.ForceRedoCornerFinding )
         if( exist(SaveFname, 'file') )
             fprintf( ' already done, skipping\n' );
@@ -190,7 +202,6 @@ for( iFile = 1:length(FileList) )
         end
     end
     fprintf('\n');
-    
     
     %---Save---
     fprintf('Saving result to %s...\n', SaveFname);
