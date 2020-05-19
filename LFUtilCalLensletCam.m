@@ -40,8 +40,8 @@
 %
 % Inputs -- all are optional, see code below for default values :
 %
-%     InputPath : Path to folder containing decoded checkerboard images -- note the function
-%                 operates recursively, i.e. it will search sub-folders.
+%     InputPath : Default '.'; Path to folder containing decoded checkerboard images -- note the
+%                 function operates recursively, i.e. it will search sub-folders.
 %
 %     CalOptions : struct controlling calibration parameters
 %          .ExpectedCheckerSize : Number of checkerboard corners, as recognized by the automatic
