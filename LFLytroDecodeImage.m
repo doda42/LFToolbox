@@ -176,9 +176,11 @@ switch( WhiteImageMetadata.camera.model )
         fprintf('Unrecognized camera model, skipping...\');
         return
 end
-WhiteImage = LFReadRaw( WhiteRawFname, BitPacking ); 
+WhiteImage = LFReadRaw( WhiteRawFname, BitPacking );
 
 %---Decode---
 fprintf('Decoding lenslet image :');
 [LF, LFWeight, DecodeOptions] = LFDecodeLensletImageDirect( LensletImage, WhiteImage, LensletGridModel, DecodeOptions );
 LF(:,:,:,:,4) = LFWeight;
+DecodeOptions.LFSize = size(LF);
+

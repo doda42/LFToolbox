@@ -63,6 +63,12 @@
 %               .OutputPath : By default files are saved alongside input files; specifying an output
 %                             path will mirror the folder structure of the input, and save generated
 %                             files in that structure, leaving the input untouched
+%          .OutputPrecision : 'uint8' or 'uint16', default 'uint16'
+%             .OutputFormat : Output file format: default 'mat', can also be 'eslf.png' or
+%                            'eslf.jpg'
+%           .ImwriteOptions : Cell array of additional options to pass to imwrite for eslf output
+%                             formats; see LFWriteESLF
+%               .SaveWeight : Save the weight channel, default true
 %               .SaveResult : Set to false to perform a "dry run"
 %                .ForceRedo : If true previous results are ignored and decoding starts from scratch
 %         .SaveFnamePattern : String defining the pattern used in generating the output filename;
@@ -152,9 +158,13 @@ function LFUtilDecodeLytroFolder( InputPath, FileOptions, DecodeOptions, RectOpt
 InputPath = LFDefaultVal( 'InputPath', 'Images' );
 
 FileOptions = LFDefaultField('FileOptions', 'OutputPath', InputPath );
+FileOptions = LFDefaultField('FileOptions', 'OutputPrecision', 'uint16' );
+FileOptions = LFDefaultField('FileOptions', 'OutputFormat', 'mat' );
+FileOptions = LFDefaultField('FileOptions', 'ImwriteOptions', {} );
+FileOptions = LFDefaultField('FileOptions', 'SaveWeight', true );
 FileOptions = LFDefaultField('FileOptions', 'SaveResult', true);
 FileOptions = LFDefaultField('FileOptions', 'ForceRedo', false);
-FileOptions = LFDefaultField('FileOptions', 'SaveFnamePattern', '%s__Decoded.mat');
+FileOptions = LFDefaultField('FileOptions', 'SaveFnamePattern', '%s__Decoded');
 FileOptions = LFDefaultField('FileOptions', 'ThumbFnamePattern', '%s__Decoded_Thumb.png');
 
 DecodeOptions = LFDefaultField('DecodeOptions', 'OptionalTasks', {}); % 'ColourCorrect', 'Rectify'
@@ -284,9 +294,16 @@ for( iFile = 1:length(FileList) )
 	
 	DecodeOptions.OptionalTasks = CompletedTasks;
 	
-	%---Optionally save--- % todo[feature]: make output format user-selected
+	%---Optionally save---
 	if( SaveRequired && FileOptions.SaveResult )
-		LF = LFConvertToInt( LF, 'uint16' ); 
+		% Convert to ints
+		LF = LFConvertToInt( LF, FileOptions.OutputPrecision );
+		
+		% Strip weight if we don't want it
+		% todo[optimization]: don't decode weight if it's not wanted
+		if( ~FileOptions.SaveWeight )
+			LF = LF( :,:,:,:, 1:3 );
+		end
 
 		% make sure output folder exists
 		OutPath = fileparts(SaveFname);
@@ -298,9 +315,24 @@ for( iFile = 1:length(FileList) )
 		fprintf('Saving to:\n\t%s,\n\t%s...\n', SaveFname, ThumbFname);
 		TimeStamp = datestr(now,'ddmmmyyyy_HHMMSS');
 		GeneratedByInfo = struct('mfilename', mfilename, 'time', TimeStamp, 'VersionStr', LFToolboxVersion);
-		
-		save('-v7.3', SaveFname, 'GeneratedByInfo', 'LF', 'LFMetadata', 'WhiteImageMetadata', 'LensletGridModel', 'DecodeOptions', 'RectOptions');
+
 		imwrite(Thumb, ThumbFname);
+		switch( FileOptions.OutputFormat )
+			case 'mat'
+				save('-v7.3', SaveFname, 'GeneratedByInfo', 'LF', 'LFMetadata', 'WhiteImageMetadata', 'LensletGridModel', 'DecodeOptions', 'RectOptions');
+			case 'eslf.png'
+				WriteAlpha = FileOptions.SaveWeight;
+				LFWriteESLF( LF, SaveFname, WriteAlpha, FileOptions.ImwriteOptions{:} );
+				MetadataFname = [SaveFname, '.json'];
+				LFWriteMetadata( MetadataFname, LFVar2Struct(GeneratedByInfo, LFMetadata, WhiteImageMetadata, LensletGridModel, DecodeOptions, RectOptions));
+			case 'eslf.jpg'
+				WriteAlpha = false;
+				LFWriteESLF( LF, SaveFname, WriteAlpha, FileOptions.ImwriteOptions{:} );
+				MetadataFname = [SaveFname, '.json'];
+				LFWriteMetadata( MetadataFname, LFVar2Struct(GeneratedByInfo, LFMetadata, WhiteImageMetadata, LensletGridModel, DecodeOptions, RectOptions));
+			otherwise
+				error('Unrecognized output format %s', FileOptions.OutputFormat);
+		end
 	end
 end
 end
@@ -312,15 +344,29 @@ function  [SDecoded, FileExists, CompletedTasks, TasksRemaining, SaveFname] = ..
 SDecoded = [];
 FileExists = false;
 SaveFname = sprintf(FileOptions.SaveFnamePattern, LFFnameBase);
+SaveFname = [SaveFname, '.', FileOptions.OutputFormat];
 SaveFname = fullfile(FileOptions.OutputPath, SaveFname);
 
 if( ~ForceRedo && exist(SaveFname, 'file') )
 	%---Task previously completed, check if there's more to do---
 	FileExists = true;
 	fprintf( '    %s already exists\n', SaveFname );
+		
+	switch( FileOptions.OutputFormat )
+		case 'mat'
+			PrevDecodeOptions = load( SaveFname, 'DecodeOptions' );
+			PrevOptionalTasks = PrevDecodeOptions.DecodeOptions.OptionalTasks;
+		otherwise
+			MetadataFname = [SaveFname, '.json'];
+			PrevDecodeOptions = LFReadMetadata( MetadataFname );
+			PrevOptionalTasks = PrevDecodeOptions.DecodeOptions.OptionalTasks;
+			if( ~isempty(PrevOptionalTasks) )
+				PrevOptionalTasks = cellstr(PrevOptionalTasks);
+			else
+				PrevOptionalTasks = {};
+			end
+	end
 	
-	PrevDecodeOptions = load( SaveFname, 'DecodeOptions' );
-	PrevOptionalTasks = PrevDecodeOptions.DecodeOptions.OptionalTasks;
 	CompletedTasks = PrevOptionalTasks;
 	TasksRemaining = find(~ismember(DecodeOptions.OptionalTasks, PrevOptionalTasks));
 	if( ~isempty(TasksRemaining) )
@@ -328,7 +374,15 @@ if( ~ForceRedo && exist(SaveFname, 'file') )
 		TasksRemaining = {DecodeOptions.OptionalTasks{TasksRemaining}};  % by name
 		fprintf('    Additional tasks remain, loading existing file...\n');
 		
-		SDecoded = load( SaveFname );
+		switch( FileOptions.OutputFormat )
+			case 'mat'
+				SDecoded = load( SaveFname );
+			otherwise
+				SDecoded = LFReadMetadata( MetadataFname );
+				LensletSize_pix = SDecoded.DecodeOptions.LFSize(1:2);
+				LoadAlpha = FileOptions.SaveWeight;
+				SDecoded.LF = LFReadESLF( SaveFname, LensletSize_pix, LoadAlpha );
+		end
 		AllTasks = [SDecoded.DecodeOptions.OptionalTasks, TasksRemaining];
 		SDecoded.DecodeOptions.OptionalTasks = AllTasks;
 		
