@@ -67,16 +67,46 @@ DecodeOptions = LFDefaultField( 'DecodeOptions', 'DoDehex', true );
 DecodeOptions = LFDefaultField( 'DecodeOptions', 'DoSquareST', true );
 DecodeOptions = LFDefaultField('DecodeOptions', 'WeightedDemosaic', false);
 DecodeOptions = LFDefaultField('DecodeOptions', 'WeightedInterp', false);
+DecodeOptions = LFDefaultField( 'DecodeOptions', 'NormaliseWIColours', false );
+DecodeOptions = LFDefaultField( 'DecodeOptions', 'NormaliseWIExposure', false );
 
 %---Rescale image values, remove black level---
 DecodeOptions.LevelLimits = cast(DecodeOptions.LevelLimits, DecodeOptions.Precision);
 BlackLevel = DecodeOptions.LevelLimits(1);
 WhiteLevel = DecodeOptions.LevelLimits(2);
+ExpFactor = 2^DecodeOptions.ExposureBias;
 WhiteImage = cast(WhiteImage, DecodeOptions.Precision);
 WhiteImage = (WhiteImage - BlackLevel) ./ (WhiteLevel - BlackLevel);
 
 LensletImage = cast(LensletImage, DecodeOptions.Precision);
-LensletImage = (LensletImage - BlackLevel) ./ (WhiteLevel - BlackLevel);
+LensletImage = ExpFactor * (LensletImage - BlackLevel) ./ (WhiteLevel - BlackLevel);
+
+%Define variables for bayer pattern
+if(strcmp(DecodeOptions.DemosaicOrder,'grbg'))
+    G1stY=1;G1stX=1;
+    RstY=1;RstX=2;
+    BstY=2;BstX=1;
+    G2stY=2;G2stX=2;
+elseif(strcmp(DecodeOptions.DemosaicOrder,'bggr'))
+    BstY=1;BstX=1;
+    G1stY=1;G1stX=2;
+    G2stY=2;G2stX=1;
+    RstY=2;RstX=2;
+else
+    error('unrecognized Demosaic Order');
+end
+
+%---White Image normalization and devignetting---
+  %Color response normalization:
+if(DecodeOptions.NormaliseWIColours)
+    WhiteImage(RstY:2:end,RstX:2:end) = WhiteImage(RstY:2:end,RstX:2:end) * DecodeOptions.SensorNormalizeRBGains(1);%Red component
+    WhiteImage(BstY:2:end,BstX:2:end) = WhiteImage(BstY:2:end,BstX:2:end) * DecodeOptions.SensorNormalizeRBGains(2);%Blue component
+end
+if(DecodeOptions.NormaliseWIExposure)
+  %Global normalization (=> value 1 at microlens centers which are not supposed to have vignetting).
+    WhiteImage = WhiteImage./prctile(WhiteImage(:),99.9);
+end
+
 LensletImage = LensletImage ./ WhiteImage; % Devignette
 % Clip -- this is aggressive and throws away bright areas; there is a potential for an HDR approach here
 LensletImage = min(1, max(0, LensletImage));
