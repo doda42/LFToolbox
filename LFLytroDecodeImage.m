@@ -72,6 +72,7 @@ DecodeOptions = LFDefaultField( 'DecodeOptions', 'WhiteImageDatabasePath', fullf
 % Compatibility: for loading extracted raw / json files
 DecodeOptions = LFDefaultField( 'DecodeOptions', 'MetadataFnamePattern', '_metadata.json' );
 DecodeOptions = LFDefaultField( 'DecodeOptions', 'SerialdataFnamePattern', '_private_metadata.json' );
+DecodeOptions = LFDefaultField( 'DecodeOptions', 'ColourCompatibility', true );
 
 %---
 LF = [];
@@ -154,15 +155,38 @@ switch( WhiteImageMetadata.camera.model )
             LFMetadata.image.color.whiteBalanceGain.gb, ...
             LFMetadata.image.color.whiteBalanceGain.b ];
         DecodeOptions.Gamma = LFMetadata.image.color.gamma^0.5;
+        DecodeOptions.SensorNormalizeRBGains = [1 1];
+        
+        if(DecodeOptions.ColourCompatibility)
+            DecodeOptions.ExposureBias = 0;
+        else
+            DecodeOptions.ExposureBias = LFMetadata.image.modulationExposureBias + 1;
+        end
+        
+        
         BitPacking = '12bit';
         
     case 'B01'
         assert( WhiteImageMetadata.image.rawDetails.pixelPacking.bitsPerPixel == 10 );
         assert( strcmp(WhiteImageMetadata.image.rawDetails.pixelPacking.endianness, 'little') );
         DecodeOptions.LevelLimits = [LFMetadata.image.pixelFormat.black.gr, LFMetadata.image.pixelFormat.white.gr];
-        DecodeOptions.ColourMatrix = reshape(LFMetadata.image.color.ccm, 3,3);
-        DecodeOptions.ColourBalance = [1,1,1];
+        
+        if(DecodeOptions.ColourCompatibility)
+            DecodeOptions.ColourMatrix = reshape(LFMetadata.image.color.ccm, 3,3);
+            DecodeOptions.ColourBalance = [1,1,1];
+            DecodeOptions.ExposureBias = 0;
+        else
+            DecodeOptions.ColourMatrix = reshape(WhiteImageMetadata.image.color.ccmRgbToSrgbArray, 3,3);
+            DecodeOptions.ColourBalance = ([...
+                LFMetadata.image.color.whiteBalanceGain.r, ...
+                LFMetadata.image.color.whiteBalanceGain.gb, ...
+                LFMetadata.image.color.whiteBalanceGain.b ]);
+            DecodeOptions.ExposureBias = LFMetadata.image.modulationExposureBias;
+        end
+        
         DecodeOptions.Gamma = 1;
+        DecodeOptions.SensorNormalizeRBGains =   [WhiteImageMetadata.devices.sensor.normalizedResponses.gr/WhiteImageMetadata.devices.sensor.normalizedResponses.r, ...
+                                                  WhiteImageMetadata.devices.sensor.normalizedResponses.gr/WhiteImageMetadata.devices.sensor.normalizedResponses.b];
         BitPacking = '10bit';
         
     otherwise
