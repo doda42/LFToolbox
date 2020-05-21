@@ -9,13 +9,21 @@ The most recent release and development versions are here: [https://github.com/d
 The complementary LiFF light field feature toolbox is here: [http://dgd.vision/Tools/LiFF](http://dgd.vision/Tools/LiFF)
 
 ## Installation and Sample Data
-Please refer to LFToolbox.pdf for installation and usage instructions.
+Clone or download and unzip the toolbox into an appropriately named folder, e.g. LFToolbox. Run LFMatlabPathSetup.m. This must be run every time Matlab starts, so consider adding a line to startup.m.
+
+**Refer to LFToolbox.pdf** for detailed installation and usage instructions.
 
 Sample data:
 
 * [LFToolbox v0.5 Sample Pack](http://www-personal.acfr.usyd.edu.au/donald/LFToolbox0.5_Samples.zip)
 * [Small Sample Calibration](http://www-personal.acfr.usyd.edu.au/ddan1654/PlenCalSmallExample.zip)
 * Additional datasets and community links at [dgd.vision](http://dgd.vision/Tools/LFToolbox)
+
+## Help and Feedback
+
+* Post general questions to [the Light Field Vision Forum](https://groups.google.com/forum/#!forum/lightfieldvision)
+* Post bug reports and feature requests via [github issues](https://github.com/doda42/LFToolbox/issues)
+* You can also email feedback and contributions to Donald.Dansereau+LFToolbox {at} gmail dot com
 
 ## What's New / Development Plan
 v0.6 introduces new features, highlights: todo
@@ -26,11 +34,10 @@ Future plans include more significant changes to lenslet-based decode and calibr
 
 ## Compatibility
 
-**Reverse-compatibility**: Changes to interfaces have been minimised, LFDispVidCirc is the main exception, with a new parameter structure.
+**Reverse-compatibility**: Changes to interfaces have been minimised.
+todo See LFToolbox.pdf for details.
 
-Previously generated calibration files should be re-generated, and to benefit from performance improvements to decoding, white images should be re-generated. See LFToolbox.pdf for details.
-
-**Matlab**: LFToolbox 0.5 was written in MATLAB 2020a, but should be compatible with earlier versions.
+**Matlab**: LFToolbox v0.6 was written in MATLAB 2020a, but should be compatible with earlier versions.
 
 **File Formats**: The toolbox can load gantry / array-style folders of images, ESLF files, and raw lenslet-based images.
 
@@ -40,17 +47,12 @@ Previously generated calibration files should be re-generated, and to benefit fr
 
 **Lytro Software**: The toolbox is compatible with files generated using Lytro Desktop 4 and 3, and will load ESLF files generated using the Lytro Power Tools.
 
-## Contributing / Feedback
-Suggestions, bug reports, code improvements and new functionality are welcome -- email Donald.Dansereau+LFToolbox {at} gmail dot com.
-
 ## Branch Structure
 * tags: keep track of each release
 * master: always the most recent release
-* develop<version #>: developing new functionality for specific release
-* develop: experimental functionality
-* release<version #>: soon-to-be-released branch, to be merged into master
+* develop*, feature*: developing new functionality an upcoming release
 
-Code in the develop branches is incomplete, unstable, undocumented, and unsupported. Use at your own risk. Functions named LFX* are new/experimental.
+Code in development branches is incomplete, use at your own risk. Functions named LFX* are new/experimental.
 
 ## Acknowledgements
 Parts of the code were taken with permission from the Camera Calibration Toolbox for MATLAB by Jean-Yves Bouguet, with contributions from Pietro Perona and others; and from the JSONlab Toolbox by Qianqian Fang and others. LFFigure was originally by Daniel Eaton. The LFP reader is based in part on Nirav Patel and Doug Kelley's LFP readers. Thanks to Michael Tao for help and samples for decoding Illum imagery.

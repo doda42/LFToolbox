@@ -3,9 +3,7 @@
 % Usage:
 %
 %     LFUtilCalLensletCam
-%     LFUtilCalLensletCam( Inputpath )
-%     LFUtilCalLensletCam( InputPath, CalOptions )
-%     LFUtilProcessCalibrations( [], CalOptions )
+%     LFUtilCalLensletCam( [InputPath], [CalOptions], [FileOptions] )
 %
 % All parameters are optional and take on default values as set in the "Defaults" section at the top
 % of the implementation. As such, this can be called as a function or run directly by editing the
@@ -42,8 +40,8 @@
 %
 % Inputs -- all are optional, see code below for default values :
 %
-%     InputPath : Path to folder containing decoded checkerboard images -- note the function
-%                 operates recursively, i.e. it will search sub-folders.
+%     InputPath : Default '.'; Path to folder containing decoded checkerboard images -- note the
+%                 function operates recursively, i.e. it will search sub-folders.
 %
 %     CalOptions : struct controlling calibration parameters
 %          .ExpectedCheckerSize : Number of checkerboard corners, as recognized by the automatic
@@ -69,7 +67,13 @@
 %                              This corresponds to Matlab's lsqnonlin option `TolFun'. The default
 %                              value of 0 is set within the LFCalRefine function, and means the
 %                              optimization never terminates based on this criterion.
+% 
+%     FileOptions : struct controlling file naming and saving
+%               .OutputPath : By default files are saved alongside input files; specifying an output
+%                             path will mirror the folder structure of the input, and save generated
+%                             files in that structure, leaving the input untouched
 %
+% 
 % Output takes the form of saved checkerboard info and calibration files.
 %
 % Example :
@@ -86,10 +90,12 @@
 
 % Copyright (c) 2013-2020 Donald G. Dansereau
 
-function LFUtilCalLensletCam( InputPath, CalOptions )
+function LFUtilCalLensletCam( InputPath, CalOptions, FileOptions )
 
 %---Tweakables---
 InputPath = LFDefaultVal('InputPath', '.');
+
+FileOptions = LFDefaultField( 'FileOptions', 'OutputPath', InputPath );
 
 CalOptions = LFDefaultField( 'CalOptions', 'ExpectedCheckerSize', [19, 19] );
 CalOptions = LFDefaultField( 'CalOptions', 'ExpectedCheckerSpacing_m', [3.61, 3.61] * 1e-3 );
@@ -101,7 +107,7 @@ CalOptions = LFDefaultField( 'CalOptions', 'ShowDisplay', true );
 CalOptions = LFDefaultField( 'CalOptions', 'CalInfoFname', 'CalInfo.json' );
 
 %---Check for previously started calibration---
-CalInfoFname = fullfile(InputPath, CalOptions.CalInfoFname);
+CalInfoFname = fullfile(FileOptions.OutputPath, CalOptions.CalInfoFname);
 if( ~CalOptions.ForceRedoInit && exist(CalInfoFname, 'file') )
     fprintf('---File %s already exists\n   Loading calibration state and options\n', CalInfoFname);
     CalOptions = LFStruct2Var( LFReadMetadata(CalInfoFname), 'CalOptions' );
@@ -118,46 +124,46 @@ while( ~strcmp(CalOptions.Phase, 'Refine') || ~RefineComplete )
         case 'Start'
             %---Find checkerboard corners---
             CalOptions.Phase = 'Corners';
-            CalOptions = LFCalFindCheckerCorners( InputPath, CalOptions );
+            CalOptions = LFCalFindCheckerCorners( InputPath, CalOptions, FileOptions );
             
         case 'Corners'
             %---Initialize calibration process---
             CalOptions.Phase = 'Init';
-            CalOptions = LFCalInit( InputPath, CalOptions );
+            CalOptions = LFCalInit( FileOptions.OutputPath, CalOptions );
             
             if( CalOptions.ShowDisplay )
                 LFFigure(2);
                 clf
-                LFCalDispEstPoses( InputPath, CalOptions, [], [0.7,0.7,0.7] );
+                LFCalDispEstPoses( FileOptions.OutputPath, CalOptions, [], [0.7,0.7,0.7] );
             end
             
         case 'Init'
             %---First step of optimization process will exclude distortion---
             CalOptions.Phase = 'NoDistort';
-            CalOptions = LFCalRefine( InputPath, CalOptions );
+            CalOptions = LFCalRefine( FileOptions.OutputPath, CalOptions );
             
             if( CalOptions.ShowDisplay )
                 LFFigure(2);
-                LFCalDispEstPoses( InputPath, CalOptions, [], [0,0.7,0] );
+                LFCalDispEstPoses( FileOptions.OutputPath, CalOptions, [], [0,0.7,0] );
             end
             
         case 'NoDistort'
             %---Next step of optimization process adds distortion---
             CalOptions.Phase = 'WithDistort';
-            CalOptions = LFCalRefine( InputPath, CalOptions );
+            CalOptions = LFCalRefine( FileOptions.OutputPath, CalOptions );
             if( CalOptions.ShowDisplay )
                 LFFigure(2);
-                LFCalDispEstPoses( InputPath, CalOptions, [], [0,0,1] );
+                LFCalDispEstPoses( FileOptions.OutputPath, CalOptions, [], [0,0,1] );
             end
             
         otherwise
             %---Subsequent calls refine the estimate---
             CalOptions.Phase = 'Refine';
-            CalOptions = LFCalRefine( InputPath, CalOptions );
+            CalOptions = LFCalRefine( FileOptions.OutputPath, CalOptions );
             RefineComplete = true;
             if( CalOptions.ShowDisplay )
                 LFFigure(2);
-                LFCalDispEstPoses( InputPath, CalOptions, [], [1,0,0] );
+                LFCalDispEstPoses( FileOptions.OutputPath, CalOptions, [], [1,0,0] );
             end
     end
 end

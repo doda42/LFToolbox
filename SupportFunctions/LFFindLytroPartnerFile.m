@@ -27,7 +27,11 @@ function PartnerFilename = LFFindLytroPartnerFile( OrigFilename, PartnerFilename
 [CurFnamePath, CurFnameBase] = fileparts( OrigFilename );
 PrependIdx = find(CurFnameBase == '_', 1);
 CurFnamePattern = strcat('*', CurFnameBase(PrependIdx:end), PartnerFilenameExtension);
-DirResult = dir(fullfile(CurFnamePath, CurFnamePattern));
+SearchLocation = fullfile(CurFnamePath, CurFnamePattern);
+DirResult = dir(SearchLocation);
+assert( ~isempty(DirResult), ...
+	['Unable to locate %s when looking for file to match %s.\n'...
+	'Check / rebuild white image database.'], SearchLocation, OrigFilename );
 DirResult = DirResult(1).name;
 PartnerFilename = fullfile(CurFnamePath, DirResult);
 

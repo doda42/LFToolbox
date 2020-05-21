@@ -11,7 +11,7 @@
 % 
 %  LFMetadata : loaded from a decoded light field, this contains the camera's serial number and zoom and focus settings.
 %  RectOptions : struct controlling rectification
-%      .CalibrationDatabaseFname : name of the calibration file database
+%      .CalibrationDatabasePath : full path to the calibration file database
 %
 % 
 % Outputs:
@@ -32,15 +32,22 @@ CalInfo = [];
 DesiredCam = struct('CamSerial', LFMetadata.SerialData.camera.serialNumber, ...
     'ZoomStep', LFMetadata.devices.lens.zoomStep, ...
     'FocusStep', LFMetadata.devices.lens.focusStep );
-CalFileInfo = LFSelectFromDatabase( DesiredCam, RectOptions.CalibrationDatabaseFname );
+CalFileInfo = LFSelectFromDatabase( DesiredCam, RectOptions.CalibrationDatabasePath );
 
 if( isempty(CalFileInfo) )
     return;
 end
 
-PathToDatabase = fileparts( RectOptions.CalibrationDatabaseFname );
+PathToDatabase = fileparts( RectOptions.CalibrationDatabasePath );
 RectOptions.CalInfoFname = CalFileInfo.Fname;
-CalInfo = LFReadMetadata( fullfile(PathToDatabase, RectOptions.CalInfoFname) );
+PathToCalFile = fullfile(PathToDatabase,CalFileInfo.RelCalFilePath);
+PathToCalFile = fullfile(PathToCalFile, RectOptions.CalInfoFname);
+assert( exist(PathToCalFile, 'file')~=0, ...
+	['Unable to locate %s, pointed to by calibration file database at %s. '...
+	'Check / rebuild white image database.'], ...
+	PathToCalFile, RectOptions.CalibrationDatabasePath );
+
+CalInfo = LFReadMetadata( PathToCalFile );
 fprintf('Loading %s\n', RectOptions.CalInfoFname);
 
 %---Check that the decode options and calibration info are a good match---

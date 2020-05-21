@@ -31,7 +31,7 @@
 %   [optinal] DecodeOptions : all fields are optional, defaults are for LFP Reader v2.0.0 naming
 %         .WhiteProcDataFnameExtension : Grid model from LFUtilProcessWhiteImages, default 'grid.json'
 %          .WhiteRawDataFnameExtension : White image file extension, default '.RAW'
-%              .WhiteImageDatabasePath : White image database, default 'Cameras/WhiteImageDatabase.mat'
+%              .WhiteImageDatabasePath : White image database, default 'Cameras/WhiteImageDatabase.json'
 % 
 %            For compatibility with extracted .raw and .json files:
 %                .MetadataFnamePattern : JSON file containing light field metadata, default '_metadata.json'
@@ -68,7 +68,7 @@ function [LF, LFMetadata, WhiteImageMetadata, LensletGridModel, DecodeOptions] =
 %---Defaults---
 DecodeOptions = LFDefaultField( 'DecodeOptions', 'WhiteProcDataFnameExtension', '.grid.json' );
 DecodeOptions = LFDefaultField( 'DecodeOptions', 'WhiteRawDataFnameExtension', '.RAW' );
-DecodeOptions = LFDefaultField( 'DecodeOptions', 'WhiteImageDatabasePath', fullfile('Cameras','WhiteImageDatabase.mat'));
+DecodeOptions = LFDefaultField( 'DecodeOptions', 'WhiteImageDatabasePath', fullfile('Cameras','WhiteImageDatabase.json'));
 % Compatibility: for loading extracted raw / json files
 DecodeOptions = LFDefaultField( 'DecodeOptions', 'MetadataFnamePattern', '_metadata.json' );
 DecodeOptions = LFDefaultField( 'DecodeOptions', 'SerialdataFnamePattern', '_private_metadata.json' );
@@ -120,6 +120,8 @@ DesiredCam = struct('CamSerial', LFMetadata.SerialData.camera.serialNumber, ...
     'FocusStep', LFMetadata.devices.lens.focusStep );
 DecodeOptions.WhiteImageInfo = LFSelectFromDatabase( DesiredCam, DecodeOptions.WhiteImageDatabasePath );
 PathToDatabase = fileparts( DecodeOptions.WhiteImageDatabasePath );
+PathToWhiteImages = DecodeOptions.WhiteImageInfo.RelWhiteImagePath;
+PathToWhiteImages = fullfile(PathToDatabase, PathToWhiteImages);
 if( isempty(DecodeOptions.WhiteImageInfo) || ~strcmp(DecodeOptions.WhiteImageInfo.CamSerial, DesiredCam.CamSerial) )
     fprintf('No appropriate white image found, skipping...\n');
     return
@@ -134,8 +136,13 @@ fprintf('Zoom:\t%d\t\t%d\n', DecodeOptions.WhiteImageInfo.ZoomStep, DesiredCam.Z
 fprintf('Focus:\t%d\t\t%d\n\n', DecodeOptions.WhiteImageInfo.FocusStep, DesiredCam.FocusStep);
 
 %---Load white image, white image metadata, and lenslet grid parameters---
-WhiteMetadataFname = fullfile(PathToDatabase, DecodeOptions.WhiteImageInfo.Fname);
-WhiteProcFname = LFFindLytroPartnerFile(WhiteMetadataFname, DecodeOptions.WhiteProcDataFnameExtension);
+WhiteMetadataFnameProc = fullfile(PathToDatabase, DecodeOptions.WhiteImageInfo.Fname);
+WhiteProcFname = LFFindLytroPartnerFile(WhiteMetadataFnameProc, DecodeOptions.WhiteProcDataFnameExtension);
+WhiteMetadataFname = fullfile(PathToWhiteImages, DecodeOptions.WhiteImageInfo.Fname);
+assert( exist(WhiteMetadataFname, 'file')~=0, ...
+	['Unable to locate %s, pointed to by white image database at %s. '...
+	'Check / rebuild white image database.'], ...
+	WhiteMetadataFname, DecodeOptions.WhiteImageDatabasePath );
 WhiteRawFname = LFFindLytroPartnerFile(WhiteMetadataFname, DecodeOptions.WhiteRawDataFnameExtension);
 
 fprintf('Loading white image and metadata...\n');
@@ -193,9 +200,11 @@ switch( WhiteImageMetadata.camera.model )
         fprintf('Unrecognized camera model, skipping...\');
         return
 end
-WhiteImage = LFReadRaw( WhiteRawFname, BitPacking ); 
+WhiteImage = LFReadRaw( WhiteRawFname, BitPacking );
 
 %---Decode---
 fprintf('Decoding lenslet image :');
 [LF, LFWeight, DecodeOptions] = LFDecodeLensletImageDirect( LensletImage, WhiteImage, LensletGridModel, DecodeOptions );
 LF(:,:,:,:,4) = LFWeight;
+DecodeOptions.LFSize = size(LF);
+

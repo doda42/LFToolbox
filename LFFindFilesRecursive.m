@@ -15,7 +15,7 @@
 %
 %    DefaultFileSpec : If no filespec is provided in the InputPath, this is used. Default: "*".
 %
-%        DefaultPath : If not path is provided in the InputPath, this is used. Default: '.'.
+%        DefaultPath : If no path is provided in the InputPath, this is used. Default: '.'.
 %
 %    SearchOptions struct
 %           .ReportFolders : report the folder structure instead of file names. Default false.

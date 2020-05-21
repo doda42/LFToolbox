@@ -27,7 +27,7 @@
 % Conference on. IEEE, Jun 2013.
 %
 % Decoding requires that an appropriate database of white images be created using
-% LFUtilProcessWhiteImages. Rectification similarly requires a calibration database be created using
+% LFUtilProcessWhiteImages. Rectification similarly requires a calibration database created using
 % LFUtilProcessCalibrations.
 % 
 % To decode a single light field, it is simplest to include a file specification in InputPath (see
@@ -60,6 +60,15 @@
 %     LFFindFilesRecursive.m for more information and examples of how InputPath is interpreted.
 %
 %     FileOptions : struct controlling file naming and saving
+%               .OutputPath : By default files are saved alongside input files; specifying an output
+%                             path will mirror the folder structure of the input, and save generated
+%                             files in that structure, leaving the input untouched
+%          .OutputPrecision : 'uint8' or 'uint16', default 'uint16'
+%             .OutputFormat : Output file format: default 'mat', can also be 'eslf.png' or
+%                            'eslf.jpg'
+%           .ImwriteOptions : Cell array of additional options to pass to imwrite for eslf output
+%                             formats; see LFWriteESLF
+%               .SaveWeight : Save the weight channel, default true
 %               .SaveResult : Set to false to perform a "dry run"
 %                .ForceRedo : If true previous results are ignored and decoding starts from scratch
 %         .SaveFnamePattern : String defining the pattern used in generating the output filename;
@@ -75,8 +84,13 @@
 %         .LensletImageFnamePattern : Pattern used to locate input files -- the pattern %s stands in
 %                                     for the base filename
 %                 .ColourHistThresh : Threshold used by LFHistEqualize in optional colour correction
-%           .WhiteImageDatabasePath : Full path to the white images database, as created by
-%                                     LFUtilProcessWhiteImages
+%           .WhiteImageDatabasePath : Path to the white images database, as created by
+%                                     LFUtilProcessWhiteImages. Default is relative path 'Cameras'.
+%                                     This can include the filename or only specify a path. The
+%                                     toolbox will search folders recursively for a file with the
+%                                     name WhiteImageDatabaseFname. If exactly one exists in the
+%                                     specified folder structure, it will be used.
+%          .WhiteImageDatabaseFname : Filename of the white image database, default WhiteImageDatabase.json
 %                          .DoDehex : Controls whether hexagonal sampling is converted to rectangular, default true
 %                       .DoSquareST : Controls whether s,t dimensions are resampled to square pixels, default true
 %                     .ResampMethod : 'fast'(default) or 'triangulation'
@@ -84,18 +98,24 @@
 %                        .Precision : 'single'(default) or 'double'
 %
 %     RectOptions : struct controlling the optional rectification process
-%         .CalibrationDatabaseFname : Full path to the calibration file database, as created by
-%                                     LFUtilProcessCalibrations;
+%         .CalibrationDatabasePath  : Path to the calibration file database, as created by
+%                                     LFUtilProcessCalibrations; Default takes vale of
+%                                     DecodeOptions.WhiteImageDatabasePath. This can include the
+%                                     filename or only specify a path. The toolbox will search
+%                                     folders recursively for a file with the name
+%                                     CalibrationDatabaseFname. If exactly one exists in the
+%                                     specified folder structure, it will be used.
+%        .CalibrationDatabaseFname  : Filename of the calibration database, default CalibrationDaatabase.json
 %
-% Example:
+% Examples:
 %
 %   LFUtilDecodeLytroFolder
-% 
+%
 %     Run from the top level of the 'Samples' folder will decode all the light fields in all the
 %     sub-folders, with default settings as set up in the opening section of the code. The
 %     calibration database created by LFUtilProcessWhiteImages is expected to be in
-%     'Cameras/CaliCalibrationDatabase.mat' by default.
-% 
+%     'Cameras/CaliCalibrationDatabase.json' by default.
+%
 %   LFUtilDecodeLytroFolder('Images', [], struct('OptionalTasks', 'ColourCorrect'))
 %
 %     Run from the top level of the 'Samples' folder will decode and colour correct all light fields in the Images
@@ -103,9 +123,9 @@
 %
 %   DecodeOptions.OptionalTasks = {'ColourCorrect', 'Rectify'};
 %   LFUtilDecodeLytroFolder([], [], DecodeOptions)
-% 
+%
 %     Will perform both colour correction and rectification in the Images folder.
-% 
+%
 %   LFUtilDecodeLytroFolder('Images/Illum/Lorikeet.lfp')
 %   LFUtilDecodeLytroFolder('Lorikeet.lfp')
 %   LFUtilDecodeLytroFolder({'Images', '*Hiding*', 'Jacaranda*'})
@@ -114,6 +134,16 @@
 %
 %     Any of these, run from the top level of the 'Samples' folder, will decode the matching files.  See
 %     LFFindFilesRecursive.
+% 
+%   LFUtilDecodeLytroFolder([],[],struct('WhiteImageDatabasePath','path/to/processed/cameras'))
+% 
+%     Specify an alternative location for the white images normally located in 'Cameras'. See 
+%     LFUtilProcessWhiteImages for more examples.
+% 
+%   LFUtilDecodeLytroFolder([],struct('OutputPath','path/for/processed/images'))
+% 
+%     Specify an output path; input path structure will be mirrored and populated with decoded light
+%     fields.
 %
 % User guide: <a href="matlab:which LFToolbox.pdf; open('LFToolbox.pdf')">LFToolbox.pdf</a>
 % See also: LFUtilExtractLFPThumbs, LFUtilProcessWhiteImages, LFUtilProcessCalibrations, LFUtilCalLensletCam,
@@ -127,28 +157,46 @@ function LFUtilDecodeLytroFolder( InputPath, FileOptions, DecodeOptions, RectOpt
 %---Defaults---
 InputPath = LFDefaultVal( 'InputPath', 'Images' );
 
+FileOptions = LFDefaultField('FileOptions', 'OutputPath', InputPath );
+FileOptions = LFDefaultField('FileOptions', 'OutputPrecision', 'uint16' );
+FileOptions = LFDefaultField('FileOptions', 'OutputFormat', 'mat' );
+FileOptions = LFDefaultField('FileOptions', 'ImwriteOptions', {} );
+FileOptions = LFDefaultField('FileOptions', 'SaveWeight', true );
 FileOptions = LFDefaultField('FileOptions', 'SaveResult', true);
 FileOptions = LFDefaultField('FileOptions', 'ForceRedo', false);
-FileOptions = LFDefaultField('FileOptions', 'SaveFnamePattern', '%s__Decoded.mat');
+FileOptions = LFDefaultField('FileOptions', 'SaveFnamePattern', '%s__Decoded');
 FileOptions = LFDefaultField('FileOptions', 'ThumbFnamePattern', '%s__Decoded_Thumb.png');
 
 DecodeOptions = LFDefaultField('DecodeOptions', 'OptionalTasks', {}); % 'ColourCorrect', 'Rectify'
 DecodeOptions = LFDefaultField('DecodeOptions', 'ColourHistThresh', 0.01);
-DecodeOptions = LFDefaultField(...
-    'DecodeOptions', 'WhiteImageDatabasePath', fullfile('Cameras','WhiteImageDatabase.mat'));
-RectOptions = LFDefaultField(...
-    'RectOptions', 'CalibrationDatabaseFname', fullfile('Cameras','CalibrationDatabase.mat'));
+
+DecodeOptions = LFDefaultField('DecodeOptions', 'WhiteImageDatabaseFname', 'WhiteImageDatabase.json');
+DecodeOptions = LFDefaultField('DecodeOptions', 'WhiteImageDatabasePath', 'Cameras');
+DecodeOptions.WhiteImageDatabasePath = ...
+	LFLocateDatabaseFile( DecodeOptions.WhiteImageDatabasePath, DecodeOptions.WhiteImageDatabaseFname );
+
+RectOptions = LFDefaultField('RectOptions', 'CalibrationDatabaseFname', 'CalibrationDatabase.json');
+RectOptions = LFDefaultField('RectOptions', 'CalibrationDatabasePath', fileparts(DecodeOptions.WhiteImageDatabasePath));
+
 % Used to decide if two lenslet grid models are "close enough"... if they're not a warning is raised
 RectOptions = LFDefaultField( 'RectOptions', 'MaxGridModelDiff', 1e-5 );
 
 % Massage a single-element OptionalTasks list to behave as a cell array
 while( ~iscell(DecodeOptions.OptionalTasks) )
-    DecodeOptions.OptionalTasks = {DecodeOptions.OptionalTasks};
+	DecodeOptions.OptionalTasks = {DecodeOptions.OptionalTasks};
 end
 
 %---Crawl folder structure locating raw lenslet images---
 DefaultFileSpec = {'*.lfr', '*.lfp', '*.LFR', '*.raw'}; % gets overriden below, if a file spec is provided
 DefaultPath = 'Images';
+fprintf('Input from %s\n', InputPath);
+fprintf('Output to %s\n', FileOptions.OutputPath);
+
+% create output folder; better to have a write permissions error here than after a full decode
+warning('off','MATLAB:MKDIR:DirectoryExists');
+mkdir( FileOptions.OutputPath );
+
+% Find input files
 [FileList, BasePath] = LFFindFilesRecursive( InputPath, DefaultFileSpec, DefaultPath );
 
 fprintf('Found :\n');
@@ -160,146 +208,198 @@ OrigDecodeOptions = DecodeOptions;
 OrigRectOptions = RectOptions;
 
 for( iFile = 1:length(FileList) )
-    SaveRequired = false;
-    
-    %---Start from orig options, avoids values bleeding between iterations---
-    DecodeOptions = OrigDecodeOptions;
-    RectOptions = OrigRectOptions;
-    
-    %---Find current / base filename---
-    CurFname = FileList{iFile};
-    CurFname = fullfile(BasePath, CurFname);
-    
-    % Build filename base without extension, auto-remove '__frame' for legacy .raw format
-    LFFnameBase = CurFname;
-    [~,~,Extension] = fileparts(LFFnameBase);
-    LFFnameBase = LFFnameBase(1:end-length(Extension));
-    CullIdx = strfind(LFFnameBase, '__frame');
-    if( ~isempty(CullIdx) )
-        LFFnameBase = LFFnameBase(1:CullIdx-1);
-    end
-    
-    fprintf('\n---%s [%d / %d]...\n', CurFname, iFile, length(FileList));
-    
-    %---Decode---
-    fprintf('Decoding...\n');
-    
-    % First check if a decoded file already exists
-    [SDecoded, FileExists, CompletedTasks, TasksRemaining, SaveFname] = CheckIfExists( ...
-        LFFnameBase, DecodeOptions, FileOptions.SaveFnamePattern, FileOptions.ForceRedo );
-    
-    if( ~FileExists )
-        % No previous result, decode
-        [LF, LFMetadata, WhiteImageMetadata, LensletGridModel, DecodeOptions] = ...
-            LFLytroDecodeImage( CurFname, DecodeOptions );
-        if( isempty(LF) )
-            continue;
-        end
-        fprintf('Decode complete\n');
-        SaveRequired = true;
-    elseif( isempty(TasksRemaining) )
-        % File exists, and nothing more to do
-        continue;
-    else
-        % File exists and tasks remain: unpack previous decoding results
-        [LF, LFMetadata, WhiteImageMetadata, LensletGridModel, DecodeOptions] = LFStruct2Var( ...
-            SDecoded, 'LF', 'LFMetadata', 'WhiteImageMetadata', 'LensletGridModel', 'DecodeOptions' );
-        clear SDecoded
-    end
-    
-    %---Display thumbnail---
-    Thumb = DispThumb(LF, CurFname, CompletedTasks);
-    
-    %---Optionally colour correct---
-    if( ismember( 'ColourCorrect', TasksRemaining ) )
-        LF = ColourCorrect( LF, LFMetadata, DecodeOptions );
-        CompletedTasks = [CompletedTasks, 'ColourCorrect'];
-        SaveRequired = true;
-        fprintf('Done\n');
-        
-        %---Display thumbnail---
-        Thumb = DispThumb(LF, CurFname, CompletedTasks);
-    end
-    
-    %---Optionally rectify---
-    if( ismember( 'Rectify', TasksRemaining ) )
-        [LF, RectOptions, Success] = Rectify( LF, LFMetadata, DecodeOptions, RectOptions, LensletGridModel );
-        if( Success )
-            CompletedTasks = [CompletedTasks, 'Rectify'];
-            SaveRequired = true;
-        end
-        %---Display thumbnail---
-        Thumb = DispThumb(LF, CurFname, CompletedTasks);
-    end
-    
-    %---Check that all tasks are completed---
-    UncompletedTaskIdx = find(~ismember(TasksRemaining, CompletedTasks));
-    if( ~isempty(UncompletedTaskIdx) )
-        UncompletedTasks = [];
-        for( i=UncompletedTaskIdx )
-            UncompletedTasks = [UncompletedTasks, ' ', TasksRemaining{UncompletedTaskIdx}];
-        end
-        warning(['Could not complete all tasks requested in DecodeOptions.OptionalTasks: ', UncompletedTasks]);
-    end
-    
-    DecodeOptions.OptionalTasks = CompletedTasks;
-    
-    %---Optionally save---
-    if( SaveRequired && FileOptions.SaveResult )
-        if( isfloat(LF) )
-            LF = uint16( LF .* double(intmax('uint16')) );
-        end
-        ThumbFname = sprintf(FileOptions.ThumbFnamePattern, LFFnameBase);
-        fprintf('Saving to:\n\t%s,\n\t%s...\n', SaveFname, ThumbFname);
-        TimeStamp = datestr(now,'ddmmmyyyy_HHMMSS');
-        GeneratedByInfo = struct('mfilename', mfilename, 'time', TimeStamp, 'VersionStr', LFToolboxVersion);
-        
-        save('-v7.3', SaveFname, 'GeneratedByInfo', 'LF', 'LFMetadata', 'WhiteImageMetadata', 'LensletGridModel', 'DecodeOptions', 'RectOptions');
-        imwrite(Thumb, ThumbFname);
-    end
+	SaveRequired = false;
+	
+	%---Start from orig options, avoids values bleeding between iterations---
+	DecodeOptions = OrigDecodeOptions;
+	RectOptions = OrigRectOptions;
+	
+	%---Find current / base filename---
+	CurFname = FileList{iFile};
+	
+	% Build filename base without extension, auto-remove '__frame' for legacy .raw format
+	LFFnameBase = CurFname;
+	[~,~,Extension] = fileparts(LFFnameBase);
+	LFFnameBase = LFFnameBase(1:end-length(Extension));
+	CullIdx = strfind(LFFnameBase, '__frame');
+	if( ~isempty(CullIdx) )
+		LFFnameBase = LFFnameBase(1:CullIdx-1);
+	end
+	
+	fprintf('\n---%s [%d / %d]...\n', CurFname, iFile, length(FileList));
+	
+	%---Decode---
+	fprintf('Decoding...\n');
+	
+	% First check if a decoded file already exists
+	[SDecoded, FileExists, CompletedTasks, TasksRemaining, SaveFname] = CheckIfExists( ...
+		LFFnameBase, DecodeOptions, FileOptions, FileOptions.ForceRedo );
+	
+	if( ~FileExists )
+		% No previous result, decode
+		InputFname = fullfile(BasePath, CurFname);
+		[LF, LFMetadata, WhiteImageMetadata, LensletGridModel, DecodeOptions] = ...
+			LFLytroDecodeImage( InputFname, DecodeOptions );
+		if( isempty(LF) )
+			continue;
+		end
+		fprintf('Decode complete\n');
+		SaveRequired = true;
+	elseif( isempty(TasksRemaining) )
+		% File exists, and nothing more to do
+		continue;
+	else
+		% File exists and tasks remain: unpack previous decoding results
+		[LF, LFMetadata, WhiteImageMetadata, LensletGridModel, DecodeOptions] = LFStruct2Var( ...
+			SDecoded, 'LF', 'LFMetadata', 'WhiteImageMetadata', 'LensletGridModel', 'DecodeOptions' );
+		clear SDecoded
+	end
+	
+	%---Display thumbnail---
+	Thumb = DispThumb(LF, CurFname, CompletedTasks);
+	
+	%---Optionally colour correct---
+	if( ismember( 'ColourCorrect', TasksRemaining ) )
+		LF = ColourCorrect( LF, LFMetadata, DecodeOptions );
+		CompletedTasks = [CompletedTasks, 'ColourCorrect'];
+		SaveRequired = true;
+		fprintf('Done\n');
+		
+		%---Display thumbnail---
+		Thumb = DispThumb(LF, CurFname, CompletedTasks);
+	end
+	
+	%---Optionally rectify---
+	if( ismember( 'Rectify', TasksRemaining ) )
+		RectOptions.CalibrationDatabasePath = ...
+			LFLocateDatabaseFile( RectOptions.CalibrationDatabasePath, RectOptions.CalibrationDatabaseFname );
+		[LF, RectOptions, Success] = Rectify( LF, LFMetadata, DecodeOptions, RectOptions, LensletGridModel );
+		if( Success )
+			CompletedTasks = [CompletedTasks, 'Rectify'];
+			SaveRequired = true;
+		end
+		%---Display thumbnail---
+		Thumb = DispThumb(LF, CurFname, CompletedTasks);
+	end
+	
+	%---Check that all tasks are completed---
+	UncompletedTaskIdx = find(~ismember(TasksRemaining, CompletedTasks));
+	if( ~isempty(UncompletedTaskIdx) )
+		UncompletedTasks = [];
+		for( i=UncompletedTaskIdx )
+			UncompletedTasks = [UncompletedTasks, ' ', TasksRemaining{UncompletedTaskIdx}];
+		end
+		warning(['Could not complete all tasks requested in DecodeOptions.OptionalTasks: ', UncompletedTasks]);
+	end
+	
+	DecodeOptions.OptionalTasks = CompletedTasks;
+	
+	%---Optionally save---
+	if( SaveRequired && FileOptions.SaveResult )
+		% Convert to ints
+		LF = LFConvertToInt( LF, FileOptions.OutputPrecision );
+		
+		% Strip weight if we don't want it
+		% todo[optimization]: don't decode weight if it's not wanted
+		if( ~FileOptions.SaveWeight )
+			LF = LF( :,:,:,:, 1:3 );
+		end
+
+		% make sure output folder exists
+		OutPath = fileparts(SaveFname);
+		warning('off','MATLAB:MKDIR:DirectoryExists');
+		mkdir( OutPath );
+
+		ThumbFname = sprintf(FileOptions.ThumbFnamePattern, LFFnameBase);
+		ThumbFname = fullfile(FileOptions.OutputPath, ThumbFname);
+		fprintf('Saving to:\n\t%s,\n\t%s...\n', SaveFname, ThumbFname);
+		TimeStamp = datestr(now,'ddmmmyyyy_HHMMSS');
+		GeneratedByInfo = struct('mfilename', mfilename, 'time', TimeStamp, 'VersionStr', LFToolboxVersion);
+
+		imwrite(Thumb, ThumbFname);
+		switch( FileOptions.OutputFormat )
+			case 'mat'
+				save('-v7.3', SaveFname, 'GeneratedByInfo', 'LF', 'LFMetadata', 'WhiteImageMetadata', 'LensletGridModel', 'DecodeOptions', 'RectOptions');
+			case 'eslf.png'
+				WriteAlpha = FileOptions.SaveWeight;
+				LFWriteESLF( LF, SaveFname, WriteAlpha, FileOptions.ImwriteOptions{:} );
+				MetadataFname = [SaveFname, '.json'];
+				LFWriteMetadata( MetadataFname, LFVar2Struct(GeneratedByInfo, LFMetadata, WhiteImageMetadata, LensletGridModel, DecodeOptions, RectOptions));
+			case 'eslf.jpg'
+				WriteAlpha = false;
+				LFWriteESLF( LF, SaveFname, WriteAlpha, FileOptions.ImwriteOptions{:} );
+				MetadataFname = [SaveFname, '.json'];
+				LFWriteMetadata( MetadataFname, LFVar2Struct(GeneratedByInfo, LFMetadata, WhiteImageMetadata, LensletGridModel, DecodeOptions, RectOptions));
+			otherwise
+				error('Unrecognized output format %s', FileOptions.OutputFormat);
+		end
+	end
 end
 end
 
 %---------------------------------------------------------------------------------------------------
 function  [SDecoded, FileExists, CompletedTasks, TasksRemaining, SaveFname] = ...
-    CheckIfExists( LFFnameBase, DecodeOptions, SaveFnamePattern, ForceRedo )
+	CheckIfExists( LFFnameBase, DecodeOptions, FileOptions, ForceRedo )
 
 SDecoded = [];
 FileExists = false;
-SaveFname = sprintf(SaveFnamePattern, LFFnameBase);
+SaveFname = sprintf(FileOptions.SaveFnamePattern, LFFnameBase);
+SaveFname = [SaveFname, '.', FileOptions.OutputFormat];
+SaveFname = fullfile(FileOptions.OutputPath, SaveFname);
 
 if( ~ForceRedo && exist(SaveFname, 'file') )
-    %---Task previously completed, check if there's more to do---
-    FileExists = true;
-    fprintf( '    %s already exists\n', SaveFname );
-    
-    PrevDecodeOptions = load( SaveFname, 'DecodeOptions' );
-    PrevOptionalTasks = PrevDecodeOptions.DecodeOptions.OptionalTasks;
-    CompletedTasks = PrevOptionalTasks;
-    TasksRemaining = find(~ismember(DecodeOptions.OptionalTasks, PrevOptionalTasks));
-    if( ~isempty(TasksRemaining) )
-        %---Additional tasks remain---
-        TasksRemaining = {DecodeOptions.OptionalTasks{TasksRemaining}};  % by name
-        fprintf('    Additional tasks remain, loading existing file...\n');
-        
-        SDecoded = load( SaveFname );
-        AllTasks = [SDecoded.DecodeOptions.OptionalTasks, TasksRemaining];
-        SDecoded.DecodeOptions.OptionalTasks = AllTasks;
-        
-        %---Convert to float as this is what subsequent operations require---
-        OrigClass = class(SDecoded.LF);
-        SDecoded.LF = cast( SDecoded.LF, SDecoded.DecodeOptions.Precision ) ./ ...
-            cast( intmax(OrigClass), SDecoded.DecodeOptions.Precision );
-        fprintf('Done\n');
-    else
-        %---No further tasks... move on---
-        fprintf( '    No further tasks requested\n');
-        TasksRemaining = {};
-    end
+	%---Task previously completed, check if there's more to do---
+	FileExists = true;
+	fprintf( '    %s already exists\n', SaveFname );
+		
+	switch( FileOptions.OutputFormat )
+		case 'mat'
+			PrevDecodeOptions = load( SaveFname, 'DecodeOptions' );
+			PrevOptionalTasks = PrevDecodeOptions.DecodeOptions.OptionalTasks;
+		otherwise
+			MetadataFname = [SaveFname, '.json'];
+			PrevDecodeOptions = LFReadMetadata( MetadataFname );
+			PrevOptionalTasks = PrevDecodeOptions.DecodeOptions.OptionalTasks;
+			if( ~isempty(PrevOptionalTasks) )
+				PrevOptionalTasks = cellstr(PrevOptionalTasks);
+			else
+				PrevOptionalTasks = {};
+			end
+	end
+	
+	CompletedTasks = PrevOptionalTasks;
+	TasksRemaining = find(~ismember(DecodeOptions.OptionalTasks, PrevOptionalTasks));
+	if( ~isempty(TasksRemaining) )
+		%---Additional tasks remain---
+		TasksRemaining = {DecodeOptions.OptionalTasks{TasksRemaining}};  % by name
+		fprintf('    Additional tasks remain, loading existing file...\n');
+		
+		switch( FileOptions.OutputFormat )
+			case 'mat'
+				SDecoded = load( SaveFname );
+			otherwise
+				SDecoded = LFReadMetadata( MetadataFname );
+				LensletSize_pix = SDecoded.DecodeOptions.LFSize(1:2);
+				LoadAlpha = FileOptions.SaveWeight;
+				SDecoded.LF = LFReadESLF( SaveFname, LensletSize_pix, LoadAlpha );
+		end
+		AllTasks = [SDecoded.DecodeOptions.OptionalTasks, TasksRemaining];
+		SDecoded.DecodeOptions.OptionalTasks = AllTasks;
+		
+		%---Convert to float as this is what subsequent operations require---
+		OrigClass = class(SDecoded.LF);
+		SDecoded.LF = cast( SDecoded.LF, SDecoded.DecodeOptions.Precision ) ./ ...
+			cast( intmax(OrigClass), SDecoded.DecodeOptions.Precision );
+		fprintf('Done\n');
+	else
+		%---No further tasks... move on---
+		fprintf( '    No further tasks requested\n');
+		TasksRemaining = {};
+	end
 else
-    %---File doesn't exist, all tasks remain---
-    TasksRemaining =  DecodeOptions.OptionalTasks;
-    CompletedTasks = {};
+	%---File doesn't exist, all tasks remain---
+	TasksRemaining =  DecodeOptions.OptionalTasks;
+	CompletedTasks = {};
 end
 end
 
@@ -312,7 +412,7 @@ LFDispSetup(Thumb);
 Title = CurFname;
 
 for( i=1:length(CompletedTasks) )
-    Title = [Title, ', ', CompletedTasks{i}];
+	Title = [Title, ', ', CompletedTasks{i}];
 end
 
 title(Title, 'Interpreter', 'none');
@@ -344,8 +444,8 @@ fprintf('Selecting calibration...\n');
 
 [CalInfo, RectOptions] = LFFindCalInfo( LFMetadata, RectOptions );
 if( isempty( CalInfo ) )
-    warning('No suitable calibration found, skipping');
-    return;
+	warning('No suitable calibration found, skipping');
+	return;
 end
 
 %---Compare structs
@@ -355,11 +455,12 @@ a.Orientation = strcmp(a.Orientation, 'horz');
 b.Orientation = strcmp(b.Orientation, 'horz');
 FractionalDiff = abs( (struct2array(a) - struct2array(b)) ./ struct2array(a) );
 if( ~all( FractionalDiff < RectOptions.MaxGridModelDiff ) )
-    warning(['Lenslet grid models differ -- ideally the same grid model and white image are ' ...
-        ' used to decode during calibration and rectification']);
+	warning(['Lenslet grid models differ -- ideally the same grid model and white image are ' ...
+		' used to decode during calibration and rectification']);
 end
 
 %---Perform rectification---
 [LF, RectOptions] = LFCalRectifyLF( LF, CalInfo, RectOptions );
 Success = true;
 end
+

@@ -24,10 +24,11 @@
 function SelectedCamInfo = LFSelectFromDatabase( DesiredCamInfo, DatabaseFname )
 
 %---Load the database---
-load(DatabaseFname, 'CamInfo');
+CamInfo = LFStruct2Var( LFReadMetadata(DatabaseFname), 'CamInfo' );
 
 %---Find the closest to the desired settings, prioritizing serial, then zoom, then focus---
 ValidSerial = find( ismember({CamInfo.CamSerial}, {DesiredCamInfo.CamSerial}) );
+assert( ~isempty( ValidSerial ), 'Unable to find white images for camera with Serial %s\n', DesiredCamInfo.CamSerial );
 
 % Discard non-matching serials
 CamInfo = CamInfo(ValidSerial);
@@ -50,5 +51,4 @@ FocusDiff = abs([CamInfo.FocusStep] - DesiredCamInfo.FocusStep);
 % Retrieve the index into the original 
 BestOriglIdx = OrigIdx(BestFocusIdx);
 SelectedCamInfo = CamInfo(BestFocusIdx);
-
 
