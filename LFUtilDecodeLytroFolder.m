@@ -157,7 +157,6 @@ function LFUtilDecodeLytroFolder( InputPath, FileOptions, DecodeOptions, RectOpt
 %---Defaults---
 InputPath = LFDefaultVal( 'InputPath', 'Images' );
 
-FileOptions = LFDefaultField('FileOptions', 'OutputPath', InputPath );
 FileOptions = LFDefaultField('FileOptions', 'OutputPrecision', 'uint16' );
 FileOptions = LFDefaultField('FileOptions', 'OutputFormat', 'mat' );
 FileOptions = LFDefaultField('FileOptions', 'ImwriteOptions', {} );
@@ -190,17 +189,19 @@ end
 DefaultFileSpec = {'*.lfr', '*.lfp', '*.LFR', '*.raw'}; % gets overriden below, if a file spec is provided
 DefaultPath = 'Images';
 fprintf('Input from %s\n', InputPath);
-fprintf('Output to %s\n', FileOptions.OutputPath);
-
-% create output folder; better to have a write permissions error here than after a full decode
-warning('off','MATLAB:MKDIR:DirectoryExists');
-mkdir( FileOptions.OutputPath );
 
 % Find input files
 [FileList, BasePath] = LFFindFilesRecursive( InputPath, DefaultFileSpec, DefaultPath );
 
 fprintf('Found :\n');
 disp(FileList)
+
+FileOptions = LFDefaultField('FileOptions', 'OutputPath', BasePath );
+fprintf('Output to %s\n', FileOptions.OutputPath);
+
+% create output folder; better to have a write permissions error here than after a full decode
+warning('off','MATLAB:MKDIR:DirectoryExists');
+mkdir( FileOptions.OutputPath );
 
 %---Process each raw lenslet file---
 % Store options so we can reset them for each file
