@@ -64,8 +64,10 @@ if( FileOptions.SaveResult )
 	%---Make sure destination folder exists, and record relative path---
 	warning('off','MATLAB:MKDIR:DirectoryExists');
 	mkdir( FileOptions.OutputPath ); % make sure folder exists
-	AbsoluteOutputPath = what( FileOptions.OutputPath ).path;
-	AbsoluteCalFilesPath = what( CalibrationsPath ).path;
+	AbsoluteOutputPath = what( FileOptions.OutputPath );
+	AbsoluteOutputPath = AbsoluteOutputPath.path;
+	AbsoluteCalFilesPath = what( CalibrationsPath );
+	AbsoluteCalFilesPath = AbsoluteCalFilesPath.path;
 	% we need to be able to find the calibration files given the path to the database
 	RelCalFilePath = relativepath( AbsoluteCalFilesPath, AbsoluteOutputPath );
 	[CamInfo.RelCalFilePath] = deal(RelCalFilePath);
