@@ -8,7 +8,7 @@
 
 function DatabasePath = LFLocateDatabaseFile( DatabasePath, DatabaseFname )
 if( exist(DatabasePath,'file') ~= 2 ) % check if file not found: exist returns 2 if a file is found
-	if( isdir( DatabasePath ) )
+	if( isdir( DatabasePath ) ) % check if a folder is being specified 
 		TentativeFullPath =  ...
 			fullfile( DatabasePath, DatabaseFname ); % try adding fname to path
 		if( any(ismember(exist(DatabasePath,'file'), [0 7])) )
