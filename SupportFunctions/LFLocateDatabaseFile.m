@@ -10,7 +10,7 @@ function DatabasePath = LFLocateDatabaseFile( DatabasePath, DatabaseFname )
 if( exist(DatabasePath,'file') ~= 2 ) % check if file not found: exist returns 2 if a file is found
 	if( isdir( DatabasePath ) )
 		TentativeFullPath =  ...
-			fullfile( DatabasePath, DatabaseFname );
+			fullfile( DatabasePath, DatabaseFname ); % try adding fname to path
 		if( any(ismember(exist(DatabasePath,'file'), [0 7])) )
 			% try finding a database under the requested location
 			FoundFiles = LFFindFilesRecursive( DatabasePath, DatabaseFname );
