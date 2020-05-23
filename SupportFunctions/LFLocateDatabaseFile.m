@@ -12,7 +12,7 @@ if( exist(DatabasePath,'file') ~= 2 ) % check if file not found: exist returns 2
 		TentativeFullPath =  ...
 			fullfile( DatabasePath, DatabaseFname ); % try adding fname to path
 		if( any(ismember(exist(DatabasePath,'file'), [0 7])) )
-			% try finding a database under the requested location
+			% not found, try finding a database under the requested folder
 			FoundFiles = LFFindFilesRecursive( DatabasePath, DatabaseFname );
 			NumFound = length(FoundFiles);
 			if( NumFound ~= 1 )
