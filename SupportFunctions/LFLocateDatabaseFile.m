@@ -7,12 +7,12 @@
 % will not return a result in case of ambiguity, e.g. if two databases are found
 
 function DatabasePath = LFLocateDatabaseFile( DatabasePath, DatabaseFname )
-if( ~isfile( DatabasePath ) )
-	if( isfolder( DatabasePath ) )
+if( exist(DatabasePath,'file') ~= 2 ) % check if file not found: exist returns 2 if a file is found
+	if( isdir( DatabasePath ) ) % check if a folder is being specified 
 		TentativeFullPath =  ...
-			fullfile( DatabasePath, DatabaseFname );
-		if( ~isfile( TentativeFullPath ) )
-			% try finding a database under the requested location
+			fullfile( DatabasePath, DatabaseFname ); % try adding fname to path
+		if( exist(TentativeFullPath,'file') ~= 2 )  % check if new attempt is found
+			% not found, try finding a database under the requested folder
 			FoundFiles = LFFindFilesRecursive( DatabasePath, DatabaseFname );
 			NumFound = length(FoundFiles);
 			if( NumFound ~= 1 )
