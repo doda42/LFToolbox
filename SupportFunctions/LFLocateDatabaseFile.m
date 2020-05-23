@@ -7,7 +7,7 @@
 % will not return a result in case of ambiguity, e.g. if two databases are found
 
 function DatabasePath = LFLocateDatabaseFile( DatabasePath, DatabaseFname )
-if( any(ismember(exist(DatabasePath,'file'), [0 7])) )
+if( exist(DatabasePath,'file') ~= 2 ) % check if file not found: exist returns 2 if a file is found
 	if( isdir( DatabasePath ) )
 		TentativeFullPath =  ...
 			fullfile( DatabasePath, DatabaseFname );
