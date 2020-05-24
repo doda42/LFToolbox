@@ -137,8 +137,10 @@ CamInfoValid(DarkF01Images) = false;
 %---Make sure destination folder exists, and record relative path---
 warning('off','MATLAB:MKDIR:DirectoryExists');
 mkdir( FileOptions.OutputPath ); % make sure folder exists
-AbsoluteOutputPath = what( FileOptions.OutputPath ).path;
-AbsoluteWhiteImagePath = what( WhiteImagesPath ).path;
+AbsoluteOutputPath = what( FileOptions.OutputPath );
+AbsoluteOutputPath = AbsoluteOutputPath.path;
+AbsoluteWhiteImagePath = what( WhiteImagesPath );
+AbsoluteWhiteImagePath = AbsoluteWhiteImagePath.path;
 % we need to be able to find the white images given the path to the database
 RelWhiteImagePath = relativepath( AbsoluteWhiteImagePath, AbsoluteOutputPath );
 
