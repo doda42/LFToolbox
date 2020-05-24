@@ -16,6 +16,7 @@ New features:
 - Added FileOptions.OutputPath parameter to allow LFUtilProcessWhiteImages, LFUtilDecodeLytroFolder, LFUtilCalLensletCam, and LFUtilProcessCalibrations to save in specified output folders, leaving input folders untouched
 - LFBuild2DLPF, LFBuild4DLPF for frequency-domain lowpass filters, optionally anisotropic
 - Smarter search for of white image and calibration databases decoding and rectifying; More informative error messages when locating white databases / files
+- LFReadESLF now loads accompanying .json metatadata files, adjusts default LensletSize_pix with the metadata, and returns the metadata as an output argument.
 
 ---v0.5.1----------------------------------------------------------------------
 Minor bug fixes and improvements
