@@ -108,7 +108,7 @@ CalOptions = LFDefaultField( 'CalOptions', 'CalInfoFname', 'CalInfo.json' );
 
 %---Check for previously started calibration---
 CalInfoFname = fullfile(FileOptions.OutputPath, CalOptions.CalInfoFname);
-if( ~CalOptions.ForceRedoInit && exist(CalInfoFname, 'file') )
+if( ~CalOptions.ForceRedoInit && ~CalOptions.ForceRedoCornerFinding && exist(CalInfoFname, 'file') )
     fprintf('---File %s already exists\n   Loading calibration state and options\n', CalInfoFname);
     CalOptions = LFStruct2Var( LFReadMetadata(CalInfoFname), 'CalOptions' );
 else

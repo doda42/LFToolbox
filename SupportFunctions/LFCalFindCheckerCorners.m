@@ -41,10 +41,15 @@ function CalOptions = LFCalFindCheckerCorners( InputPath, CalOptions, FileOption
 FileOptions = LFDefaultField( 'FileOptions', 'OutputPath', InputPath );
 
 CalOptions = LFDefaultField( 'CalOptions', 'ForceRedoCornerFinding', false );
-CalOptions = LFDefaultField( 'CalOptions', 'LFFnamePattern', '%s__Decoded.mat' );
+CalOptions = LFDefaultField( 'CalOptions', 'LFFnamePattern', ...
+	{'%s__Decoded.mat','%s__Decoded.eslf.png'} );
 CalOptions = LFDefaultField( 'CalOptions', 'CheckerCornersFnamePattern', '%s__CheckerCorners.mat' );
 CalOptions = LFDefaultField( 'CalOptions', 'ShowDisplay', true );
-CalOptions = LFDefaultField( 'CalOptions', 'MinSubimageWeight', 0.2 * 2^16 ); % for fast rejection of dark frames
+CalOptions = LFDefaultField( 'CalOptions', 'MinSubimageWeight', 0.2 ); % for fast rejection of dark frames
+
+if( ~iscell(CalOptions.LFFnamePattern) )
+	CalOptions.LFFnamePattern = {CalOptions.LFFnamePattern};
+end
 
 %---Make sure dest exists---
 warning('off','MATLAB:MKDIR:DirectoryExists');
@@ -52,7 +57,12 @@ mkdir( FileOptions.OutputPath );
 
 %---Build a regular expression for stripping the base filename out of the full raw filename---
 BaseFnamePattern = regexp(CalOptions.LFFnamePattern, '%s', 'split');
-BaseFnamePattern = cell2mat({BaseFnamePattern{1}, '(.*)', BaseFnamePattern{2}});
+for( iPat = 1:length(BaseFnamePattern) )
+	CurPat = BaseFnamePattern{iPat};
+	CurPat = cell2mat({CurPat{1}, '(.*)', CurPat{2}});
+	BaseFnamePattern{iPat} = CurPat;
+	CalOptions.LFFnamePattern{iPat} = sprintf(CalOptions.LFFnamePattern{iPat}, '*');
+end
 
 %---Tagged onto all saved files---
 TimeStamp = datestr(now,'ddmmmyyyy_HHMMSS');
@@ -60,7 +70,7 @@ GeneratedByInfo = struct('mfilename', mfilename, 'time', TimeStamp, 'VersionStr'
 
 %---Crawl folder structure locating raw lenslet images---
 fprintf('\n===Locating light fields in %s===\n', InputPath);
-[FileList, BasePath] = LFFindFilesRecursive( InputPath, sprintf(CalOptions.LFFnamePattern, '*') );
+[FileList, BasePath] = LFFindFilesRecursive( InputPath, CalOptions.LFFnamePattern );
 if( isempty(FileList) )
     error(['No files found... are you running from the correct folder?\n'...
         '       Current folder: %s\n'], pwd);
@@ -72,7 +82,17 @@ disp(FileList)
 fprintf('Checking zoom / focus / serial number across all files...\n');
 for( iFile = 1:length(FileList) )
     CurFname = FileList{iFile};
-    load(fullfile(BasePath, CurFname), 'LFMetadata');
+	if( strfind( CurFname, '.eslf' ) )
+		MetadataFname = [CurFname,'.json'];
+		MetadataFname = fullfile(BasePath, MetadataFname);
+		AllMetadata = LFReadMetadata( MetadataFname );
+		LFMetadata = AllMetadata.LFMetadata;
+	elseif( strfind( CurFname, '.mat' ) )
+		load(fullfile(BasePath, CurFname), 'LFMetadata');
+	else
+		error('unknown file format\n');
+	end
+	
     CamSettings(iFile).Fname = CurFname;
     CamSettings(iFile).ZoomStep = LFMetadata.devices.lens.zoomStep;
     CamSettings(iFile).FocusStep = LFMetadata.devices.lens.focusStep;
@@ -120,6 +140,7 @@ for( iFile = 1:length(FileList) )
     
     %---Build the base filename---
     CurBaseFname = regexp(CurFname, BaseFnamePattern, 'tokens');
+	CurBaseFname = [CurBaseFname{:}]; % only one will match
     CurBaseFname = CurBaseFname{1}{1};
     [~,ShortFname] = fileparts(CurBaseFname);
     fprintf(' --- %s [%d / %d]', ShortFname, iFile, length(FileList));
@@ -139,7 +160,16 @@ for( iFile = 1:length(FileList) )
     
     %---Load the LF---
     tic  % track time
-    load( CurFname, 'LF', 'LensletGridModel', 'DecodeOptions' );
+	if( strfind( CurFname, '.eslf' ) )
+		[LF, AllMetadata] = LFReadESLF( CurFname );
+		LensletGridModel = AllMetadata.LensletGridModel;
+		DecodeOptions = AllMetadata.DecodeOptions;
+	elseif( strfind( CurFname, '.mat' ) )
+		load( CurFname, 'LF', 'LensletGridModel', 'DecodeOptions' );
+	else
+		error('unknown file format\n');
+	end
+
     LFSize = size(LF);
     
     if( CalOptions.ShowDisplay )
@@ -157,7 +187,7 @@ for( iFile = 1:length(FileList) )
             CurW = squeeze(LF(TIdx, SIdx, :,:, 4));
             CurW = mean(CurW(:));
             
-            if( CurW < CalOptions.MinSubimageWeight )
+            if( CurW < CalOptions.MinSubimageWeight * intmax(class(LF)) )
                 CurCheckerCorners = [];
             else
                 CurImg = squeeze(LF(TIdx, SIdx, :,:, 1:3));

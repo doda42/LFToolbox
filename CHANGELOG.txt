@@ -9,6 +9,7 @@ Please refer to README.md and LFToolbox.pdf for installation instructions and fu
 Reverse compatibility:
 - White image and calibration database file formats changed, re-run LFUtilProcessWhiteImages and LFUtilProcessCalibrations; grid analysis and calibrations don't need to re-run, only the database file needs to be re-generated.
 - LFUtilDecodeLytroFolder RectOptions.CalibrationDatabaseFname is now split into CalibrationDatabaseFname and CalibrationDatabasePath; default behaviour remains unchanged.
+- CalOptions.MinSubimageWeight is now a float in range 0-1, default behaviour is unchanged, if specifying your own value it must be scaled down by 2^16 compared with previous toolbox versions.
 
 New features:
 - New decode output options OutputPrecision, OutputFormat, ImwriteOptions, and SaveWeight; saving decoded LFs to 8-bit eslf.png files reduces file size significantly
@@ -17,6 +18,7 @@ New features:
 - LFBuild2DLPF, LFBuild4DLPF for frequency-domain lowpass filters, optionally anisotropic
 - Smarter search for of white image and calibration databases decoding and rectifying; More informative error messages when locating white databases / files
 - LFReadESLF now loads accompanying .json metatadata files, adjusts default LensletSize_pix with the metadata, and returns the metadata as an output argument.
+- CalOptions.LFFnamePattern now accepts a cell array, and the default changed to look for .mat and .eslf.png files. Input files must include a weight channel.
 
 ---v0.5.1----------------------------------------------------------------------
 Minor bug fixes and improvements
