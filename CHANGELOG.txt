@@ -20,6 +20,9 @@ New features:
 - LFReadESLF now loads accompanying .json metatadata files, adjusts default LensletSize_pix with the metadata, and returns the metadata as an output argument.
 - CalOptions.LFFnamePattern now accepts a cell array, and the default changed to look for .mat and .eslf.png files. Input files must include a weight channel.
 
+Performance improvements:
+- Faster / smarter display during calibration checkerboard finding
+
 ---v0.5.1----------------------------------------------------------------------
 Minor bug fixes and improvements
 
