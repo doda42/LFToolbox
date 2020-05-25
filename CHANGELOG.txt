@@ -17,6 +17,13 @@ New features:
 - LFBuild2DLPF, LFBuild4DLPF for frequency-domain lowpass filters, optionally anisotropic
 - Smarter search for of white image and calibration databases decoding and rectifying; More informative error messages when locating white databases / files
 
+Decoding improvements:
+- New decode options WeightedDemosaic, WeightedInterp for improved demosaicing and interpolations (reduce ghosting artifacts on external views).
+- Improved colours and exposure with decode options NormaliseWIColours, NormaliseWIExposure and corrected use of metadata for Lytro Illum (behaviour of previous versions is still available with decode option ColourCompatibility).
+- New decode options CorrectSaturated and ClipMode for the recovery of saturated colours in the highlights.
+- New decode option EarlyWhiteBalance to perform white balance on the RAW lenslet image directly (reduce some colour artifacts).
+
+
 ---v0.5.1----------------------------------------------------------------------
 Minor bug fixes and improvements
 

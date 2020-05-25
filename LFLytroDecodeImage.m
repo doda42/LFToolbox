@@ -72,7 +72,6 @@ DecodeOptions = LFDefaultField( 'DecodeOptions', 'WhiteImageDatabasePath', fullf
 % Compatibility: for loading extracted raw / json files
 DecodeOptions = LFDefaultField( 'DecodeOptions', 'MetadataFnamePattern', '_metadata.json' );
 DecodeOptions = LFDefaultField( 'DecodeOptions', 'SerialdataFnamePattern', '_private_metadata.json' );
-DecodeOptions = LFDefaultField( 'DecodeOptions', 'ColourCompatibility', true );
 
 %---
 LF = [];

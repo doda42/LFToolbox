@@ -33,6 +33,15 @@
 %          [Optional] ResampMethod : 'fast'(default) or 'triangulation', the latter is slower
 %          [Optional]   Precision : 'single'(default) or 'double'
 %          [Optional] LevelLimits : a two-element vector defining the black and white levels
+%          [Optional] WeightedDemosaic : Do White Image guided demosaicing (default=false).
+%          [Optional] WeightedInterp : Do White Image guided interpolations for lenslet image rotation/translation/scaling operations (default=false).
+%          [Optional] NormaliseWIColours : Normalise sensor responses of Red and Blue pixels realtively to Green pixels in the White Image (prevents interference betweeen devignetting and white balance settings).
+%                                          The option is true by default. But it is desactivated in LFUtilDecodeLytroFolder when ColourCompatibility is true, to avoid changing colours compared to versions v0.4 and v0.5.
+%          [Optional] NormaliseWIExposure : Normalises White image exposure to have value 1 at microlens centers (prevents interference between devignetting and exposure settings).
+%                                           The option is true by default. But it is desactivated in LFUtilDecodeLytroFolder when ColourCompatibility is true, to avoid changing exosure compared to versions v0.4 and v0.5.
+%          [Optional] EarlyWhiteBalance : Perform white balance directly on the RAW data, before demosaicing (default = false).
+%          [Optional] CorrectSaturated : Process saturated pixels on the sensor so that they appear white after white balance (default = false).
+%          [Optional] ClipMode : 'hard', 'soft', 'none'. The default is 'soft' if CorrectSaturated is true, 'hard' otherwise.
 %
 % Output LF is a 5D array of size [Nj,Ni,Nl,Nk,3]. See [1] and the documentation accompanying this
 % toolbox for a brief description of the light field structure.
@@ -65,11 +74,20 @@ DecodeOptions = LFDefaultField( 'DecodeOptions', 'ResampMethod', 'fast' ); %'fas
 DecodeOptions = LFDefaultField( 'DecodeOptions', 'Precision', 'single' );
 DecodeOptions = LFDefaultField( 'DecodeOptions', 'DoDehex', true );
 DecodeOptions = LFDefaultField( 'DecodeOptions', 'DoSquareST', true );
-DecodeOptions = LFDefaultField('DecodeOptions', 'WeightedDemosaic', false);
-DecodeOptions = LFDefaultField('DecodeOptions', 'WeightedInterp', false);
-DecodeOptions = LFDefaultField( 'DecodeOptions', 'NormaliseWIColours', false );
-DecodeOptions = LFDefaultField( 'DecodeOptions', 'NormaliseWIExposure', false );
+DecodeOptions = LFDefaultField('DecodeOptions', 'WeightedDemosaic', false );
+DecodeOptions = LFDefaultField('DecodeOptions', 'WeightedInterp', false );
+DecodeOptions = LFDefaultField( 'DecodeOptions', 'NormaliseWIColours', true );
+DecodeOptions = LFDefaultField( 'DecodeOptions', 'NormaliseWIExposure', true );
+DecodeOptions = LFDefaultField( 'DecodeOptions', 'EarlyWhiteBalance', false );
+DecodeOptions = LFDefaultField( 'DecodeOptions', 'CorrectSaturated', false );
+if( DecodeOptions.CorrectSaturated )
+	DefaultClipMode='soft';
+else
+    DefaultClipMode='hard';
+end
+DecodeOptions = LFDefaultField( 'DecodeOptions', 'ClipMode', DefaultClipMode );% 'none', 'soft', 'hard'
 
+    
 %---Rescale image values, remove black level---
 DecodeOptions.LevelLimits = cast(DecodeOptions.LevelLimits, DecodeOptions.Precision);
 BlackLevel = DecodeOptions.LevelLimits(1);
@@ -79,7 +97,7 @@ WhiteImage = cast(WhiteImage, DecodeOptions.Precision);
 WhiteImage = (WhiteImage - BlackLevel) ./ (WhiteLevel - BlackLevel);
 
 LensletImage = cast(LensletImage, DecodeOptions.Precision);
-LensletImage = ExpFactor * (LensletImage - BlackLevel) ./ (WhiteLevel - BlackLevel);
+LensletImage = (LensletImage - BlackLevel) ./ (WhiteLevel - BlackLevel);
 
 %Define variables for bayer pattern
 if(strcmp(DecodeOptions.DemosaicOrder,'grbg'))
@@ -108,9 +126,73 @@ if(DecodeOptions.NormaliseWIExposure)
 end
 
 LensletImage = LensletImage ./ WhiteImage; % Devignette
-% Clip -- this is aggressive and throws away bright areas; there is a potential for an HDR approach here
-LensletImage = min(1, max(0, LensletImage));
 
+%Separate R,G and B pixels for the next steps (Correction of highlights + White Balance)
+if(DecodeOptions.CorrectSaturated || DecodeOptions.EarlyWhiteBalance)
+    R=LensletImage(RstY:2:end,RstX:2:end);
+    G1=LensletImage(G1stY:2:end,G1stX:2:end);
+    G2=LensletImage(G2stY:2:end,G2stX:2:end);
+    B=LensletImage(BstY:2:end,BstX:2:end);
+end
+
+%--- Highlights Processing ---
+if(DecodeOptions.CorrectSaturated)
+    fact=max(DecodeOptions.ColourBalance);%RGB dependent factor to force pixels saturated on all components to be white after the White Balance step.
+    ThSatCol=.99;%saturation threshold
+    
+    %Detect pixels saturated on the sensor (i.e. close to 1 before division by White image).
+    RSat = find(R>ThSatCol./WhiteImage(RstY:2:end,RstX:2:end));
+    G1Sat = find(G1>ThSatCol./WhiteImage(G1stY:2:end,G1stX:2:end));
+    G2Sat = find(G2>ThSatCol./WhiteImage(G2stY:2:end,G2stX:2:end));
+    BSat =  find(B>ThSatCol./WhiteImage(BstY:2:end,BstX:2:end));
+
+    %Determine the component with lowest value (the last one to saturate).
+    [MinSat,MinId] = min(cat(3,R,G1,G2,B),[],3);
+    %Compute the value of the lowest component after White Balance.
+    ColMult = DecodeOptions.ColourBalance([1,2,2,3]);
+    MinSatBal = MinSat.*ColMult(MinId);
+    %Compute weight indicating the amount of saturation on the sensor (i.e. before devignetting) . If all components are saturated on the sensor, the weight is 1.
+    MinSat = min(MinSat.*(WhiteImage(G1stY:2:end,G1stX:2:end)+WhiteImage(G2stY:2:end,G2stX:2:end)+WhiteImage(RstY:2:end,RstX:2:end)+WhiteImage(BstY:2:end,BstX:2:end))/4,1).^2;
+    clear MinId
+
+    %Final formula combining two behaviours : only left term when at least one component is far from saturation on the sensor/ only right term when All R,G1,G2 and B pixels are saturated on the sensor.
+    %In both cases inverse white balance is applied (division by WB coeff) because the White Balance will be applied later on the whole image.
+    R(RSat) =   max( ( MinSatBal(RSat) .*(1-MinSat(RSat))  +  R(RSat)*fact .* MinSat(RSat) )/DecodeOptions.ColourBalance(1) ,  R(RSat));
+    G1(G1Sat) = max( ( MinSatBal(G1Sat) .*(1-MinSat(G1Sat)) + G1(G1Sat)*fact .* MinSat(G1Sat) )/DecodeOptions.ColourBalance(2) , G1(G1Sat)) ;
+    G2(G2Sat) = max( ( MinSatBal(G2Sat) .*(1-MinSat(G2Sat)) + G2(G2Sat)*fact .* MinSat(G2Sat) )/DecodeOptions.ColourBalance(2) , G2(G2Sat));
+    B(BSat) =   max( ( MinSatBal(BSat) .*(1-MinSat(BSat))  +  B(BSat)*fact .* MinSat(BSat) )/DecodeOptions.ColourBalance(3) ,  B(BSat));
+    clear RSat G1Sat G2Sat BSat MinSat MinSatBal
+end
+
+%--- White Balance ---
+if(DecodeOptions.EarlyWhiteBalance)
+    % White Balance on RAW data before the demosaicing
+    LensletImage(RstY:2:end,RstX:2:end) = R * DecodeOptions.ColourBalance(1);
+    LensletImage(G1stY:2:end,G1stX:2:end) = G1 * DecodeOptions.ColourBalance(2);
+    LensletImage(G2stY:2:end,G2stX:2:end) = G2 * DecodeOptions.ColourBalance(2);
+    LensletImage(BstY:2:end,BstX:2:end) = B * DecodeOptions.ColourBalance(3);
+elseif(DecodeOptions.CorrectSaturated)
+    %Otherwise, the White Balance will be performed later
+    LensletImage(RstY:2:end,RstX:2:end) = R;
+    LensletImage(G1stY:2:end,G1stX:2:end) = G1;
+    LensletImage(G2stY:2:end,G2stX:2:end) = G2;
+    LensletImage(BstY:2:end,BstX:2:end) = B;
+end
+clear G1 G2 R B
+
+%Exposure correction
+LensletImage = LensletImage * ExpFactor;
+
+% Clip
+switch DecodeOptions.ClipMode
+    case 'hard'
+        LensletImage = min(1, max(0, LensletImage));
+    case 'soft'
+        LensletImage = max(0, softClip(LensletImage,7));
+    case 'none'
+    otherwise
+        error(['Unknown ClipMode ''' DecodeOptions.ClipMode '''. Valid values are ''none'', ''soft'', ''hard''.']);
+end
 
 if(DecodeOptions.WeightedDemosaic || DecodeOptions.WeightedInterp)
     [Belonging, MLCenters, ~] = LFMicrolensBelonging(size(LensletImage,1),size(LensletImage,2), LensletGridModel);
@@ -138,10 +220,11 @@ else
 % This uses Matlab's demosaic, which is "gradient compensated". This likely has implications near
 % the edges of lenslet images, where the contrast is due to vignetting / aperture shape, and is not
 % a desired part of the image
-    LensletImage = cast(LensletImage.*double(intmax('uint16')), 'uint16');
+    MaxLum=max(LensletImage(:));
+    LensletImage = cast(LensletImage.*(double(intmax('uint16'))/MaxLum), 'uint16');
     LensletImage = demosaic(LensletImage, DecodeOptions.DemosaicOrder);
     LensletImage = cast(LensletImage, DecodeOptions.Precision);
-    LensletImage = LensletImage ./  double(intmax('uint16'));
+    LensletImage = LensletImage .* (MaxLum/double(intmax('uint16')));
 end
 DecodeOptions.NColChans = 3;
 
@@ -396,4 +479,12 @@ for( UStart = 0:UBlkSize:USize-1 )  % note zero-based indexing
         
     fprintf('.');
 end
+end
+
+
+%------------------------------------------------------------------------------------------------------
+%Soft clipping function (high value of R -> hard clipping)
+function O = softClip(I,R)
+b = exp(R);
+O = log((1+b)./(1+b*exp(-R*I)))./log(1+b);
 end

@@ -96,6 +96,18 @@
 %                     .ResampMethod : 'fast'(default) or 'triangulation'
 %                      .LevelLimits : a two-element vector defining the black and white levels
 %                        .Precision : 'single'(default) or 'double'
+%                  WeightedDemosaic : Do White Image guided demosaicing, default=false.
+%                    WeightedInterp : Do White Image guided interpolations for lenslet image rotation/translation/scaling operations, default=false.
+%              .ColourCompatibility : Keep same colours/exposure as versions v0.4 and v0.5 of the toolbox, default true
+%               .NormaliseWIColours : Normalise sensor responses of Red and Blue pixels realtively to Green pixels in the White Image (prevents interference betweeen devignetting and white balance settings).
+%                                     The option is true by default. But it is always desactivated when ColourCompatibility is true, to avoid changing colours compared to versions v0.4 and v0.5.
+%              .NormaliseWIExposure : Normalises White image exposure to have value 1 at microlens centers (prevents interference between devignetting and exposure settings).
+%                                     The option is true by default. But it is always desactivated when ColourCompatibility is true, to avoid changing exposure compared to versions v0.4 and v0.5.
+%                .EarlyWhiteBalance : Perform white balance directly on the RAW data, before demosaicing, default = false.
+%                 .CorrectSaturated : Process saturated pixels on the sensor so that they appear white after white balance, default = false.
+%                         .ClipMode : Clipping for highlights : 'hard', 'soft' or 'none'. The default is 'soft' if CorrectSaturated is true, and 'hard' otherwise.
+%                                     ClipMode='none' prevents clipping of highlights. To retain values above the saturation level in the output integer format,
+%                                     the light field data is divided by its maximum value before conversion to integers, and the maximum value is saved in metadata as MaxLum.
 %
 %     RectOptions : struct controlling the optional rectification process
 %         .CalibrationDatabasePath  : Path to the calibration file database, as created by
@@ -173,6 +185,13 @@ DecodeOptions = LFDefaultField('DecodeOptions', 'WhiteImageDatabaseFname', 'Whit
 DecodeOptions = LFDefaultField('DecodeOptions', 'WhiteImageDatabasePath', 'Cameras');
 DecodeOptions.WhiteImageDatabasePath = ...
 	LFLocateDatabaseFile( DecodeOptions.WhiteImageDatabasePath, DecodeOptions.WhiteImageDatabaseFname );
+
+DecodeOptions = LFDefaultField( 'DecodeOptions', 'ColourCompatibility', true );
+if( DecodeOptions.ColourCompatibility )
+    DecodeOptions.NormaliseWIColours = false;
+    DecodeOptions.NormaliseWIExposure = false;
+end
+
 
 RectOptions = LFDefaultField('RectOptions', 'CalibrationDatabaseFname', 'CalibrationDatabase.json');
 RectOptions = LFDefaultField('RectOptions', 'CalibrationDatabasePath', fileparts(DecodeOptions.WhiteImageDatabasePath));
@@ -298,7 +317,12 @@ for( iFile = 1:length(FileList) )
 	%---Optionally save---
 	if( SaveRequired && FileOptions.SaveResult )
 		% Convert to ints
-		LF = LFConvertToInt( LF, FileOptions.OutputPrecision );
+		if(strcmp(DecodeOptions.ClipMode,'none'))
+			MaxLum = max(LF(:));
+		else
+			MaxLum=1;
+        end
+		LF = LFConvertToInt( LF ./ MaxLum, FileOptions.OutputPrecision);
 		
 		% Strip weight if we don't want it
 		% todo[optimization]: don't decode weight if it's not wanted
@@ -320,17 +344,17 @@ for( iFile = 1:length(FileList) )
 		imwrite(Thumb, ThumbFname);
 		switch( FileOptions.OutputFormat )
 			case 'mat'
-				save('-v7.3', SaveFname, 'GeneratedByInfo', 'LF', 'LFMetadata', 'WhiteImageMetadata', 'LensletGridModel', 'DecodeOptions', 'RectOptions');
+				save('-v7.3', SaveFname, 'GeneratedByInfo', 'LF', 'LFMetadata', 'WhiteImageMetadata', 'LensletGridModel', 'DecodeOptions', 'RectOptions', 'MaxLum');
 			case 'eslf.png'
 				WriteAlpha = FileOptions.SaveWeight;
 				LFWriteESLF( LF, SaveFname, WriteAlpha, FileOptions.ImwriteOptions{:} );
 				MetadataFname = [SaveFname, '.json'];
-				LFWriteMetadata( MetadataFname, LFVar2Struct(GeneratedByInfo, LFMetadata, WhiteImageMetadata, LensletGridModel, DecodeOptions, RectOptions));
+				LFWriteMetadata( MetadataFname, LFVar2Struct(GeneratedByInfo, LFMetadata, WhiteImageMetadata, LensletGridModel, DecodeOptions, RectOptions, MaxLum));
 			case 'eslf.jpg'
 				WriteAlpha = false;
 				LFWriteESLF( LF, SaveFname, WriteAlpha, FileOptions.ImwriteOptions{:} );
 				MetadataFname = [SaveFname, '.json'];
-				LFWriteMetadata( MetadataFname, LFVar2Struct(GeneratedByInfo, LFMetadata, WhiteImageMetadata, LensletGridModel, DecodeOptions, RectOptions));
+				LFWriteMetadata( MetadataFname, LFVar2Struct(GeneratedByInfo, LFMetadata, WhiteImageMetadata, LensletGridModel, DecodeOptions, RectOptions, MaxLum));
 			otherwise
 				error('Unrecognized output format %s', FileOptions.OutputFormat);
 		end
@@ -428,8 +452,23 @@ fprintf('Applying colour correction... ');
 LFWeight = LF(:,:,:,:,4);
 LF = LF(:,:,:,:,1:3);
 
+if( DecodeOptions.EarlyWhiteBalance )
+    ColBalance = [1 1 1]; %White Balance is already performed
+else
+    ColBalance = DecodeOptions.ColourBalance;
+end
+
+if( DecodeOptions.ColourCompatibility )
+    SaturationLevel = DecodeOptions.ColourBalance*DecodeOptions.ColourMatrix;
+    SaturationLevel = min(SaturationLevel);
+else
+    SaturationLevel = 1;
+end
+
+doClip = ~strcmp(DecodeOptions.ClipMode,'none');
+
 %---Apply the color conversion and saturate---
-LF = LFColourCorrect( LF, DecodeOptions.ColourMatrix, DecodeOptions.ColourBalance, DecodeOptions.Gamma );
+LF = LFColourCorrect( LF, DecodeOptions.ColourMatrix, ColBalance, SaturationLevel, doClip, DecodeOptions.Gamma );
 
 %---Put the weight channel back---
 LF(:,:,:,:,4) = LFWeight;

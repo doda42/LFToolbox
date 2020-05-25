@@ -31,7 +31,7 @@
 
 % Copyright (c) 2013-2020 Donald G. Dansereau
 
-function LF = LFColourCorrect(LF, ColMatrix, ColBalance, Gamma)
+function LF = LFColourCorrect(LF, ColMatrix, ColBalance, SaturationLevel, doClip, Gamma)
 
 LFSize = size(LF);
 
@@ -45,11 +45,12 @@ LF = LF * ColMatrix;
 % Unflatten result
 LF = reshape(LF, [LFSize(1:NDims-1),3]);
 
-% Saturating eliminates some issues with clipped pixels, but is aggressive and loses information
-% todo[optimization]: find a better approach to dealing with saturated pixels
-SaturationLevel = ColBalance*ColMatrix;
-SaturationLevel = min(SaturationLevel);
-LF = min(SaturationLevel,max(0,LF)) ./ SaturationLevel; 
+if(doClip)
+    % Saturating eliminates some issues with clipped pixels, but is aggressive and loses information
+    LF = min(SaturationLevel,max(0,LF)) ./ SaturationLevel; 
+else
+    LF = LF ./ SaturationLevel;
+end
 
 % Apply gamma
 LF = LF .^ Gamma;
