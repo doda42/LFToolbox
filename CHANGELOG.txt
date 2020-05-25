@@ -21,7 +21,7 @@ New features:
 - CalOptions.LFFnamePattern now accepts a cell array, and the default changed to look for .mat and .eslf.png files. Input files must include a weight channel.
 
 Performance improvements:
-- Faster / smarter display during calibration checkerboard finding
+- Faster / smarter display during calibration checkerboard finding; faster calibration
 
 ---v0.5.1----------------------------------------------------------------------
 Minor bug fixes and improvements

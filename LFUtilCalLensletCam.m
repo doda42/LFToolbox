@@ -140,7 +140,9 @@ while( ~strcmp(CalOptions.Phase, 'Refine') || ~RefineComplete )
         case 'Init'
             %---First step of optimization process will exclude distortion---
             CalOptions.Phase = 'NoDistort';
+			tic
             CalOptions = LFCalRefine( FileOptions.OutputPath, CalOptions );
+			toc
             
             if( CalOptions.ShowDisplay )
                 LFFigure(2);
@@ -150,7 +152,9 @@ while( ~strcmp(CalOptions.Phase, 'Refine') || ~RefineComplete )
         case 'NoDistort'
             %---Next step of optimization process adds distortion---
             CalOptions.Phase = 'WithDistort';
+			tic
             CalOptions = LFCalRefine( FileOptions.OutputPath, CalOptions );
+			toc
             if( CalOptions.ShowDisplay )
                 LFFigure(2);
                 LFCalDispEstPoses( FileOptions.OutputPath, CalOptions, [], [0,0,1] );
@@ -159,7 +163,9 @@ while( ~strcmp(CalOptions.Phase, 'Refine') || ~RefineComplete )
         otherwise
             %---Subsequent calls refine the estimate---
             CalOptions.Phase = 'Refine';
+			tic
             CalOptions = LFCalRefine( FileOptions.OutputPath, CalOptions );
+			toc
             RefineComplete = true;
             if( CalOptions.ShowDisplay )
                 LFFigure(2);
