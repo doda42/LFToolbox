@@ -1,3 +1,4 @@
+% todo: doc
 % LFCalFindCheckerCorners - locates corners in checkerboard images, called by LFUtilCalLensletCam
 %
 % Usage:
@@ -12,10 +13,10 @@
 %     InputPath : Path to folder containing decoded checkerboard images.
 %
 %     [optional] CalOptions : struct controlling calibration parameters, all fields are optional
-%         .CheckerCornersFnamePattern : Pattern for building output checkerboard corner files; %s is
+%                   .FeatFnamePattern : Pattern for building output checkerboard corner files; %s is
 %                                       used as a placeholder for the base filename
 %                     .LFFnamePattern : Filename pattern for locating input light fields
-%             .ForceRedoCornerFinding : Forces the function to run, overwriting existing results
+%             .ForceRedoFeatFinding : Forces the function to run, overwriting existing results
 %                        .ShowDisplay : Enables display, allowing visual verification of results
 %
 %    [optional] FileOptions : struct controlling file naming and saving
@@ -35,95 +36,26 @@
 
 % Copyright (c) 2013-2020 Donald G. Dansereau
 
-function CalOptions = LFCalFindCheckerCorners( InputPath, CalOptions, FileOptions )
+function CalOptions = LFModCalFindCheckerCorners( InputPath, CalOptions, FileOptions )
 
 %---Defaults---
 FileOptions = LFDefaultField( 'FileOptions', 'OutputPath', InputPath );
 
-CalOptions = LFDefaultField( 'CalOptions', 'ForceRedoCornerFinding', false );
-CalOptions = LFDefaultField( 'CalOptions', 'LFFnamePattern', ...
-	{'%s__Decoded.mat','%s__Decoded.eslf.png'} );
-CalOptions = LFDefaultField( 'CalOptions', 'CheckerCornersFnamePattern', '%s__CheckerCorners.mat' );
+CalOptions = LFDefaultField( 'CalOptions', 'ForceRedoFeatFinding', false );
+CalOptions = LFDefaultField( 'CalOptions', 'FeatFnamePattern', '%s__Feat.mat' );
 CalOptions = LFDefaultField( 'CalOptions', 'ShowDisplay', true );
 CalOptions = LFDefaultField( 'CalOptions', 'MinSubimageWeight', 0.2 ); % for fast rejection of dark frames
-
-if( ~iscell(CalOptions.LFFnamePattern) )
-	CalOptions.LFFnamePattern = {CalOptions.LFFnamePattern};
-end
 
 %---Make sure dest exists---
 warning('off','MATLAB:MKDIR:DirectoryExists');
 mkdir( FileOptions.OutputPath );
 
-%---Build a regular expression for stripping the base filename out of the full raw filename---
-BaseFnamePattern = regexp(CalOptions.LFFnamePattern, '%s', 'split');
-for( iPat = 1:length(BaseFnamePattern) )
-	CurPat = BaseFnamePattern{iPat};
-	CurPat = cell2mat({CurPat{1}, '(.*)', CurPat{2}});
-	BaseFnamePattern{iPat} = CurPat;
-	CalOptions.LFFnamePattern{iPat} = sprintf(CalOptions.LFFnamePattern{iPat}, '*');
-end
-
 %---Tagged onto all saved files---
 TimeStamp = datestr(now,'ddmmmyyyy_HHMMSS');
 GeneratedByInfo = struct('mfilename', mfilename, 'time', TimeStamp, 'VersionStr', LFToolboxVersion);
 
-%---Crawl folder structure locating raw lenslet images---
-fprintf('\n===Locating light fields in %s===\n', InputPath);
-[FileList, BasePath] = LFFindFilesRecursive( InputPath, CalOptions.LFFnamePattern );
-if( isempty(FileList) )
-	error(['No files found... are you running from the correct folder?\n'...
-		'       Current folder: %s\n'], pwd);
-end;
-fprintf('Found :\n');
-disp(FileList)
-
-%---Check zoom / focus and serial number settings across light fields---
-fprintf('Checking zoom / focus / serial number across all files...\n');
-for( iFile = 1:length(FileList) )
-	CurFname = FileList{iFile};
-	if( strfind( CurFname, '.eslf' ) )
-		MetadataFname = [CurFname,'.json'];
-		MetadataFname = fullfile(BasePath, MetadataFname);
-		AllMetadata = LFReadMetadata( MetadataFname );
-		LFMetadata = AllMetadata.LFMetadata;
-	elseif( strfind( CurFname, '.mat' ) )
-		load(fullfile(BasePath, CurFname), 'LFMetadata');
-	else
-		error('unknown file format\n');
-	end
-	
-	CamSettings(iFile).Fname = CurFname;
-	CamSettings(iFile).ZoomStep = LFMetadata.devices.lens.zoomStep;
-	CamSettings(iFile).FocusStep = LFMetadata.devices.lens.focusStep;
-	CamSettings(iFile).CamSerial = LFMetadata.SerialData.camera.serialNumber;
-end
-
-% Find the most frequent serial number
-[UniqueSerials,~,SerialIdx]=unique({CamSettings.CamSerial});
-NumSerials = size(UniqueSerials,2);
-MostFreqSerialIdx = median(SerialIdx);
-CamInfo.CamSerial = UniqueSerials{MostFreqSerialIdx};
-CamInfo.CamModel = LFMetadata.camera.model;
-
-% Finding the most frequent zoom / focus is easier
-CamInfo.FocusStep = median([CamSettings.FocusStep]);
-CamInfo.ZoomStep = median([CamSettings.ZoomStep]);
-fprintf( 'Serial: %s, ZoomStep: %d, FocusStep: %d\n', CamInfo.CamSerial, CamInfo.ZoomStep, CamInfo.FocusStep );
-InvalidIdx = find( ...
-	([CamSettings.ZoomStep] ~= CamInfo.ZoomStep) | ...
-	([CamSettings.FocusStep] ~= CamInfo.FocusStep) | ...
-	(SerialIdx ~= MostFreqSerialIdx)' );
-
-if( ~isempty(InvalidIdx) )
-	warning('Some files mismatch');
-	for( iInvalid = InvalidIdx )
-		fprintf('Serial: %s, ZoomStep: %d, FocusStep: %d -- %s\n', CamSettings(iInvalid).CamSerial, CamSettings(iInvalid).ZoomStep, CamSettings(iInvalid).FocusStep, CamSettings(iInvalid).Fname);
-	end
-	fprintf('For significant deviations, it is recommended that these files be removed and the program restarted.');
-else
-	fprintf('...all files match\n');
-end
+%---Find input files---
+[FileList, BasePath, BaseFnamePattern, CalOptions] = LFCalFindInputImages( InputPath, CalOptions );
 
 %---enable warning to display it once; gets disabled after first call to detectCheckerboardPoints--
 warning('on','vision:calibrate:boardShouldBeAsymmetric');
@@ -153,9 +85,9 @@ for( iFile = 1:length(FileList) )
 	fprintf(' --- %s [%d / %d]', ShortFname, iFile, length(FileList));
 	
 	%---Check for already-decoded file---
-	SaveFname = sprintf(CalOptions.CheckerCornersFnamePattern, ShortFname);
+	SaveFname = sprintf(CalOptions.FeatFnamePattern, ShortFname);
 	SaveFname = fullfile( FileOptions.OutputPath, SaveFname );
-	if( ~CalOptions.ForceRedoCornerFinding )
+	if( ~CalOptions.ForceRedoFeatFinding )
 		if( exist(SaveFname, 'file') )
 			fprintf( ' already done, skipping\n' );
 			SkippedFileCount = SkippedFileCount + 1;
@@ -167,12 +99,14 @@ for( iFile = 1:length(FileList) )
 	
 	%---Load the LF---
 	tic  % track time
+	
 	if( strfind( CurFname, '.eslf' ) )
-		[LF, AllMetadata] = LFReadESLF( CurFname );
-		LensletGridModel = AllMetadata.LensletGridModel;
-		DecodeOptions = AllMetadata.DecodeOptions;
+		% 		[LF, AllMetadata] = LFReadESLF( CurFname );
+		LF = LFReadESLF( CurFname );
+		% 		LensletGridModel = AllMetadata.LensletGridModel;  % todo: cleanp
+		% 		DecodeOptions = AllMetadata.DecodeOptions;
 	elseif( strfind( CurFname, '.mat' ) )
-		load( CurFname, 'LF', 'LensletGridModel', 'DecodeOptions' );
+		load( CurFname, 'LF' );%, 'LensletGridModel', 'DecodeOptions' ); %todo
 	else
 		error('unknown file format\n');
 	end
@@ -190,20 +124,30 @@ for( iFile = 1:length(FileList) )
 			CurW = mean(CurW(:));
 			
 			if( CurW < CalOptions.MinSubimageWeight * intmax(class(LF)) )
-				CurCheckerCorners = [];
+				CurChecker = [];
 			else
 				CurImg = squeeze(LF(TIdx, SIdx, :,:, 1:3));
 				CurImg = rgb2gray(CurImg);
 				
-				[CurCheckerCorners,CheckBoardSize] = detectCheckerboardPoints( CurImg );
+				[CurChecker,CheckBoardSize] = detectCheckerboardPoints( CurImg );  % todo: easy-insert alt feature finder here
 				warning('off','vision:calibrate:boardShouldBeAsymmetric');  % display once (at most)
+				CurValid = (prod(CheckBoardSize-1) == prod(CalOptions.ExpectedCheckerSize));
+				CurChecker = CurChecker'; 
 				
+				% todo: error message / display for checker size mismatch
+
+				%---For valid poses (having expected corner count) fix orientation---
 				% Matlab's detectCheckerboardPoints sometimes expresses the grid in different orders, especially for
-				% symmetric checkerbords. It's up to the consumer of this data to treat the points in the correct order.
+				% symmetric checkerbords.
+				if( ~CurValid )
+					CurChecker = [];
+				else
+					%--- reorient to expected ---
+					CurChecker = LFCheckerFixOrient( CurChecker, CalOptions );
+				end
 			end
 			
-			HitCount(TIdx,SIdx) = numel(CurCheckerCorners);
-			CheckerCorners{TIdx,SIdx} = CurCheckerCorners;
+			FeatObs{TIdx,SIdx} = CurChecker;
 		end
 		
 		%---Display results---
@@ -225,17 +169,21 @@ for( iFile = 1:length(FileList) )
 			Scaling = size(h.CData) ./ (LFSize(3:4) .* [NRows, NCols]);
 			hold on;
 			for( SIdx = 1:LFSize(2) )
-				if( HitCount(TIdx,SIdx) > 0 )
-					cx = CheckerCorners{TIdx,SIdx}(:,1);
-					cy = CheckerCorners{TIdx,SIdx}(:,2);
+				CurFeat = FeatObs{TIdx,SIdx};
+				if( numel(CurFeat) > 0 )
+					cx = CurFeat(1,:);
+					cy = CurFeat(2,:);
 					
 					CurCol = mod( SIdx-1, NCols );
 					CurRow = floor( (SIdx-1) / NCols );
 					cx = cx + CurCol * LFSize(4);
 					cy = cy + CurRow * LFSize(3);
 					cx = cx .* Scaling(2);
-					cy = cy .* Scaling(2);
-					plot(cx(:),cy(:),'r.', 'markersize',15)
+					cy = cy .* Scaling(1);
+					plot(cx,cy,'r.', 'markersize',15);
+					plot(cx(1),cy(1),'g.', 'markersize',20);
+					plot(cx(2),cy(2),'c.', 'markersize',20);
+					plot(cx(end),cy(end),'y.', 'markersize',20);
 				end
 			end
 			drawnow
@@ -245,7 +193,7 @@ for( iFile = 1:length(FileList) )
 	
 	%---Save---
 	fprintf('Saving result to %s...\n', SaveFname);
-	save(SaveFname, 'GeneratedByInfo', 'CheckerCorners', 'LFSize', 'CamInfo', 'LensletGridModel', 'DecodeOptions');
+	save(SaveFname, 'GeneratedByInfo', 'FeatObs', 'LFSize');%, 'CamInfo', 'LensletGridModel', 'DecodeOptions'); %todo
 	
 	TotFileTime = TotFileTime + toc;
 	MeanFileTime = TotFileTime / ProcessedFileCount;
