@@ -23,6 +23,9 @@ Decoding improvements:
 - New decode options CorrectSaturated and ClipMode for the recovery of saturated colours in the highlights.
 - New decode option EarlyWhiteBalance to perform white balance on the RAW lenslet image directly (reduce some colour artifacts).
 
+Misc improvements:
+- LFWriteESLF: smarter jpeg file writing; reduces to 8-bit and strips weight channel as needed
+
 
 ---v0.5.1----------------------------------------------------------------------
 Minor bug fixes and improvements
