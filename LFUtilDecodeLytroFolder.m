@@ -96,8 +96,8 @@
 %                     .ResampMethod : 'fast'(default) or 'triangulation'
 %                      .LevelLimits : a two-element vector defining the black and white levels
 %                        .Precision : 'single'(default) or 'double'
-%                  WeightedDemosaic : Do White Image guided demosaicing, default=false.
-%                    WeightedInterp : Do White Image guided interpolations for lenslet image rotation/translation/scaling operations, default=false.
+%                 .WeightedDemosaic : Do White Image guided demosaicing, default=false.
+%                   .WeightedInterp : Do White Image guided interpolations for lenslet image rotation/translation/scaling operations, default=false.
 %              .ColourCompatibility : Keep same colours/exposure as versions v0.4 and v0.5 of the toolbox, default true
 %               .NormaliseWIColours : Normalise sensor responses of Red and Blue pixels realtively to Green pixels in the White Image (prevents interference betweeen devignetting and white balance settings).
 %                                     The option is true by default. But it is always desactivated when ColourCompatibility is true, to avoid changing colours compared to versions v0.4 and v0.5.
@@ -468,7 +468,7 @@ end
 doClip = ~strcmp(DecodeOptions.ClipMode,'none');
 
 %---Apply the color conversion and saturate---
-LF = LFColourCorrect( LF, DecodeOptions.ColourMatrix, ColBalance, SaturationLevel, doClip, DecodeOptions.Gamma );
+LF = LFColourCorrect( LF, DecodeOptions.ColourMatrix, ColBalance, DecodeOptions.Gamma, SaturationLevel, doClip );
 
 %---Put the weight channel back---
 LF(:,:,:,:,4) = LFWeight;
