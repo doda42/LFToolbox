@@ -60,11 +60,11 @@
 %                              estimted parameter values change by less than this amount, the
 %                              optimization terminates. See the Matlab documentation on lsqnonlin,
 %                              option `TolX' for more information. The default value of 5e-5 is set
-%                              within the LFCalRefine function; a value of 0 means the optimization
+%                              within the LFModCalRefine function; a value of 0 means the optimization
 %                              never terminates based on this criterion.
 %                 .OptTolFun : Similar to OptTolX, except this tolerance deals with the error value.
 %                              This corresponds to Matlab's lsqnonlin option `TolFun'. The default
-%                              value of 0 is set within the LFCalRefine function, and means the
+%                              value of 0 is set within the LFModCalRefine function, and means the
 %                              optimization never terminates based on this criterion.
 %
 %     FileOptions : struct controlling file naming and saving
@@ -85,7 +85,7 @@
 %   documentation for a more complete example.
 %
 % User guide: <a href="matlab:which LFToolbox.pdf; open('LFToolbox.pdf')">LFToolbox.pdf</a>
-% See also:  LFCalFindCheckerCorners, LFCalInit, LFCalRefine, LFUtilDecodeLytroFolder, LFSelectFromDatabase
+% See also:  LFCalFindCheckerCorners, LFCalInit, LFModCalRefine, LFUtilDecodeLytroFolder, LFSelectFromDatabase
 
 % Copyright (c) 2013-2020 Donald G. Dansereau
 
@@ -104,6 +104,10 @@ CalOptions = LFDefaultField( 'CalOptions', 'ForceRedoInit', false );
 CalOptions = LFDefaultField( 'CalOptions', 'ShowDisplay', true );
 CalOptions = LFDefaultField( 'CalOptions', 'CalInfoFname', 'ModCalInfo.json' );
 
+if( ~isfield(CalOptions, 'CalTarget') )
+	CalOptions.CalTarget = LFModCalTargetChecker( CalOptions );
+end
+
 %---Check for previously started calibration---
 CalInfoFname = fullfile(FileOptions.OutputPath, CalOptions.CalInfoFname);
 if( ~CalOptions.ForceRedoInit && ~CalOptions.ForceRedoFeatFinding && exist(CalInfoFname, 'file') )
@@ -114,8 +118,6 @@ else
 end
 
 %---Step through the calibration phases---
-
-CalOptions.Phase = 'Corners';
 CalOptions = LFModCalFindCheckerCorners( InputPath, CalOptions, FileOptions );
 CalOptions = LFModCalCollectFeatures( FileOptions.OutputPath, CalOptions );
 CalOptions = LFModCalInit( FileOptions.OutputPath, CalOptions ); % todo: carry some LF metadata through to init
@@ -125,31 +127,31 @@ if( CalOptions.ShowDisplay )
 	LFCalDispEstPoses( FileOptions.OutputPath, CalOptions, [], [0.7,0.7,0.7] );
 end
 
-% CalOptions.Phase = 'NoDistort';
-% tic
-% CalOptions = LFCalRefine( FileOptions.OutputPath, CalOptions );
-% toc
-% 
-% if( CalOptions.ShowDisplay )
-% 	LFFigure(2);
-% 	LFCalDispEstPoses( FileOptions.OutputPath, CalOptions, [], [0,0.7,0] );
-% end
-% 
-% CalOptions.Phase = 'WithDistort';
-% tic
-% CalOptions = LFCalRefine( FileOptions.OutputPath, CalOptions );
-% toc
-% if( CalOptions.ShowDisplay )
-% 	LFFigure(2);
-% 	LFCalDispEstPoses( FileOptions.OutputPath, CalOptions, [], [0,0,1] );
-% end
-% 
-% CalOptions.Phase = 'Refine';
-% tic
-% CalOptions = LFCalRefine( FileOptions.OutputPath, CalOptions );
-% toc
-% RefineComplete = true;
-% if( CalOptions.ShowDisplay )
-% 	LFFigure(2);
-% 	LFCalDispEstPoses( FileOptions.OutputPath, CalOptions, [], [1,0,0] );
-% end
+CalOptions.Phase = 'NoDistort';
+tic
+CalOptions = LFModCalRefine( FileOptions.OutputPath, CalOptions );
+toc
+
+if( CalOptions.ShowDisplay )
+	LFFigure(2);
+	LFCalDispEstPoses( FileOptions.OutputPath, CalOptions, [], [0,0.7,0] );
+end
+
+CalOptions.Phase = 'WithDistort';
+tic
+CalOptions = LFModCalRefine( FileOptions.OutputPath, CalOptions );
+toc
+if( CalOptions.ShowDisplay )
+	LFFigure(2);
+	LFCalDispEstPoses( FileOptions.OutputPath, CalOptions, [], [0,0,1] );
+end
+
+CalOptions.Phase = 'Refine';
+tic
+CalOptions = LFModCalRefine( FileOptions.OutputPath, CalOptions );
+toc
+RefineComplete = true;
+if( CalOptions.ShowDisplay )
+	LFFigure(2);
+	LFCalDispEstPoses( FileOptions.OutputPath, CalOptions, [], [1,0,0] );
+end

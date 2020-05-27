@@ -56,9 +56,6 @@ end
 AllFeatsFile = fullfile(InputPath, CalOptions.AllFeatsFname);
 load( AllFeatsFile, 'AllFeatObs', 'LFSize' );
 
-%---Load ideal cal target Geometry - order matters---
-CalTarget = LFModCalTargetChecker( CalOptions );  % todo: as param
-
 %---Initial estimate of focal length---
 
 %---Compute homography for each subcam pose---
@@ -71,7 +68,7 @@ for( iFile = 1:length(CalOptions.FileList) )
 			if( ~isempty(CurFeatObs) )
 				ValidFeatCount = ValidFeatCount + 1;			
 				%---Compute homography for each subcam pose---
-				CurH = compute_homography( CurFeatObs, CalTarget(1:2,:) );
+				CurH = compute_homography( CurFeatObs, CalOptions.CalTarget(1:2,:) );
 				H(ValidFeatCount, :,:) = CurH;
 			end
         end
@@ -146,8 +143,8 @@ for( iSuperPoseIdx = 1:ValidSuperPoseCount )
                 continue;
             end
 
-            [CurRot, CurTrans] = compute_extrinsic_init(CurFeatObs, CalTarget, FocInit, CInit, zeros(1,5), 0);
-            [CurRot, CurTrans] = compute_extrinsic_refine(CurRot, CurTrans, CurFeatObs, CalTarget, FocInit, CInit, zeros(1,5), 0,20,1000000);
+            [CurRot, CurTrans] = compute_extrinsic_init(CurFeatObs, CalOptions.CalTarget, FocInit, CInit, zeros(1,5), 0);
+            [CurRot, CurTrans] = compute_extrinsic_refine(CurRot, CurTrans, CurFeatObs, CalOptions.CalTarget, FocInit, CInit, zeros(1,5), 0,20,1000000);
             
             RotVals{iSuperPoseIdx, TIdx, SIdx} = CurRot;
             TransVals{iSuperPoseIdx, TIdx, SIdx} = CurTrans;
