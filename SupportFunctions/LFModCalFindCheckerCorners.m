@@ -101,12 +101,9 @@ for( iFile = 1:length(FileList) )
 	tic  % track time
 	
 	if( strfind( CurFname, '.eslf' ) )
-		% 		[LF, AllMetadata] = LFReadESLF( CurFname );
 		LF = LFReadESLF( CurFname );
-		% 		LensletGridModel = AllMetadata.LensletGridModel;  % todo: cleanp
-		% 		DecodeOptions = AllMetadata.DecodeOptions;
 	elseif( strfind( CurFname, '.mat' ) )
-		load( CurFname, 'LF' );%, 'LensletGridModel', 'DecodeOptions' ); %todo
+		load( CurFname, 'LF' );
 	else
 		error('unknown file format\n');
 	end
@@ -132,7 +129,7 @@ for( iFile = 1:length(FileList) )
 				[CurChecker,CheckBoardSize] = detectCheckerboardPoints( CurImg );  % todo: easy-insert alt feature finder here
 				warning('off','vision:calibrate:boardShouldBeAsymmetric');  % display once (at most)
 				CurValid = (prod(CheckBoardSize-1) == prod(CalOptions.ExpectedCheckerSize));
-				CurChecker = CurChecker'; 
+				CurChecker = CurChecker';
 				
 				% todo: error message / display for checker size mismatch
 
@@ -193,7 +190,7 @@ for( iFile = 1:length(FileList) )
 	
 	%---Save---
 	fprintf('Saving result to %s...\n', SaveFname);
-	save(SaveFname, 'GeneratedByInfo', 'FeatObs', 'LFSize');%, 'CamInfo', 'LensletGridModel', 'DecodeOptions'); %todo
+	save(SaveFname, 'GeneratedByInfo', 'FeatObs', 'LFSize', 'CalOptions', 'FileOptions');
 	
 	TotFileTime = TotFileTime + toc;
 	MeanFileTime = TotFileTime / ProcessedFileCount;

@@ -51,9 +51,8 @@
 %           .LensletBorderSize : Number of pixels to skip around the edges of lenslets; a low
 %                                 value of 1 or 0 is generally appropriate, as invalid pixels are
 %                                 automatically skipped
-%                   .SaveResult : Set to false to perform a "dry run"
 %                  .ShowDisplay : Enables various displays throughout the calibration process
-%       .ForceRedoCornerFinding : Forces the corner finding procedure to run, overwriting existing
+%       .ForceRedoFeatFinding : Forces the corner finding procedure to run, overwriting existing
 %                                 results
 %                .ForceRedoInit : Forces the parameter initialization step to run, overwriting
 %                                 existing results
@@ -67,13 +66,13 @@
 %                              This corresponds to Matlab's lsqnonlin option `TolFun'. The default
 %                              value of 0 is set within the LFCalRefine function, and means the
 %                              optimization never terminates based on this criterion.
-% 
+%
 %     FileOptions : struct controlling file naming and saving
 %               .OutputPath : By default files are saved alongside input files; specifying an output
 %                             path will mirror the folder structure of the input, and save generated
 %                             files in that structure, leaving the input untouched
 %
-% 
+%
 % Output takes the form of saved checkerboard info and calibration files.
 %
 % Example :
@@ -100,76 +99,57 @@ FileOptions = LFDefaultField( 'FileOptions', 'OutputPath', InputPath );
 CalOptions = LFDefaultField( 'CalOptions', 'ExpectedCheckerSize', [19, 19] );
 CalOptions = LFDefaultField( 'CalOptions', 'ExpectedCheckerSpacing_m', [3.61, 3.61] * 1e-3 );
 CalOptions = LFDefaultField( 'CalOptions', 'LensletBorderSize', 1 );
-CalOptions = LFDefaultField( 'CalOptions', 'SaveResult', true );
-CalOptions = LFDefaultField( 'CalOptions', 'ForceRedoCornerFinding', false );
+CalOptions = LFDefaultField( 'CalOptions', 'ForceRedoFeatFinding', false );
 CalOptions = LFDefaultField( 'CalOptions', 'ForceRedoInit', false );
 CalOptions = LFDefaultField( 'CalOptions', 'ShowDisplay', true );
-CalOptions = LFDefaultField( 'CalOptions', 'CalInfoFname', 'CalInfo.json' );
+CalOptions = LFDefaultField( 'CalOptions', 'CalInfoFname', 'ModCalInfo.json' );
 
 %---Check for previously started calibration---
 CalInfoFname = fullfile(FileOptions.OutputPath, CalOptions.CalInfoFname);
-if( ~CalOptions.ForceRedoInit && ~CalOptions.ForceRedoCornerFinding && exist(CalInfoFname, 'file') )
-    fprintf('---File %s already exists\n   Loading calibration state and options\n', CalInfoFname);
-    CalOptions = LFStruct2Var( LFReadMetadata(CalInfoFname), 'CalOptions' );
+if( ~CalOptions.ForceRedoInit && ~CalOptions.ForceRedoFeatFinding && exist(CalInfoFname, 'file') )
+	fprintf('---File %s already exists\n   Loading calibration state and options\n', CalInfoFname);
+	CalOptions = LFStruct2Var( LFReadMetadata(CalInfoFname), 'CalOptions' );
 else
-    CalOptions.Phase = 'Start';
+	CalOptions.Phase = 'Start';
 end
-
-RefineComplete = false; % always at least refine once
 
 %---Step through the calibration phases---
-while( ~strcmp(CalOptions.Phase, 'Refine') || ~RefineComplete )
-    switch( CalOptions.Phase )
-        
-        case 'Start'
-            %---Find checkerboard corners---
-            CalOptions.Phase = 'Corners';
-            CalOptions = LFCalFindCheckerCorners( InputPath, CalOptions, FileOptions );
-            
-        case 'Corners'
-            %---Initialize calibration process---
-            CalOptions.Phase = 'Init';
-            CalOptions = LFCalInit( FileOptions.OutputPath, CalOptions );
-            
-            if( CalOptions.ShowDisplay )
-                LFFigure(2);
-                clf
-                LFCalDispEstPoses( FileOptions.OutputPath, CalOptions, [], [0.7,0.7,0.7] );
-            end
-            
-        case 'Init'
-            %---First step of optimization process will exclude distortion---
-            CalOptions.Phase = 'NoDistort';
-			tic
-            CalOptions = LFCalRefine( FileOptions.OutputPath, CalOptions );
-			toc
-            
-            if( CalOptions.ShowDisplay )
-                LFFigure(2);
-                LFCalDispEstPoses( FileOptions.OutputPath, CalOptions, [], [0,0.7,0] );
-            end
-            
-        case 'NoDistort'
-            %---Next step of optimization process adds distortion---
-            CalOptions.Phase = 'WithDistort';
-			tic
-            CalOptions = LFCalRefine( FileOptions.OutputPath, CalOptions );
-			toc
-            if( CalOptions.ShowDisplay )
-                LFFigure(2);
-                LFCalDispEstPoses( FileOptions.OutputPath, CalOptions, [], [0,0,1] );
-            end
-            
-        otherwise
-            %---Subsequent calls refine the estimate---
-            CalOptions.Phase = 'Refine';
-			tic
-            CalOptions = LFCalRefine( FileOptions.OutputPath, CalOptions );
-			toc
-            RefineComplete = true;
-            if( CalOptions.ShowDisplay )
-                LFFigure(2);
-                LFCalDispEstPoses( FileOptions.OutputPath, CalOptions, [], [1,0,0] );
-            end
-    end
+
+CalOptions.Phase = 'Corners';
+CalOptions = LFModCalFindCheckerCorners( InputPath, CalOptions, FileOptions );
+CalOptions = LFModCalCollectFeatures( FileOptions.OutputPath, CalOptions );
+CalOptions = LFModCalInit( FileOptions.OutputPath, CalOptions ); % todo: carry some LF metadata through to init
+if( CalOptions.ShowDisplay )
+	LFFigure(2);
+	clf
+	LFCalDispEstPoses( FileOptions.OutputPath, CalOptions, [], [0.7,0.7,0.7] );
 end
+
+% CalOptions.Phase = 'NoDistort';
+% tic
+% CalOptions = LFCalRefine( FileOptions.OutputPath, CalOptions );
+% toc
+% 
+% if( CalOptions.ShowDisplay )
+% 	LFFigure(2);
+% 	LFCalDispEstPoses( FileOptions.OutputPath, CalOptions, [], [0,0.7,0] );
+% end
+% 
+% CalOptions.Phase = 'WithDistort';
+% tic
+% CalOptions = LFCalRefine( FileOptions.OutputPath, CalOptions );
+% toc
+% if( CalOptions.ShowDisplay )
+% 	LFFigure(2);
+% 	LFCalDispEstPoses( FileOptions.OutputPath, CalOptions, [], [0,0,1] );
+% end
+% 
+% CalOptions.Phase = 'Refine';
+% tic
+% CalOptions = LFCalRefine( FileOptions.OutputPath, CalOptions );
+% toc
+% RefineComplete = true;
+% if( CalOptions.ShowDisplay )
+% 	LFFigure(2);
+% 	LFCalDispEstPoses( FileOptions.OutputPath, CalOptions, [], [1,0,0] );
+% end
