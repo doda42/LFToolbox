@@ -135,9 +135,9 @@ fprintf('\nInitial estimate of extrinsics...\n');
 ValidSuperPoseCount = size(AllFeatObs,1);
 for( iSuperPoseIdx = 1:ValidSuperPoseCount )
     fprintf('---[%d / %d]', iSuperPoseIdx, ValidSuperPoseCount);
-    for( TIdx = 1:size(AllFeatObs,1) )
+    for( TIdx = 1:size(AllFeatObs,2) )
         fprintf('.');
-        for( SIdx = 1:size(AllFeatObs,2) )
+        for( SIdx = 1:size(AllFeatObs,3) ) % todo[testing]: check with asymmetric board
             CurFeatObs = AllFeatObs{iSuperPoseIdx, TIdx, SIdx};
             if( isempty(CurFeatObs) )
                 continue;
