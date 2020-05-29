@@ -93,7 +93,10 @@
 %          .WhiteImageDatabaseFname : Filename of the white image database, default WhiteImageDatabase.json
 %                          .DoDehex : Controls whether hexagonal sampling is converted to rectangular, default true
 %                       .DoSquareST : Controls whether s,t dimensions are resampled to square pixels, default true
-%                     .ResampMethod : 'fast'(default) or 'triangulation'
+%                     .ResampMethod : 'fast'(default)
+%                                     'triangulation'
+%                                     'barycentric': slower but generates higher resolution images by a factor 3*sqrt(3)/2.
+%                                     'none': No interpolation -> Generates many incomplete views with a weight map per RGB component (zero weight indicate missing pixel).
 %                      .LevelLimits : a two-element vector defining the black and white levels
 %                        .Precision : 'single'(default) or 'double'
 %                 .WeightedDemosaic : Do White Image guided demosaicing, default=false.
@@ -192,6 +195,10 @@ if( DecodeOptions.ColourCompatibility )
     DecodeOptions.NormaliseWIExposure = false;
 end
 
+if(isfield(DecodeOptions,'ResampMethod') && strcmp(DecodeOptions.ResampMethod,'none') && ~strcmp(FileOptions.OutputFormat,'mat'))
+    warning('Only ''mat'' file OutputFormat is available with ResampMethod option set to ''none'' -> Using ''mat'' output format.');
+    FileOptions.OutputFormat = 'mat';
+end
 
 RectOptions = LFDefaultField('RectOptions', 'CalibrationDatabaseFname', 'CalibrationDatabase.json');
 RectOptions = LFDefaultField('RectOptions', 'CalibrationDatabasePath', fileparts(DecodeOptions.WhiteImageDatabasePath));
@@ -449,13 +456,19 @@ function LF = ColourCorrect( LF, LFMetadata, DecodeOptions )
 fprintf('Applying colour correction... ');
 
 %---Weight channel is not used by colour correction, so strip it out---
-LFWeight = LF(:,:,:,:,4);
-LF = LF(:,:,:,:,1:3);
+LFWeight = LF(:,:,:,:,DecodeOptions.NColChans+1:DecodeOptions.NColChans+DecodeOptions.NWeightChans);
+LF = LF(:,:,:,:,1:DecodeOptions.NColChans);
 
 if( DecodeOptions.EarlyWhiteBalance )
     ColBalance = [1 1 1]; %White Balance is already performed
 else
     ColBalance = DecodeOptions.ColourBalance;
+end
+
+if(strcmp(DecodeOptions.ResampMethod,'none'))
+    ColMatrix = eye(3); %Skip colour transform to avoid mixing RGB data since at most one component per pixel is reliable.
+else
+    ColMatrix = DecodeOptions.ColourMatrix;
 end
 
 if( DecodeOptions.ColourCompatibility )
@@ -468,10 +481,10 @@ end
 doClip = ~strcmp(DecodeOptions.ClipMode,'none');
 
 %---Apply the color conversion and saturate---
-LF = LFColourCorrect( LF, DecodeOptions.ColourMatrix, ColBalance, DecodeOptions.Gamma, SaturationLevel, doClip );
+LF = LFColourCorrect( LF, ColMatrix, ColBalance, DecodeOptions.Gamma, SaturationLevel, doClip );
 
 %---Put the weight channel back---
-LF(:,:,:,:,4) = LFWeight;
+LF(:,:,:,:,DecodeOptions.NColChans+1:DecodeOptions.NColChans+DecodeOptions.NWeightChans) = LFWeight;
 
 end
 

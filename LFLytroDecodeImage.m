@@ -169,6 +169,10 @@ switch( WhiteImageMetadata.camera.model )
             DecodeOptions.ExposureBias = LFMetadata.image.modulationExposureBias + 1;
         end
         
+        if(isfield(DecodeOptions,'ResampMethod') && DecodeOptions.ResampMethod)
+            DecodeOptions = LFDefaultField( 'DecodeOptions', 'NumViewsDiameter', 17 );
+            DecodeOptions = LFDefaultField( 'DecodeOptions', 'LensletBorderSkip', 1.5 );
+        end
         
         BitPacking = '12bit';
         
@@ -190,6 +194,11 @@ switch( WhiteImageMetadata.camera.model )
             DecodeOptions.ExposureBias = LFMetadata.image.modulationExposureBias;
         end
         
+        if(isfield(DecodeOptions,'ResampMethod') && strcmp(DecodeOptions.ResampMethod,'none'))
+            DecodeOptions = LFDefaultField( 'DecodeOptions', 'NumViewsDiameter', 25 );
+            DecodeOptions = LFDefaultField( 'DecodeOptions', 'LensletBorderSkip', 1.5 );
+        end
+        
         DecodeOptions.Gamma = 1;
         DecodeOptions.SensorNormalizeRBGains =   [WhiteImageMetadata.devices.sensor.normalizedResponses.gr/WhiteImageMetadata.devices.sensor.normalizedResponses.r, ...
                                                   WhiteImageMetadata.devices.sensor.normalizedResponses.gr/WhiteImageMetadata.devices.sensor.normalizedResponses.b];
@@ -204,6 +213,6 @@ WhiteImage = LFReadRaw( WhiteRawFname, BitPacking );
 %---Decode---
 fprintf('Decoding lenslet image :');
 [LF, LFWeight, DecodeOptions] = LFDecodeLensletImageDirect( LensletImage, WhiteImage, LensletGridModel, DecodeOptions );
-LF(:,:,:,:,4) = LFWeight;
+LF(:,:,:,:,end+1:end+DecodeOptions.NWeightChans) = LFWeight;
 DecodeOptions.LFSize = size(LF);
 
