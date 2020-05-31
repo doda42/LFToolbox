@@ -145,13 +145,13 @@ if( CalOptions.ShowDisplay )
 	LFFigure(2);
 	LFCalDispEstPoses( FileOptions.OutputPath, CalOptions, [], [0,0,1] );
 end
-
-CalOptions.Phase = 'Refine';
-tic
-CalOptions = LFModCalRefine( FileOptions.OutputPath, CalOptions );
-toc
-RefineComplete = true;
-if( CalOptions.ShowDisplay )
-	LFFigure(2);
-	LFCalDispEstPoses( FileOptions.OutputPath, CalOptions, [], [1,0,0] );
-end
+% 
+% CalOptions.Phase = 'Refine';
+% tic
+% CalOptions = LFModCalRefine( FileOptions.OutputPath, CalOptions );
+% toc
+% RefineComplete = true;
+% if( CalOptions.ShowDisplay )
+% 	LFFigure(2);
+% 	LFCalDispEstPoses( FileOptions.OutputPath, CalOptions, [], [1,0,0] );
+% end

@@ -62,7 +62,7 @@ Bug Fixes :
 - LFMatlabPathSetup.m: compatible with deployed code
 
 Performance and behaviour changes :
-- Decoding: improved alignment with rotated lenslet grids, impacts decoding and calibration; white should be re-processed
+- Decoding: improved alignment with rotated lenslet grids, impacts decoding and calibration; white images should be re-processed
 - Decoding Lytro images is up to 2x faster, excluding saving to disk
 - LFDisp* functions now display in the active figure window, allowing multiple open interactive displays; scale changes work without closing the window
 - LFBuildLensletGridModel: added CropOffset to control region of interest; more informative debug display; 

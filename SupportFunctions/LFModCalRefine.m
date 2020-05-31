@@ -69,7 +69,7 @@
 
 % Copyright (c) 2013-2020 Donald G. Dansereau
 
-function CalOptions = LFCalRefine( InputPath, CalOptions ) 
+function CalOptions = LFModCalRefine( InputPath, CalOptions ) 
 
 %---Defaults---
 CalOptions = LFDefaultField( 'CalOptions', 'OptTolX', 5e-5 );
@@ -247,6 +247,13 @@ function [PtPlaneDists, JacobPattern] = FindError(Params, AllFeatObs, CalTarget,
         CurEstCamPoseH = eye(4);
         CurEstCamPoseH(1:3,1:3) = rodrigues(CurEstCamPoseV(4:6));
         CurEstCamPoseH(1:3,4) = CurEstCamPoseV(1:3);
+		
+		%---Transform ideal 3D feature coords into camera's reference frame---
+		CalTarget_CamFrame = CurEstCamPoseH * CalTarget; % todo[refactor]: is CurEstCamPoseH actually the inverse of cam pose?
+		CalTarget_CamFrame = CalTarget_CamFrame(1:3,:); % won't be needing homogeneous points
+		
+		CameraModel.H = EstCamIntrinsicsH;
+		CameraModel.D = EstCamDistortionV;
 
         %---Iterate through the feature observations---
         for( TIdx = CalOptions.IJVecToOptOver )
@@ -260,57 +267,31 @@ function [PtPlaneDists, JacobPattern] = FindError(Params, AllFeatObs, CalTarget,
                 
                 %---Assemble observed feature positions into complete 4D [i,j,k,l] indices---
                 CurFeatObs_Idx = [repmat([SIdx;TIdx], 1, NFeatObs); CurFeatObs; ones(1, NFeatObs)];
-                
-                %---Transform ideal 3D feature coords into camera's reference frame---
-                CalTarget_CamFrame = CurEstCamPoseH * CalTarget; % todo[refactor]: is CurEstCamPoseH actually the inverse of cam pose?
-                CalTarget_CamFrame = CalTarget_CamFrame(1:3,:); % won't be needing homogeneous points
-                
-                %---Project observed feature indices to [s,t,u,v] rays---
-                CurFeatObs_Ray = EstCamIntrinsicsH * CurFeatObs_Idx;
-                
-                %---Apply direction-dependent distortion model---
-                if( ~isempty(EstCamDistortionV) && any(EstCamDistortionV(:)~=0))
-                    k1 = EstCamDistortionV(1);
-                    k2 = EstCamDistortionV(2);
-                    k3 = EstCamDistortionV(3);
-                    b1dir = EstCamDistortionV(4);
-                    b2dir = EstCamDistortionV(5);
-                    Direction = CurFeatObs_Ray(3:4,:);
-                    Direction = bsxfun(@minus, Direction, [b1dir;b2dir]);
-                    DirectionR2 = sum(Direction.^2);
-                    Direction = Direction .* repmat((1 + k1.*DirectionR2 + k2.*DirectionR2.^2 + k3.*DirectionR2.^3),2,1);
-                    Direction = bsxfun(@plus, Direction, [b1dir;b2dir]);
-                    CurFeatObs_Ray(3:4,:) = Direction;
-                end
-                
-                %---Find 3D point-ray distance---
-                STPlaneIntersect = [CurFeatObs_Ray(1:2,:); zeros(1,NFeatObs)];
-				% Here interpret u,v as relative, at a distance of 1 m
-				% Thus we use a relative 2pp, with D = 1m.
-                RayDir = [CurFeatObs_Ray(3:4,:); ones(1,NFeatObs)];  
-                CurDist3D = LFFind3DPtRayDist( STPlaneIntersect, RayDir, CalTarget_CamFrame );
-                
-                PtPlaneDists(OutputIdx + (1:NFeatObs)) = CurDist3D;
-                
-                if( nargout >=2 )
-                    % Build the Jacobian pattern. First we enumerate those observations related to
-                    % the current pose, then find all parameters to which those observations are
-                    % sensitive. This relies on the JacobSensitivity list constructed by the
-                    % FlattenStruct function.
-                    CurObservationList = OutputIdx + (1:NFeatObs);
-                    CurSensitivityList = (JacobSensitivity==PoseIdx | JacobSensitivity==0);
-                    JacobPattern(CurObservationList, CurSensitivityList) = 1;
-                end
-                OutputIdx = OutputIdx + NFeatObs;
-            end
-        end
-    end
-    
-    %---Check that the expected number of observations have gone by---
-    if( CheckFeatObs ~= TotFeatObs )
-        error(['Mismatch between expected (%d) and observed (%d) number of feature observations' ...
-            ' -- possibly caused by a grid parameter mismatch'], TotFeatObs, CheckFeatObs);
-    end
+				
+				%---Find error---
+				CurDist3D = CalError_PtRay( CurFeatObs_Idx, CameraModel, CalTarget_CamFrame );
+				PtPlaneDists(OutputIdx + (1:NFeatObs)) = CurDist3D;
+
+				%---Optionally compute jacobian sensitivity matrix---
+				if( nargout >=2 )
+					% Build the Jacobian pattern. First we enumerate those observations related to
+					% the current pose, then find all parameters to which those observations are
+					% sensitive. This relies on the JacobSensitivity list constructed by the
+					% FlattenStruct function.
+					CurObservationList = OutputIdx + (1:NFeatObs);
+					CurSensitivityList = (JacobSensitivity==PoseIdx | JacobSensitivity==0);
+					JacobPattern(CurObservationList, CurSensitivityList) = 1;
+				end
+				OutputIdx = OutputIdx + NFeatObs;
+			end
+		end
+	end
+	
+	%---Check that the expected number of observations have gone by---
+	if( CheckFeatObs ~= TotFeatObs )
+		error(['Mismatch between expected (%d) and observed (%d) number of feature observations' ...
+			' -- possibly caused by a grid parameter mismatch'], TotFeatObs, CheckFeatObs);
+	end
 end
 
 %---Compute distances from 3D rays to a 3D points---
@@ -319,10 +300,45 @@ function [Dist] = LFFind3DPtRayDist( PtOnRay, RayDir, Pt3D )
 RayDir = RayDir ./ repmat(sqrt(sum(RayDir.^2)), 3,1); % normalize ray
 Pt3D = Pt3D - PtOnRay;    % Vector to point
 
-PD1 = dot(Pt3D, RayDir);  
+PD1 = dot(Pt3D, RayDir);
 PD1 = repmat(PD1,3,1).*RayDir; % Project point vec onto ray vec
 
-Pt3D = Pt3D - PD1; 
+Pt3D = Pt3D - PD1;
 Dist = sqrt(sum(Pt3D.^2, 1)); % Distance from point to projected point
 
+end
+
+%---Convert a feature observation (pixel index) into a ray using general H and distortion---
+function CurFeatObs_Ray = ObsToRay_FreeIntrinH( CurFeatObs, CameraModel )
+%---Project observed feature indices to [s,t,u,v] rays---
+CurFeatObs_Ray = CameraModel.H * CurFeatObs;
+
+%---Apply direction-dependent distortion model---
+if( ~isempty(CameraModel.D) && any(CameraModel.D(:)~=0))
+	k1 = CameraModel.D(1);
+	k2 = CameraModel.D(2);
+	k3 = CameraModel.D(3);
+	b1dir = CameraModel.D(4);
+	b2dir = CameraModel.D(5);
+	Direction = CurFeatObs_Ray(3:4,:);
+	Direction = bsxfun(@minus, Direction, [b1dir;b2dir]);
+	DirectionR2 = sum(Direction.^2);
+	Direction = Direction .* repmat((1 + k1.*DirectionR2 + k2.*DirectionR2.^2 + k3.*DirectionR2.^3),2,1);
+	Direction = bsxfun(@plus, Direction, [b1dir;b2dir]);
+	CurFeatObs_Ray(3:4,:) = Direction;
+end
+end
+
+%---Find error given features, camera model, and checkerboards---
+% This method projects the features out as rays, and finds the ray-to-point distance
+function CurDist = CalError_PtRay( CurFeatObs, CameraModel, CalTarget_CamFrame )
+NFeatObs = size(CurFeatObs,2);
+CurFeatObs_Ray = ObsToRay_FreeIntrinH( CurFeatObs, CameraModel );
+
+%---Find 3D point-ray distance---
+STPlaneIntersect = [CurFeatObs_Ray(1:2,:); zeros(1,NFeatObs)];
+% Here interpret u,v as relative, at a distance of 1 m
+% Thus we use a relative 2pp, with D = 1m.
+RayDir = [CurFeatObs_Ray(3:4,:); ones(1,NFeatObs)];
+CurDist = LFFind3DPtRayDist( STPlaneIntersect, RayDir, CalTarget_CamFrame );
 end
