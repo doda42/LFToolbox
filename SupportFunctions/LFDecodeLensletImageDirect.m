@@ -30,7 +30,10 @@
 % LFBuildLensletGridModel -- see that function for more on the required structure.
 %
 % Optional Input DecodeOptions is a structure containing:
-%          [Optional] ResampMethod : 'fast'(default) or 'triangulation', the latter is slower
+%          [Optional] ResampMethod : 'fast'(default)
+%                                    'triangulation' slower.
+%                                    'barycentric': slow but generates larger images by a factor 3*sqrt(3)/2.
+%                                    'none': No interpolation -> Generates many incomplete views with a weight map per RGB component (zero weight indicate missing pixel).
 %          [Optional]   Precision : 'single'(default) or 'double'
 %          [Optional] LevelLimits : a two-element vector defining the black and white levels
 %          [Optional] WeightedDemosaic : Do White Image guided demosaicing (default=false).
@@ -70,7 +73,7 @@ function [LF, LFWeight, DecodeOptions, DebayerLensletImage] = ...
 %---Defaults---
  % LevelLimits defaults are a failsafe, should be passed in / come from the white image metadata
 DecodeOptions = LFDefaultField( 'DecodeOptions', 'LevelLimits', [min(WhiteImage(:)), max(WhiteImage(:))] );
-DecodeOptions = LFDefaultField( 'DecodeOptions', 'ResampMethod', 'fast' ); %'fast', 'triangulation'
+DecodeOptions = LFDefaultField( 'DecodeOptions', 'ResampMethod', 'fast' ); %'fast', 'triangulation', 'barycentric', 'none'
 DecodeOptions = LFDefaultField( 'DecodeOptions', 'Precision', 'single' );
 DecodeOptions = LFDefaultField( 'DecodeOptions', 'DoDehex', true );
 DecodeOptions = LFDefaultField( 'DecodeOptions', 'DoSquareST', true );
@@ -86,8 +89,12 @@ else
     DefaultClipMode='hard';
 end
 DecodeOptions = LFDefaultField( 'DecodeOptions', 'ClipMode', DefaultClipMode );% 'none', 'soft', 'hard'
+if(strcmp(DecodeOptions.ResampMethod,'none') || strcmp(DecodeOptions.ResampMethod,'none'))
+    %Weigthed interpolation not compatible with the ResampMode modes 'barycentric' and 'none'
+    DecodeOptions.WeightedInterp=false;
+    fprintf('ResampMethod not compatible with WeightedInterp, disabling\n');
+end
 
-    
 %---Rescale image values, remove black level---
 DecodeOptions.LevelLimits = cast(DecodeOptions.LevelLimits, DecodeOptions.Precision);
 BlackLevel = DecodeOptions.LevelLimits(1);
@@ -229,7 +236,11 @@ end
 DecodeOptions.NColChans = 3;
 
 if( nargout >= 2 )
-    DecodeOptions.NWeightChans = 1;
+    if(strcmp(DecodeOptions.ResampMethod,'none'))
+        DecodeOptions.NWeightChans = 3;
+    else
+        DecodeOptions.NWeightChans = 1;
+    end
 else
     DecodeOptions.NWeightChans = 0;
 end
@@ -267,144 +278,267 @@ DecodeOptions.OutputScale(3:4) = [1,2/sqrt(3)];  % hex sampling
 RTrans = eye(3);
 RTrans(end,1:2) = XformTrans;
 
+
+if(~strcmp(DecodeOptions.ResampMethod,'barycentric') && ~strcmp(DecodeOptions.ResampMethod,'none'))
 % The following rotation can rotate parts of the lenslet image out of frame.
 % todo[optimization]: attempt to keep these regions, offer greater user-control of what's kept
-FixAll = RRot*RScale*RTrans;
-LensletImage(:,:,4) = WhiteImage;
-clear WhiteImage
-LF = SliceXYImage( FixAll, NewLensletGridModel, LensletImage, DecodeOptions, Weights, Belonging, MLCenters);
-clear LensletImage
+    FixAll = RRot*RScale*RTrans;
+    LensletImage(:,:,4) = WhiteImage;
+    clear WhiteImage
+    LF = SliceXYImage( FixAll, NewLensletGridModel, LensletImage, DecodeOptions, Weights, Belonging, MLCenters);
+    clear LensletImage
 
-%---Correct for hex grid and resize to square u,v pixels---
-LFSize = size(LF);
-HexAspect = 2/sqrt(3);
-switch( DecodeOptions.ResampMethod )
-    case 'fast'
-        fprintf('\nResampling (1D approximation) to square u,v pixels');
-        NewUVec = 0:1/HexAspect:(size(LF,4)+1);  % overshoot then trim
-        NewUVec = NewUVec(1:ceil(LFSize(4)*HexAspect));
-        OrigUSize = size(LF,4);
-        LFSize(4) = length(NewUVec);
-        %---Allocate dest and copy orig LF into it (memory saving vs. keeping both separately)---
-        LF2 = zeros(LFSize, DecodeOptions.Precision);
-        LF2(:,:,:,1:OrigUSize,:) = LF;
-        LF = LF2;
-        clear LF2
-        
-        if( DecodeOptions.DoDehex )
-            ShiftUVec = -0.5+NewUVec;
-            fprintf(' and removing hex sampling...');
-        else
-            ShiftUVec = NewUVec;
-            fprintf('...');
+    %---Correct for hex grid and resize to square u,v pixels---
+    LFSize = size(LF);
+    HexAspect = 2/sqrt(3);
+    switch( DecodeOptions.ResampMethod )
+        case 'fast'
+            fprintf('\nResampling (1D approximation) to square u,v pixels');
+            NewUVec = 0:1/HexAspect:(size(LF,4)+1);  % overshoot then trim
+            NewUVec = NewUVec(1:ceil(LFSize(4)*HexAspect));
+            OrigUSize = size(LF,4);
+            LFSize(4) = length(NewUVec);
+            %---Allocate dest and copy orig LF into it (memory saving vs. keeping both separately)---
+            LF2 = zeros(LFSize, DecodeOptions.Precision);
+            LF2(:,:,:,1:OrigUSize,:) = LF;
+            LF = LF2;
+            clear LF2
+
+            if( DecodeOptions.DoDehex )
+                ShiftUVec = -0.5+NewUVec;
+                fprintf(' and removing hex sampling...');
+            else
+                ShiftUVec = NewUVec;
+                fprintf('...');
+            end
+            for( ColChan = 1:size(LF,5) )
+                CurUVec = ShiftUVec;
+                for( RowIter = 1:2 )
+                    RowIdx = mod(NewLensletGridModel.FirstPosShiftRow + RowIter, 2) + 1;
+                    ShiftRows = squeeze(LF(:,:,RowIdx:2:end,1:OrigUSize, ColChan));
+                    SliceSize = size(ShiftRows);
+                    SliceSize(4) = length(NewUVec);
+                    ShiftRows = reshape(ShiftRows, [size(ShiftRows,1)*size(ShiftRows,2)*size(ShiftRows,3), size(ShiftRows,4)]);
+                    ShiftRows = interp1( (0:size(ShiftRows,2)-1)', ShiftRows', CurUVec' )';
+                    ShiftRows(isnan(ShiftRows)) = 0;
+                    LF(:,:,RowIdx:2:end,:,ColChan) = reshape(ShiftRows,SliceSize);
+                    CurUVec = NewUVec;
+                end
+            end
+            clear ShiftRows
+            DecodeOptions.OutputScale(3) = DecodeOptions.OutputScale(3) * HexAspect;
+
+        case 'triangulation'
+            fprintf('\nResampling (triangulation) to square u,v pixels');
+            OldVVec = (0:size(LF,3)-1);
+            OldUVec = (0:size(LF,4)-1) * HexAspect;
+
+            NewUVec = (0:ceil(LFSize(4)*HexAspect)-1);
+            NewVVec = (0:LFSize(3)-1);
+            LFSize(4) = length(NewUVec);
+            LF2 = zeros(LFSize, DecodeOptions.Precision);
+
+            [Oldvv,Olduu] = ndgrid(OldVVec,OldUVec);
+            [Newvv,Newuu] = ndgrid(NewVVec,NewUVec);
+            if( DecodeOptions.DoDehex )
+                fprintf(' and removing hex sampling...');
+                FirstShiftRow = NewLensletGridModel.FirstPosShiftRow;
+                Olduu(FirstShiftRow:2:end,:) = Olduu(FirstShiftRow:2:end,:) + HexAspect/2;
+            else
+                fprintf('...');
+            end
+
+            DT = delaunayTriangulation( Olduu(:), Oldvv(:) );  % use DelaunayTri in older Matlab versions
+            [ti,bc] = pointLocation(DT, Newuu(:), Newvv(:));
+            ti(isnan(ti)) = 1;
+
+            for( ColChan = 1:size(LF,5) )
+                fprintf('.');
+                for( tidx= 1:LFSize(1) )
+                    for( sidx= 1:LFSize(2) )
+                        CurUVSlice = squeeze(LF(tidx,sidx,:,:,ColChan));
+                        triVals = CurUVSlice(DT(ti,:));
+                        CurUVSlice = dot(bc',triVals')';
+                        CurUVSlice = reshape(CurUVSlice, [length(NewVVec),length(NewUVec)]);
+
+                        CurUVSlice(isnan(CurUVSlice)) = 0;
+                        LF2(tidx,sidx, :,:, ColChan) = CurUVSlice;
+                    end
+                end
+            end
+            LF = LF2;
+            clear LF2
+            DecodeOptions.OutputScale(3) = DecodeOptions.OutputScale(3) * HexAspect;
+
+        otherwise
+            fprintf('\nNo valid dehex / resampling selected\n');
+    end
+
+    %---Resize to square s,t pixels---
+    % Assumes only a very slight resampling is required, resulting in an identically-sized output light field
+    if( DecodeOptions.DoSquareST )
+        fprintf('\nResizing to square s,t pixels using 1D linear interp...');
+
+        ResizeScale = DecodeOptions.OutputScale(1)/DecodeOptions.OutputScale(2);
+        ResizeDim1 = 1;
+        ResizeDim2 = 2;
+        if( ResizeScale < 1 )
+            ResizeScale = 1/ResizeScale;
+            ResizeDim1 = 2;
+            ResizeDim2 = 1;
         end
-        for( ColChan = 1:size(LF,5) )
-            CurUVec = ShiftUVec;
-            for( RowIter = 1:2 )
-                RowIdx = mod(NewLensletGridModel.FirstPosShiftRow + RowIter, 2) + 1;
-                ShiftRows = squeeze(LF(:,:,RowIdx:2:end,1:OrigUSize, ColChan));
-                SliceSize = size(ShiftRows);
-                SliceSize(4) = length(NewUVec);
-                ShiftRows = reshape(ShiftRows, [size(ShiftRows,1)*size(ShiftRows,2)*size(ShiftRows,3), size(ShiftRows,4)]);
-                ShiftRows = interp1( (0:size(ShiftRows,2)-1)', ShiftRows', CurUVec' )';
-                ShiftRows(isnan(ShiftRows)) = 0;
-                LF(:,:,RowIdx:2:end,:,ColChan) = reshape(ShiftRows,SliceSize);
-                CurUVec = NewUVec;
+
+        OrigSize = size(LF, ResizeDim1);
+        OrigVec = floor((-(OrigSize-1)/2):((OrigSize-1)/2));
+        NewVec = OrigVec ./ ResizeScale;
+
+        OrigDims = [1:ResizeDim1-1, ResizeDim1+1:5];
+
+        UBlkSize = 32;
+        USize = size(LF,4);
+        LF = permute(LF,[ResizeDim1, OrigDims]);
+        for( UStart = 1:UBlkSize:USize )
+            UStop = UStart + UBlkSize - 1;
+            UStop = min(UStop, USize);
+            LF(:,:,:,UStart:UStop,:) = interp1(OrigVec, LF(:,:,:,UStart:UStop,:), NewVec);
+            fprintf('.');
+        end
+        LF = ipermute(LF,[ResizeDim1, OrigDims]);
+        LF(isnan(LF)) = 0;
+
+        DecodeOptions.OutputScale(ResizeDim2) = DecodeOptions.OutputScale(ResizeDim2) * ResizeScale;
+    end
+
+else %Alternative Resampling modes 'none' and 'barycentric
+    
+    fprintf('\nInterpolating subaperture images from raw data...');
+    
+    USize = LensletGridModel.UMax;
+    VSize = LensletGridModel.VMax;
+    HOffset = LensletGridModel.HOffset;
+    VOffset = LensletGridModel.VOffset;
+    HSpacing = LensletGridModel.HSpacing;
+    VSpacing = LensletGridModel.VSpacing;
+    HexShiftStart = LensletGridModel.FirstPosShiftRow;
+    
+    [uu, vv] = meshgrid( 0:USize-1 , 0:VSize-1 );
+    centerX = HOffset + HSpacing * uu;
+    centerX(HexShiftStart:2:end,:) = centerX(HexShiftStart:2:end,:) + HSpacing/2;
+    centerY = VOffset + VSpacing * vv;
+
+    RotatedCenters = [centerX(:),centerY(:)] * RRot(1:2,1:2)';
+    centerX(:) = RotatedCenters(:,1);
+    centerY(:) = RotatedCenters(:,2);
+    
+    if(strcmp(DecodeOptions.ResampMethod,'barycentric'))
+        STVec = linspace(-HSpacing/2,HSpacing/2, NewLensletGridModel.HSpacing+1);%view positions cover the full lenslet diameter (=hspacing)
+        VSizeNew = floor(VSize*3*sqrt(3)/2);
+        USizeNew = USize*3;
+        LF = ones(length(STVec), length(STVec), VSizeNew, USizeNew, DecodeOptions.NColChans + DecodeOptions.NWeightChans, DecodeOptions.Precision);
+        
+        first = true;
+        for row = 1:length(STVec)
+            for col = 1:length(STVec)
+                vecFix = RRot * [STVec(col); STVec(row); 1];
+                colOffset = vecFix(1)/vecFix(3);
+                rowOffset = vecFix(2)/vecFix(3);
+                hex = zeros(2*VSize,2*USize,DecodeOptions.NColChans+DecodeOptions.NWeightChans);
+                img = zeros(VSizeNew,USizeNew,DecodeOptions.NColChans+DecodeOptions.NWeightChans);
+                for ch = 1:DecodeOptions.NColChans+DecodeOptions.NWeightChans
+                    if(ch<=DecodeOptions.NColChans)
+                        InterpSlice = interpn(squeeze(LensletImage(:,:,ch)), centerY+rowOffset, centerX+colOffset, 'cubic');
+                    else
+                        InterpSlice = interpn(squeeze(WhiteImage), centerY+rowOffset, centerX+colOffset, 'cubic');
+                    end
+                    hex(1:4:end,3-HexShiftStart:2:end,ch) = InterpSlice(1:2:end,:);
+                    hex(3:4:end,HexShiftStart:2:end,ch) = InterpSlice(2:2:end,:);
+                    if(first)
+                        [img(:,:,ch), InterpData] = baryCentric(hex(:,:,ch),VSize/2,USize, HexShiftStart);
+                        first = false;
+                    else
+                       img(:,:,ch) = baryCentric(hex(:,:,ch),VSize/2,USize, HexShiftStart, InterpData);
+                    end
+                end
+                LF(row, col,:,:,1:DecodeOptions.NColChans+DecodeOptions.NWeightChans) = cast(img,DecodeOptions.Precision);
             end
         end
-        clear ShiftRows
-        DecodeOptions.OutputScale(3) = DecodeOptions.OutputScale(3) * HexAspect;
         
-    case 'triangulation'
-        fprintf('\nResampling (triangulation) to square u,v pixels');
-        OldVVec = (0:size(LF,3)-1);
-        OldUVec = (0:size(LF,4)-1) * HexAspect;
+    else  % ResampMode 'none' -> only nearest interpolations with 
         
-        NewUVec = (0:ceil(LFSize(4)*HexAspect)-1);
-        NewVVec = (0:LFSize(3)-1);
-        LFSize(4) = length(NewUVec);
-        LF2 = zeros(LFSize, DecodeOptions.Precision);
+        G1Xparity = mod(G1stX,2); G1Yparity = mod(G1stY,2);
+        G2Xparity = mod(G2stX,2); G2Yparity = mod(G2stY,2);
+        RXparity  = mod(RstX,2);  RYparity  = mod(RstY,2);
+        BXparity  = mod(BstX,2);  BYparity  = mod(BstY,2);
         
-        [Oldvv,Olduu] = ndgrid(OldVVec,OldUVec);
-        [Newvv,Newuu] = ndgrid(NewVVec,NewUVec);
-        if( DecodeOptions.DoDehex )
-            fprintf(' and removing hex sampling...');
-            FirstShiftRow = NewLensletGridModel.FirstPosShiftRow;
-            Olduu(FirstShiftRow:2:end,:) = Olduu(FirstShiftRow:2:end,:) + HexAspect/2;
-        else
-            fprintf('...');
-        end
-        
-        DT = delaunayTriangulation( Olduu(:), Oldvv(:) );  % use DelaunayTri in older Matlab versions
-        [ti,bc] = pointLocation(DT, Newuu(:), Newvv(:));
-        ti(isnan(ti)) = 1;
-        
-        for( ColChan = 1:size(LF,5) )
-            fprintf('.');
-            for( tidx= 1:LFSize(1) )
-                for( sidx= 1:LFSize(2) )
-                    CurUVSlice = squeeze(LF(tidx,sidx,:,:,ColChan));
-                    triVals = CurUVSlice(DT(ti,:));
-                    CurUVSlice = dot(bc',triVals')';
-                    CurUVSlice = reshape(CurUVSlice, [length(NewVVec),length(NewUVec)]);
+        radius = (HSpacing-1)/2 - DecodeOptions.LensletBorderSkip;
+        STVec = linspace(-radius, radius, DecodeOptions.NumViewsDiameter);%oversample in ST dimension for better accuracy of nearest interpolation.
+        [S,T]=meshgrid(STVec,STVec);
+        STkeep = (S.^2+T.^2)<=radius.^2;
+        S = S(STkeep);
+        T = T(STkeep);
+        STVec = RRot * [S(:)'; T(:)'; ones(1,numel(S))];
+        S = STVec(1,:);
+        T = STVec(2,:);
+        nViews = numel(S);
+        DecodeOptions.Sampling.ST = [S(:), T(:)];%[S(:), T(:)*2/sqrt(3)];
+        DecodeOptions.Sampling.HexShiftStart = HexShiftStart;
+        DecodeOptions.Sampling.SubPixAccuracy=2*radius/(DecodeOptions.NumViewsDiameter-1);
+
+        LF = zeros(nViews, 1, VSize, USize, DecodeOptions.NColChans + DecodeOptions.NWeightChans, DecodeOptions.Precision);
+
+        %Only assign a sensor pixel value to its nearest pixel in the light field.
+        nearPxThreshold = DecodeOptions.Sampling.SubPixAccuracy/sqrt(2);
+        buffer_IdOut = zeros(size(LensletImage,1),size(LensletImage,2));
+        buffer_Dist = inf(size(LensletImage,1),size(LensletImage,2));
+        numPixPerView = USize*VSize;
+        DecodeOptions.Sampling.ViewWeights = ones(numel(S),1);
+        for viewId = 1:numel(S)
+            %Find the colour view and mask (unknown->0 / known->weight from the white image).
+            for xId=1:USize
+                for yId=1:VSize
+                    vxyId = (viewId-1)*numPixPerView + (xId-1)*VSize + yId;
+                    Xreq = centerX(yId,xId) + S(viewId);
+                    Yreq = centerY(yId,xId) + T(viewId);
+                    Xnear = min(max(round(Xreq),1),size(LensletImage,2));
+                    Ynear = min(max(round(Yreq),1),size(LensletImage,1));
+                    dist2 = (Xnear-Xreq).^2+(Ynear-Yreq).^2;
+                    LF(viewId,1,yId,xId,1:DecodeOptions.NColChans) = LensletImage(Ynear,Xnear,:);
                     
-                    CurUVSlice(isnan(CurUVSlice)) = 0;
-                    LF2(tidx,sidx, :,:, ColChan) = CurUVSlice;
+                    if( DecodeOptions.NWeightChans==3 && dist2 < buffer_Dist(Ynear,Xnear) )
+                        isNeighbour = abs(Xreq-Xnear) < nearPxThreshold  & abs(Yreq-Ynear) < nearPxThreshold;
+                        weight = WhiteImage(Ynear,Xnear);
+                        LF(viewId,1,yId,xId,DecodeOptions.NColChans+1) = weight * ( isNeighbour & mod(Xnear,2) == RXparity & mod(Ynear,2) == RYparity );
+                        LF(viewId,1,yId,xId,DecodeOptions.NColChans+2) = weight * ( isNeighbour & (mod(Xnear,2) == G1Xparity & mod(Ynear,2) == G1Yparity | mod(Xnear,2) == G2Xparity & mod(Ynear,2) == G2Yparity) );
+                        LF(viewId,1,yId,xId,DecodeOptions.NColChans+3) = weight * ( isNeighbour & mod(Xnear,2) == BXparity & mod(Ynear,2) == BYparity );
+                        
+                        %Remove previous closest pixel (set its mask value to zero)
+                        vxyIdPrev = buffer_IdOut(Ynear,Xnear);
+                        if(vxyIdPrev>0)
+                            viewIdPrev = 1+floor((vxyIdPrev-1)/numPixPerView);
+                            xIdPrev = 1 + floor((vxyIdPrev-(viewIdPrev-1)*numPixPerView-1)/VSize);
+                            yIdPrev = vxyIdPrev - (viewIdPrev-1)*numPixPerView - (xIdPrev-1)*VSize;
+                            LF(viewIdPrev,1,yIdPrev,xIdPrev,1+DecodeOptions.NColChans:DecodeOptions.NColChans+3) = 0;
+                        end
+                        %Update index and distance buffers with new closest pixel info.
+                        buffer_IdOut(Ynear,Xnear) = vxyId;
+                        buffer_Dist(Ynear,Xnear) = dist2;
+                    end
                 end
             end
         end
-        LF = LF2;
-        clear LF2
-        DecodeOptions.OutputScale(3) = DecodeOptions.OutputScale(3) * HexAspect;
-        
-    otherwise
-        fprintf('\nNo valid dehex / resampling selected\n');
-end
-
-%---Resize to square s,t pixels---
-% Assumes only a very slight resampling is required, resulting in an identically-sized output light field
-if( DecodeOptions.DoSquareST )
-    fprintf('\nResizing to square s,t pixels using 1D linear interp...');
-    
-    ResizeScale = DecodeOptions.OutputScale(1)/DecodeOptions.OutputScale(2);
-    ResizeDim1 = 1;
-    ResizeDim2 = 2;
-    if( ResizeScale < 1 )
-        ResizeScale = 1/ResizeScale;
-        ResizeDim1 = 2;
-        ResizeDim2 = 1;
     end
-    
-    OrigSize = size(LF, ResizeDim1);
-    OrigVec = floor((-(OrigSize-1)/2):((OrigSize-1)/2));
-    NewVec = OrigVec ./ ResizeScale;
-    
-    OrigDims = [1:ResizeDim1-1, ResizeDim1+1:5];
-    
-    UBlkSize = 32;
-    USize = size(LF,4);
-    LF = permute(LF,[ResizeDim1, OrigDims]);
-    for( UStart = 1:UBlkSize:USize )
-        UStop = UStart + UBlkSize - 1;
-        UStop = min(UStop, USize);
-        LF(:,:,:,UStart:UStop,:) = interp1(OrigVec, LF(:,:,:,UStart:UStop,:), NewVec);
-        fprintf('.');
-    end
-    LF = ipermute(LF,[ResizeDim1, OrigDims]);
-    LF(isnan(LF)) = 0;
-    
-    DecodeOptions.OutputScale(ResizeDim2) = DecodeOptions.OutputScale(ResizeDim2) * ResizeScale;
 end
-
 
 %---Trim s,t---
-LF = LF(2:end-1,2:end-1, :,:, :);
+if(~strcmp(DecodeOptions.ResampMethod,'none'))
+    LF = LF(2:end-1,2:end-1, :,:, :);
+end
 
 %---Slice out LFWeight if it was requested---
 if( nargout >= 2 )
-    LFWeight = LF(:,:,:,:,end);
+    LFWeight = LF(:,:,:,:,DecodeOptions.NColChans+1:end);
     LFWeight = LFWeight./max(LFWeight(:));
-    LF = LF(:,:,:,:,1:end-1);
+    LF = LF(:,:,:,:,1:DecodeOptions.NColChans);
 end
 
 end
