@@ -32,7 +32,7 @@
 % Optional Input DecodeOptions is a structure containing:
 %          [Optional] ResampMethod : 'fast'(default)
 %                                    'triangulation' slower.
-%                                    'barycentric': slow but generates higher resolution images by a factor 3*sqrt(3)/2.
+%                                    'barycentric': slow but generates larger images by a factor 3*sqrt(3)/2.
 %                                    'none': No interpolation -> Generates many incomplete views with a weight map per RGB component (zero weight indicate missing pixel).
 %          [Optional]   Precision : 'single'(default) or 'double'
 %          [Optional] LevelLimits : a two-element vector defining the black and white levels
@@ -92,6 +92,7 @@ DecodeOptions = LFDefaultField( 'DecodeOptions', 'ClipMode', DefaultClipMode );%
 if(strcmp(DecodeOptions.ResampMethod,'none') || strcmp(DecodeOptions.ResampMethod,'none'))
     %Weigthed interpolation not compatible with the ResampMode modes 'barycentric' and 'none'
     DecodeOptions.WeightedInterp=false;
+    fprintf('ResampMethod not compatible with WeightedInterp, disabling\n');
 end
 
 %---Rescale image values, remove black level---

@@ -95,7 +95,7 @@
 %                       .DoSquareST : Controls whether s,t dimensions are resampled to square pixels, default true
 %                     .ResampMethod : 'fast'(default)
 %                                     'triangulation'
-%                                     'barycentric': slower but generates higher resolution images by a factor 3*sqrt(3)/2.
+%                                     'barycentric': slower but generates larger images by a factor 3*sqrt(3)/2.
 %                                     'none': No interpolation -> Generates many incomplete views with a weight map per RGB component (zero weight indicate missing pixel).
 %                      .LevelLimits : a two-element vector defining the black and white levels
 %                        .Precision : 'single'(default) or 'double'
