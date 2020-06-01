@@ -45,6 +45,8 @@
 %          [Optional] EarlyWhiteBalance : Perform white balance directly on the RAW data, before demosaicing (default = false).
 %          [Optional] CorrectSaturated : Process saturated pixels on the sensor so that they appear white after white balance (default = false).
 %          [Optional] ClipMode : 'hard', 'soft', 'none'. The default is 'soft' if CorrectSaturated is true, 'hard' otherwise.
+%          [Optional] HotPixelCorrect : Performs hot pixel correction using a list of hot pixels detected on the sensor (default=false).
+%                                       If the option is active, the vertical and horizontal indices of the hot pixels must be defined temporarily in DecodeOptions.HotPixelsX and DecodeOptions.HotPixelsY (these fields are removed after the hot pixel correction is done).
 %
 % Output LF is a 5D array of size [Nj,Ni,Nl,Nk,3]. See [1] and the documentation accompanying this
 % toolbox for a brief description of the light field structure.
@@ -199,6 +201,13 @@ switch DecodeOptions.ClipMode
     case 'none'
     otherwise
         error(['Unknown ClipMode ''' DecodeOptions.ClipMode '''. Valid values are ''none'', ''soft'', ''hard''.']);
+end
+
+% Hot pixel correction 
+% todo[refactor]: encapsulate hot pixel list, lenslet grid model, ...
+if(DecodeOptions.HotPixelCorrect)
+    LensletImage = LFHotPixelCorrection(LensletImage,DecodeOptions.HotPixelsX,DecodeOptions.HotPixelsY);
+    DecodeOptions = rmfield(DecodeOptions,{'HotPixelsX','HotPixelsY'});
 end
 
 if(DecodeOptions.WeightedDemosaic || DecodeOptions.WeightedInterp)
