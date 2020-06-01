@@ -203,7 +203,8 @@ switch DecodeOptions.ClipMode
         error(['Unknown ClipMode ''' DecodeOptions.ClipMode '''. Valid values are ''none'', ''soft'', ''hard''.']);
 end
 
-% Hot pixel correction
+% Hot pixel correction 
+% todo[refactor]: encapsulate hot pixel list, lenslet grid model, ...
 if(DecodeOptions.HotPixelCorrect)
     LensletImage = LFHotPixelCorrection(LensletImage,DecodeOptions.HotPixelsX,DecodeOptions.HotPixelsY);
     DecodeOptions = rmfield(DecodeOptions,{'HotPixelsX','HotPixelsY'});

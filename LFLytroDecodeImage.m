@@ -189,7 +189,7 @@ switch( WhiteImageMetadata.camera.model )
 
             %---Compute Hot pixels---
             m = mean(BlackImageSum(:));
-            [DecodeOptions.HotPixelsY, DecodeOptions.HotPixelsX] = ind2sub( size(BlackImageSum), find(BlackImageSum > 2*m) );
+            [DecodeOptions.HotPixelsY, DecodeOptions.HotPixelsX] = ind2sub( size(BlackImageSum), find(BlackImageSum > 2*m) ); % todo[refactor]: make magic number 2 as parameter
             clear BlackImageSum
         end
         

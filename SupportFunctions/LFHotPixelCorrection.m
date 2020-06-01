@@ -36,3 +36,6 @@ function result = LFHotPixelCorrection(img, HotPixelsX, HotPixelsY)
     result = img;
     
 end
+
+% todo[refactor]
+% todo[feature] : alternate (4D) patching methods; zeroing weight channel
