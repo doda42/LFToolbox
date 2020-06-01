@@ -22,6 +22,7 @@ Decoding improvements:
 - Improved colours and exposure with decode options NormaliseWIColours, NormaliseWIExposure and corrected use of metadata for Lytro Illum (behaviour of previous versions is still available with decode option ColourCompatibility).
 - New decode options CorrectSaturated and ClipMode for the recovery of saturated colours in the highlights.
 - New decode option EarlyWhiteBalance to perform white balance on the RAW lenslet image directly (reduce some colour artifacts).
+- New decode option HotPixelCorrect for hot pixel correction of the RAW image.
 - New ResampMethod option 'barycentric' from the ICCV2013 paper of Cho et al, "Modeling the calibration pipeline of the Lytro camera for high quality light-field image reconstruction".
 - New ResampMethod option 'none' from ICCP2020 paper of Le Pendu and Smolic, "High Resolution Light Field Recovery with Fourier Disparity Layer Completion, Demosaicing, and Super-Resolution".
 
