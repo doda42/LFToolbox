@@ -470,7 +470,7 @@ else %Alternative Resampling modes 'none' and 'barycentric
         RXparity  = mod(RstX,2);  RYparity  = mod(RstY,2);
         BXparity  = mod(BstX,2);  BYparity  = mod(BstY,2);
         
-        radius = (HSpacing-1)/2 - DecodeOptions.LensletBorderSkip;
+        radius = (HSpacing-1)/2 - DecodeOptions.LensletBorderSize;
         STVec = linspace(-radius, radius, DecodeOptions.NumViewsDiameter);%oversample in ST dimension for better accuracy of nearest interpolation.
         [S,T]=meshgrid(STVec,STVec);
         STkeep = (S.^2+T.^2)<=radius.^2;

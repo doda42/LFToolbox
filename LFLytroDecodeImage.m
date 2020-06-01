@@ -171,7 +171,7 @@ switch( WhiteImageMetadata.camera.model )
         
         if(isfield(DecodeOptions,'ResampMethod') && DecodeOptions.ResampMethod)
             DecodeOptions = LFDefaultField( 'DecodeOptions', 'NumViewsDiameter', 17 );
-            DecodeOptions = LFDefaultField( 'DecodeOptions', 'LensletBorderSkip', 1.5 );
+            DecodeOptions = LFDefaultField( 'DecodeOptions', 'LensletBorderSize', 1.5 );
         end
         
         BitPacking = '12bit';
@@ -196,7 +196,7 @@ switch( WhiteImageMetadata.camera.model )
         
         if(isfield(DecodeOptions,'ResampMethod') && strcmp(DecodeOptions.ResampMethod,'none'))
             DecodeOptions = LFDefaultField( 'DecodeOptions', 'NumViewsDiameter', 25 );
-            DecodeOptions = LFDefaultField( 'DecodeOptions', 'LensletBorderSkip', 1.5 );
+            DecodeOptions = LFDefaultField( 'DecodeOptions', 'LensletBorderSize', 1.5 );
         end
         
         DecodeOptions.Gamma = 1;
