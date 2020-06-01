@@ -72,6 +72,7 @@ DecodeOptions = LFDefaultField( 'DecodeOptions', 'WhiteImageDatabasePath', fullf
 % Compatibility: for loading extracted raw / json files
 DecodeOptions = LFDefaultField( 'DecodeOptions', 'MetadataFnamePattern', '_metadata.json' );
 DecodeOptions = LFDefaultField( 'DecodeOptions', 'SerialdataFnamePattern', '_private_metadata.json' );
+DecodeOptions = LFDefaultField( 'DecodeOptions', 'HotPixelCorrect', false );
 
 %---
 LF = [];
@@ -169,8 +170,28 @@ switch( WhiteImageMetadata.camera.model )
             DecodeOptions.ExposureBias = LFMetadata.image.modulationExposureBias + 1;
         end
         
+        if(isfield(DecodeOptions,'ResampMethod') && DecodeOptions.ResampMethod)
+            DecodeOptions = LFDefaultField( 'DecodeOptions', 'NumViewsDiameter', 17 );
+            DecodeOptions = LFDefaultField( 'DecodeOptions', 'LensletBorderSize', 1.5 );
+        end
         
         BitPacking = '12bit';
+        
+        if(DecodeOptions.HotPixelCorrect)
+            %---Select and read black images---
+            % For Lytro F01, the black image have similar names as the white images and their indices are 0 and 1.
+            [ImagesDir, BlackImagesNames] = LFFindWhiteImageByIndex(WhiteRawFname,[0 1]);
+            BlackImageSum = 0;
+            for i=1:length(BlackImagesNames)
+                BlackImgPath = fullfile(ImagesDir, BlackImagesNames{i});
+                BlackImageSum = BlackImageSum + double(LFReadRaw( BlackImgPath, BitPacking ));
+            end
+
+            %---Compute Hot pixels---
+            m = mean(BlackImageSum(:));
+            [DecodeOptions.HotPixelsY, DecodeOptions.HotPixelsX] = ind2sub( size(BlackImageSum), find(BlackImageSum > 2*m) ); % todo[refactor]: make magic number 2 as parameter
+            clear BlackImageSum
+        end
         
     case 'B01'
         assert( WhiteImageMetadata.image.rawDetails.pixelPacking.bitsPerPixel == 10 );
@@ -190,10 +211,24 @@ switch( WhiteImageMetadata.camera.model )
             DecodeOptions.ExposureBias = LFMetadata.image.modulationExposureBias;
         end
         
+        if(isfield(DecodeOptions,'ResampMethod') && strcmp(DecodeOptions.ResampMethod,'none'))
+            DecodeOptions = LFDefaultField( 'DecodeOptions', 'NumViewsDiameter', 25 );
+            DecodeOptions = LFDefaultField( 'DecodeOptions', 'LensletBorderSize', 1.5 );
+        end
+        
         DecodeOptions.Gamma = 1;
         DecodeOptions.SensorNormalizeRBGains =   [WhiteImageMetadata.devices.sensor.normalizedResponses.gr/WhiteImageMetadata.devices.sensor.normalizedResponses.r, ...
                                                   WhiteImageMetadata.devices.sensor.normalizedResponses.gr/WhiteImageMetadata.devices.sensor.normalizedResponses.b];
+        
+        if(DecodeOptions.HotPixelCorrect)
+            HotPixelsFname = fullfile(fileparts(WhiteRawFname), 'HOTPIXEL.BIN');
+            HotPixelsXY = LFReadHotPixels(HotPixelsFname);
+            DecodeOptions.HotPixelsX = HotPixelsXY(:,1);
+            DecodeOptions.HotPixelsY = HotPixelsXY(:,2);
+        end
+        
         BitPacking = '10bit';
+        
         
     otherwise
         fprintf('Unrecognized camera model, skipping...\');
@@ -204,6 +239,6 @@ WhiteImage = LFReadRaw( WhiteRawFname, BitPacking );
 %---Decode---
 fprintf('Decoding lenslet image :');
 [LF, LFWeight, DecodeOptions] = LFDecodeLensletImageDirect( LensletImage, WhiteImage, LensletGridModel, DecodeOptions );
-LF(:,:,:,:,4) = LFWeight;
+LF(:,:,:,:,end+1:end+DecodeOptions.NWeightChans) = LFWeight;
 DecodeOptions.LFSize = size(LF);
 
