@@ -36,7 +36,7 @@
 
 % Copyright (c) 2013-2020 Donald G. Dansereau
 
-function CalOptions = LFModCalFindCheckerCorners( InputPath, CalOptions, FileOptions )
+function CalOptions = LFModCalFind2DFeats( InputPath, CalOptions, FileOptions )
 
 %---Defaults---
 FileOptions = LFDefaultField( 'FileOptions', 'OutputPath', InputPath );

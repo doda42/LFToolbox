@@ -118,7 +118,7 @@ else
 end
 
 %---Step through the calibration phases---
-CalOptions = LFModCalFindCheckerCorners( InputPath, CalOptions, FileOptions );
+CalOptions = LFModCalFind2DFeats( InputPath, CalOptions, FileOptions );
 CalOptions = LFModCalCollectFeatures( FileOptions.OutputPath, CalOptions );
 CalOptions = LFModCalInit( FileOptions.OutputPath, CalOptions ); % todo: carry some LF metadata through to init
 if( CalOptions.ShowDisplay )

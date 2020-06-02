@@ -185,13 +185,14 @@ fprintf('\nInitializing estimate of camera intrinsics to: \n');
 disp(EstCamIntrinsicsH);
 
 %---Start with no distortion estimate---
-EstCamDistortionV = [];
+CameraModel.IntrinsicsH = EstCamIntrinsicsH;
+CameraModel.Distortion = [];
 
 %---Optionally save the results---
 TimeStamp = datestr(now,'ddmmmyyyy_HHMMSS');
 GeneratedByInfo = struct('mfilename', mfilename, 'time', TimeStamp, 'VersionStr', LFToolboxVersion);
 
 fprintf('Saving to %s...\n', CalInfoSaveFname);
-LFWriteMetadata(CalInfoSaveFname, LFVar2Struct(GeneratedByInfo, EstCamIntrinsicsH, EstCamDistortionV, EstCamPosesV, CalOptions ));
+LFWriteMetadata(CalInfoSaveFname, LFVar2Struct(GeneratedByInfo, CameraModel, EstCamPosesV, CalOptions ));
 
 fprintf(' ---Calibration initialization done---\n');
