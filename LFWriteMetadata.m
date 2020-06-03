@@ -19,6 +19,9 @@
 % 
 % Enabled writing of class objects
 % 2020, Nuno Monteiro
+%
+% Enabled writing of function handles as strings
+% 2020, Donald Dansereau
 
 function LFWriteMetadata( JsonFileFname, DataToSave )
 
@@ -62,6 +65,10 @@ end
 
 %%-------------------------------------------------------------------------
 function txt=obj2json(name,item,level,varargin)
+
+if(isa(item,'function_handle'))
+	item = func2str(item);  % convert function handle to string, gets saved below
+end
 
 if(iscell(item))
     txt=cell2json(name,item,level,varargin{:});
