@@ -110,7 +110,7 @@
 %                 .CorrectSaturated : Process saturated pixels on the sensor so that they appear white after white balance, default = false.
 %                         .ClipMode : Clipping for highlights : 'hard', 'soft' or 'none'. The default is 'soft' if CorrectSaturated is true, and 'hard' otherwise.
 %                                     ClipMode='none' prevents clipping of highlights. To retain values above the saturation level in the output integer format,
-%                                     the light field data is divided by its maximum value before conversion to integers, and the maximum value is saved in metadata as MaxLum.
+%                                     the light field data is divided by its maximum value before conversion to integers, and the maximum value is saved in metadata as MaxLum. todo[doc]: describe soft
 %                  .HotPixelCorrect : Performs hot pixel correction using a list of hot pixels detected on the sensor (default=false). % todo[doc] explain when the required list of pixels is present
 %
 %     RectOptions : struct controlling the optional rectification process
