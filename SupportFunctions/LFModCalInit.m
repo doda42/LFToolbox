@@ -66,6 +66,7 @@ for( iFile = 1:length(CalOptions.FileList) )
         for( SIdx = 1:size(AllFeatObs,2) )
 			CurFeatObs = AllFeatObs{iFile, TIdx, SIdx};
 			if( ~isempty(CurFeatObs) )
+				CurFeatObs = CurFeatObs(3:4,:);
 				ValidFeatCount = ValidFeatCount + 1;			
 				%---Compute homography for each subcam pose---
 				CurH = compute_homography( CurFeatObs, CalOptions.CalTarget(1:2,:) );
@@ -141,8 +142,9 @@ for( iSuperPoseIdx = 1:ValidSuperPoseCount )
             CurFeatObs = AllFeatObs{iSuperPoseIdx, TIdx, SIdx};
             if( isempty(CurFeatObs) )
                 continue;
-            end
-
+			end
+			CurFeatObs = CurFeatObs(3:4,:);
+			
             [CurRot, CurTrans] = compute_extrinsic_init(CurFeatObs, CalOptions.CalTarget, FocInit, CInit, zeros(1,5), 0);
             [CurRot, CurTrans] = compute_extrinsic_refine(CurRot, CurTrans, CurFeatObs, CalOptions.CalTarget, FocInit, CInit, zeros(1,5), 0,20,1000000);
             

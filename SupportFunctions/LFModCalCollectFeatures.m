@@ -1,3 +1,4 @@
+%todo[doc]
 function CalOptions = LFModCalCollectFeatures( InputPath, CalOptions )
 
 CalOptions = LFDefaultField( 'CalOptions', 'FeatFnamePattern', '%s__Feats.mat' );
@@ -10,14 +11,12 @@ fprintf('Found :\n');
 disp(CalOptions.FileList)
 
 %---Load each feature observation file---
-ValidSuperPoseCount = 0;
 
 fprintf('Loading feature observations...\n');
 for( iFile = 1:length(CalOptions.FileList) )
-    ValidSuperPoseCount = ValidSuperPoseCount + 1;
     CurFname = CalOptions.FileList{iFile};
     [~,ShortFname] = fileparts(CurFname);
-    fprintf('---%s [%3d / %3d]...', ShortFname, ValidSuperPoseCount, length(CalOptions.FileList));
+    fprintf('---%s [%3d / %3d]...', ShortFname, iFile, length(CalOptions.FileList));
     
     load(fullfile(BasePath, CurFname), 'FeatObs', 'LFSize');
     PerImageValidCount = 0;
@@ -26,7 +25,7 @@ for( iFile = 1:length(CalOptions.FileList) )
             CurFeat = FeatObs{TIdx, SIdx};
             if( ~isempty(CurFeat) )
                 PerImageValidCount = PerImageValidCount + 1;
-                AllFeatObs{ValidSuperPoseCount, TIdx, SIdx} = CurFeat;
+                AllFeatObs{iFile, TIdx, SIdx} = CurFeat;
             end
         end
     end

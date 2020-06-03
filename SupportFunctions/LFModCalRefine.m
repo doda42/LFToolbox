@@ -75,6 +75,8 @@ function CalOptions = LFModCalRefine( InputPath, CalOptions )
 CalOptions = LFDefaultField( 'CalOptions', 'OptTolX', 5e-5 );
 CalOptions = LFDefaultField( 'CalOptions', 'OptTolFun', 0 );
 
+CalOptions = LFDefaultField( 'CalOptions', 'Fn_PerObsError', 'ObsError_PtRay' );
+
 %---Load feaature observations and previous cal state---
 AllFeatsFname = fullfile(InputPath, CalOptions.AllFeatsFname);
 CalInfoFname = fullfile(InputPath, CalOptions.CalInfoFname);
@@ -101,7 +103,7 @@ CalTarget = [CalTarget; ones(1,size(CalTarget,2))]; % homogeneous coord
 CalOptions.NPoses = size(EstCamPosesV,1);
 [OptParams0, ParamsInfo, JacobSensitivity] = ModelToOptParams( EstCamPosesV, CameraModel, CalOptions );
 
-[ModelError0, JacobPattern] = FindError( OptParams0, AllFeatObs, CalTarget, CalOptions, ParamsInfo, JacobSensitivity );
+[ModelError0, JacobPattern] = FindError2DFeats( OptParams0, AllFeatObs, CalTarget, CalOptions, ParamsInfo, JacobSensitivity );
 if( numel(ModelError0) == 0 )
     error('No valid grid points found -- possible grid parameter mismatch');
 end
@@ -109,7 +111,7 @@ end
 fprintf('\n    Start SSE: %g m^2, RMSE: %g m\n', sum((ModelError0).^2), sqrt(mean((ModelError0).^2)));
 
 %---Start the optimization---
-ObjectiveFunc = @(Params) FindError(Params, AllFeatObs, CalTarget, CalOptions, ParamsInfo, JacobSensitivity );
+ObjectiveFunc = @(Params) FindError2DFeats(Params, AllFeatObs, CalTarget, CalOptions, ParamsInfo, JacobSensitivity );
 OptimOptions = optimset('Display','iter', ...
     'TolX', CalOptions.OptTolX, ...
     'TolFun',CalOptions.OptTolFun, ...
@@ -201,7 +203,7 @@ end
 end
 
 %---------------------------------------------------------------------------------------------------
-function [ModelError, JacobPattern] = FindError( OptParams, AllFeatObs, CalTarget, CalOptions, ParamsInfo, JacobSensitivity )
+function [ModelError, JacobPattern] = FindError2DFeats( OptParams, AllFeatObs, CalTarget, CalOptions, ParamsInfo, JacobSensitivity )
     %---Decode optim params---
     [EstCamPosesV, CameraModel] = OptParamsToModel( OptParams, CalOptions, ParamsInfo );
     
@@ -241,10 +243,10 @@ function [ModelError, JacobPattern] = FindError( OptParams, AllFeatObs, CalTarge
                 CheckFeatObs = CheckFeatObs + NFeatObs;
                 
                 %---Assemble observed feature positions into complete 4D [i,j,k,l] indices---
-                CurFeatObs_Idx = [repmat([SIdx;TIdx], 1, NFeatObs); CurFeatObs; ones(1, NFeatObs)];
+                CurFeatObs_Idx = [CurFeatObs; ones(1, NFeatObs)];
 				
 				%---Find error---
-				CurDist3D = CalError_PtRay( CurFeatObs_Idx, CameraModel, CalTarget_CamFrame );
+				CurDist3D = feval( CalOptions.Fn_PerObsError, CurFeatObs_Idx, CameraModel, CalTarget_CamFrame );
 				ModelError(OutputIdx + (1:NFeatObs)) = CurDist3D;
 
 				%---Optionally compute jacobian sensitivity matrix---
@@ -269,46 +271,11 @@ function [ModelError, JacobPattern] = FindError( OptParams, AllFeatObs, CalTarge
 	end
 end
 
-%---Compute distances from 3D rays to a 3D points---
-function [Dist] = LFFind3DPtRayDist( PtOnRay, RayDir, Pt3D )
-
-RayDir = RayDir ./ repmat(sqrt(sum(RayDir.^2)), 3,1); % normalize ray
-Pt3D = Pt3D - PtOnRay;    % Vector to point
-
-PD1 = dot(Pt3D, RayDir);
-PD1 = repmat(PD1,3,1).*RayDir; % Project point vec onto ray vec
-
-Pt3D = Pt3D - PD1;
-Dist = sqrt(sum(Pt3D.^2, 1)); % Distance from point to projected point
-
-end
-
-%---Convert a feature observation (pixel index) into a ray using general H and distortion---
-function CurFeatObs_Ray = ObsToRay_FreeIntrinH( CurFeatObs, CameraModel )
-%---Project observed feature indices to [s,t,u,v] rays---
-CurFeatObs_Ray = CameraModel.IntrinsicsH * CurFeatObs;
-
-%---Apply direction-dependent distortion model---
-if( ~isempty(CameraModel.Distortion) && any(CameraModel.Distortion(:)~=0))
-	k1 = CameraModel.Distortion(1);
-	k2 = CameraModel.Distortion(2);
-	k3 = CameraModel.Distortion(3);
-	b1dir = CameraModel.Distortion(4);
-	b2dir = CameraModel.Distortion(5);
-	Direction = CurFeatObs_Ray(3:4,:);
-	Direction = bsxfun(@minus, Direction, [b1dir;b2dir]);
-	DirectionR2 = sum(Direction.^2);
-	Direction = Direction .* repmat((1 + k1.*DirectionR2 + k2.*DirectionR2.^2 + k3.*DirectionR2.^3),2,1);
-	Direction = bsxfun(@plus, Direction, [b1dir;b2dir]);
-	CurFeatObs_Ray(3:4,:) = Direction;
-end
-end
-
 %---Find error given features, camera model, and checkerboards---
 % This method projects the features out as rays, and finds the ray-to-point distance
-function CurDist = CalError_PtRay( CurFeatObs, CameraModel, CalTarget_CamFrame )
+function CurDist = ObsError_PtRay( CurFeatObs, CameraModel, CalTarget_CamFrame )
 NFeatObs = size(CurFeatObs,2);
-CurFeatObs_Ray = ObsToRay_FreeIntrinH( CurFeatObs, CameraModel );
+CurFeatObs_Ray = LFObsToRay_FreeIntrinH( CurFeatObs, CameraModel );
 
 %---Find 3D point-ray distance---
 STPlaneIntersect = [CurFeatObs_Ray(1:2,:); zeros(1,NFeatObs)];
@@ -339,5 +306,4 @@ if( ~isempty(CalOptions.DistortionParamsToOpt) )
     fprintf('    Distortion: ');
     disp(CalOptions.DistortionParamsToOpt);
 end
-
 end

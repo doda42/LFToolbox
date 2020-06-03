@@ -62,11 +62,7 @@ warning('on','vision:calibrate:boardShouldBeAsymmetric');
 fprintf('Skipping subimages with mean weight below MinSubimageWeight %g\n', CalOptions.MinSubimageWeight);
 
 %---clear display---
-if( CalOptions.ShowDisplay )
-	LFFigure(1);
-	FirstRun = true;
-	clf
-end
+FirstRun = true;
 
 %---Process each folder---
 SkippedFileCount = 0;
@@ -74,6 +70,8 @@ ProcessedFileCount = 0;
 TotFileTime = 0;
 %---Process each raw lenslet file---
 for( iFile = 1:length(FileList) )
+	FeatObs = {};
+	
 	CurFname = FileList{iFile};
 	CurFname = fullfile(BasePath, CurFname);
 	
@@ -142,6 +140,10 @@ for( iFile = 1:length(FileList) )
 					%--- reorient to expected ---
 					CurChecker = LFCheckerFixOrient( CurChecker, CalOptions );
 				end
+				
+				%---build complete i,j,k,l observations---
+                NFeatObs = size(CurChecker,2);
+                CurChecker = [repmat([SIdx;TIdx], 1, NFeatObs); CurChecker];
 			end
 			
 			FeatObs{TIdx,SIdx} = CurChecker;
@@ -156,20 +158,22 @@ for( iFile = 1:length(FileList) )
 			CurSlice = permute(CurSlice,[2,3,1]);
 			
 			LFFigure(1);
-			hold off
 			if( FirstRun )
+				clf
 				h = montage( CurSlice, 'Size', [NRows, NCols] );
 				FirstRun = false;
 			else
+				hold off
 				h = montage( CurSlice, 'Size', [NRows, NCols], 'Parent', gca );
 			end
+			title(sprintf('%s  t: %d, s: 1-%d', ShortFname, TIdx, LFSize(2)), 'Interpreter', 'none');
 			Scaling = size(h.CData) ./ (LFSize(3:4) .* [NRows, NCols]);
 			hold on;
 			for( SIdx = 1:LFSize(2) )
 				CurFeat = FeatObs{TIdx,SIdx};
 				if( numel(CurFeat) > 0 )
-					cx = CurFeat(1,:);
-					cy = CurFeat(2,:);
+					cx = CurFeat(3,:);
+					cy = CurFeat(4,:);
 					
 					CurCol = mod( SIdx-1, NCols );
 					CurRow = floor( (SIdx-1) / NCols );
@@ -188,7 +192,7 @@ for( iFile = 1:length(FileList) )
 	end
 	fprintf('\n');
 	
-	%---Save---
+	%---Save---	
 	fprintf('Saving result to %s...\n', SaveFname);
 	save(SaveFname, 'GeneratedByInfo', 'FeatObs', 'LFSize', 'CalOptions', 'FileOptions');
 	
