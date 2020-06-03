@@ -1,3 +1,4 @@
+% todo[doc]
 function [FileList, BasePath, BaseFnamePattern, CalOptions] = LFCalFindInputImages( InputPath, CalOptions )
 
 %---Defaults---
@@ -5,7 +6,11 @@ CalOptions = LFDefaultField( 'CalOptions', 'LFFnamePattern',  ...
 	{'%s__Decoded.mat','%s__Decoded.eslf.png'} );
 
 if( ~iscell(CalOptions.LFFnamePattern) )
-	CalOptions.LFFnamePattern = {CalOptions.LFFnamePattern};
+	if( isstring(CalOptions.LFFnamePattern) )
+		CalOptions.LFFnamePattern = cellstr(CalOptions.LFFnamePattern);
+	else
+		CalOptions.LFFnamePattern = {CalOptions.LFFnamePattern};
+	end
 end
 
 %---Build a regular expression for stripping the base filename out of the full raw filename---
@@ -14,12 +19,12 @@ for( iPat = 1:length(BaseFnamePattern) )
 	CurPat = BaseFnamePattern{iPat};
 	CurPat = cell2mat({CurPat{1}, '(.*)', CurPat{2}});
 	BaseFnamePattern{iPat} = CurPat;
-	CalOptions.LFFnamePattern{iPat} = sprintf(CalOptions.LFFnamePattern{iPat}, '*');
+	WildcardLFFnamePattern{iPat} = sprintf(CalOptions.LFFnamePattern{iPat}, '*');
 end
 
 %---Crawl folder structure locating raw lenslet images---
 fprintf('\n===Locating light fields in %s===\n', InputPath);
-[FileList, BasePath] = LFFindFilesRecursive( InputPath, CalOptions.LFFnamePattern );
+[FileList, BasePath] = LFFindFilesRecursive( InputPath, WildcardLFFnamePattern );
 if( isempty(FileList) )
 	error(['No files found... are you running from the correct folder?\n'...
 		'       Current folder: %s\n'], pwd);
