@@ -3,7 +3,7 @@
 % Usage:
 %
 %     LFUtilCalLensletCam
-%     LFUtilCalLensletCam( [InputPath], [CalOptions], [FileOptions] )
+%     LFUtilCalLensletCam( [InputImagePath], [CalOptions], [FileOptions] )
 %
 % All parameters are optional and take on default values as set in the "Defaults" section at the top
 % of the implementation. As such, this can be called as a function or run directly by editing the
@@ -40,7 +40,7 @@
 %
 % Inputs -- all are optional, see code below for default values :
 %
-%     InputPath : Default '.'; Path to folder containing decoded checkerboard images -- note the
+%     InputImagePath : Default '.'; Path to folder containing decoded checkerboard images -- note the
 %                 function operates recursively, i.e. it will search sub-folders.
 %
 %     CalOptions : struct controlling calibration parameters
@@ -68,7 +68,7 @@
 %                              optimization never terminates based on this criterion.
 %
 %     FileOptions : struct controlling file naming and saving
-%               .OutputPath : By default files are saved alongside input files; specifying an output
+%               .WorkingPath : By default files are saved alongside input files; specifying an output
 %                             path will mirror the folder structure of the input, and save generated
 %                             files in that structure, leaving the input untouched
 %
@@ -89,12 +89,12 @@
 
 % Copyright (c) 2013-2020 Donald G. Dansereau
 
-function LFUtilCalLensletCam( InputPath, CalOptions, FileOptions )
+function LFUtilCalLensletCam( InputImagePath, CalOptions, FileOptions )
 
 %---Tweakables---
-InputPath = LFDefaultVal('InputPath', '.');
+InputImagePath = LFDefaultVal('InputImagePath', '.');
 
-FileOptions = LFDefaultField( 'FileOptions', 'OutputPath', InputPath );
+FileOptions = LFDefaultField( 'FileOptions', 'WorkingPath', InputImagePath );
 
 CalOptions = LFDefaultField( 'CalOptions', 'ExpectedCheckerSize', [19, 19] );
 CalOptions = LFDefaultField( 'CalOptions', 'ExpectedCheckerSpacing_m', [3.61, 3.61] * 1e-3 );
@@ -104,12 +104,14 @@ CalOptions = LFDefaultField( 'CalOptions', 'ForceRedoInit', false );
 CalOptions = LFDefaultField( 'CalOptions', 'ShowDisplay', true );
 CalOptions = LFDefaultField( 'CalOptions', 'CalInfoFname', 'ModCalInfo.json' );
 
+CalOptions = LFDefaultField( 'CalOptions', 'Fn_CalInit', 'LFModCalInit' );
+
 if( ~isfield(CalOptions, 'CalTarget') )
 	CalOptions.CalTarget = LFModCalTargetChecker( CalOptions );
 end
 
 %---Check for previously started calibration---
-CalInfoFname = fullfile(FileOptions.OutputPath, CalOptions.CalInfoFname);
+CalInfoFname = fullfile(FileOptions.WorkingPath, CalOptions.CalInfoFname);
 if( ~CalOptions.ForceRedoInit && ~CalOptions.ForceRedoFeatFinding && exist(CalInfoFname, 'file') )
 	fprintf('---File %s already exists\n   Loading calibration state and options\n', CalInfoFname);
 	CalOptions = LFStruct2Var( LFReadMetadata(CalInfoFname), 'CalOptions' );
@@ -118,40 +120,41 @@ else
 end
 
 %---Step through the calibration phases---
-CalOptions = LFModCalFind2DFeats( InputPath, CalOptions, FileOptions );
-CalOptions = LFModCalCollectFeatures( FileOptions.OutputPath, CalOptions );
-CalOptions = LFModCalInit( FileOptions.OutputPath, CalOptions ); % todo: carry some LF metadata through to init
+CalOptions = LFModCalFind2DFeats( InputImagePath, CalOptions, FileOptions );
+CalOptions = LFModCalCollectFeatures( FileOptions, CalOptions );
+CalOptions = ...  % todo: carry some LF metadata through to init
+	feval( CalOptions.Fn_CalInit, FileOptions, CalOptions );
 if( CalOptions.ShowDisplay )
 	LFFigure(2);
 	clf
-	LFCalDispEstPoses( FileOptions.OutputPath, CalOptions, [], [0.7,0.7,0.7] );
+	LFCalDispEstPoses( FileOptions, CalOptions, [], [0.7,0.7,0.7] );
 end
 
 CalOptions.Phase = 'NoDistort';
 tic
-CalOptions = LFModCalRefine( FileOptions.OutputPath, CalOptions );
+CalOptions = LFModCalRefine( FileOptions, CalOptions );
 toc
 
 if( CalOptions.ShowDisplay )
 	LFFigure(2);
-	LFCalDispEstPoses( FileOptions.OutputPath, CalOptions, [], [0,0.7,0] );
+	LFCalDispEstPoses( FileOptions, CalOptions, [], [0,0.7,0] );
 end
 
 CalOptions.Phase = 'WithDistort';
 tic
-CalOptions = LFModCalRefine( FileOptions.OutputPath, CalOptions );
+CalOptions = LFModCalRefine( FileOptions, CalOptions );
 toc
 if( CalOptions.ShowDisplay )
 	LFFigure(2);
-	LFCalDispEstPoses( FileOptions.OutputPath, CalOptions, [], [0,0,1] );
+	LFCalDispEstPoses( FileOptions, CalOptions, [], [0,0,1] );
 end
 % 
 % CalOptions.Phase = 'Refine';
 % tic
-% CalOptions = LFModCalRefine( FileOptions.OutputPath, CalOptions );
+% CalOptions = LFModCalRefine( FileOptions, CalOptions );
 % toc
 % RefineComplete = true;
 % if( CalOptions.ShowDisplay )
 % 	LFFigure(2);
-% 	LFCalDispEstPoses( FileOptions.OutputPath, CalOptions, [], [1,0,0] );
+% 	LFCalDispEstPoses( FileOptions, CalOptions, [], [1,0,0] );
 % end

@@ -1,15 +1,16 @@
 % LFCalDispEstPoses - Visualize pose estimates associated with a calibration info file
 %
 % Usage: 
-%     LFCalDispEstPoses( InputPath, CalOptions, DrawFrameSizeMult, BaseColour )
+%     LFCalDispEstPoses( FileOptions, CalOptions, DrawFrameSizeMult, BaseColour )
 %
 % Draws a set of frames, one for each camera pose, in the colour defined by BaseColour. All inputs
-% except InputPath are optional. Pass an empty array "[]" to omit a parameter. See
+% except FileOptions are optional. Pass an empty array "[]" to omit a parameter. See
 % LFUtilCalLensletCam for example usage.
 % 
 % Inputs:
 % 
-%     InputPath : Path to folder containing CalInfo file.
+%     FileOptions : struct of file options
+%        .WorkingPath : Path to folder containing CalInfo file.
 % 
 %     [optional] CalOptions : struct controlling calibration parameters
 %                 .CalInfoFname : Name of the file containing calibration estimate; note that this
@@ -27,17 +28,16 @@
 
 % Copyright (c) 2013-2020 Donald G. Dansereau
 
-function LFCalDispEstPoses( InputPath, CalOptions, DrawFrameSizeMult, BaseColour )
+function LFCalDispEstPoses( FileOptions, CalOptions, DrawFrameSizeMult, BaseColour )
 
 %---Defaults---
 CalOptions = LFDefaultField( 'CalOptions', 'CalInfoFname', 'CalInfo.json' );
 DrawFrameSizeMult = LFDefaultVal( 'DrawFrameSizeMult', 1 );
 BaseColour = LFDefaultVal( 'BaseColour', [1,1,0] );
 
-
 %---
 Fname = fullfile(CalOptions.CalInfoFname);
-EstCamPosesV = LFStruct2Var( LFReadMetadata(fullfile(InputPath, Fname)), 'EstCamPosesV' );
+EstCamPosesV = LFStruct2Var( LFReadMetadata(fullfile(FileOptions.WorkingPath, Fname)), 'EstCamPosesV' );
 
 % Establish an appropriate scale for the drawing
 AutoDrawScale = EstCamPosesV(:,1:3);

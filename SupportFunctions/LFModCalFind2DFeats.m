@@ -2,15 +2,15 @@
 % LFCalFindCheckerCorners - locates corners in checkerboard images, called by LFUtilCalLensletCam
 %
 % Usage:
-%     CalOptions = LFCalFindCheckerCorners( InputPath )
-%     CalOptions = LFCalFindCheckerCorners( InputPath, [CalOptions], [FileOptions] )
+%     CalOptions = LFCalFindCheckerCorners( InputImagePath )
+%     CalOptions = LFCalFindCheckerCorners( InputImagePath, [CalOptions], [FileOptions] )
 %
 % This function is called by LFUtilCalLensletCam to identify the corners in a set of checkerboard
 % images.
 %
 % Inputs:
 %
-%     InputPath : Path to folder containing decoded checkerboard images.
+%     InputImagePath : Path to folder containing decoded checkerboard images.
 %
 %     [optional] CalOptions : struct controlling calibration parameters, all fields are optional
 %                   .FeatFnamePattern : Pattern for building output checkerboard corner files; %s is
@@ -20,7 +20,7 @@
 %                        .ShowDisplay : Enables display, allowing visual verification of results
 %
 %    [optional] FileOptions : struct controlling file naming and saving
-%               .OutputPath : By default files are saved alongside input files; specifying an output
+%              .WorkingPath : By default files are saved alongside input files; specifying an output
 %                             path will mirror the folder structure of the input, and save generated
 %                             files in that structure, leaving the input untouched
 %
@@ -36,10 +36,10 @@
 
 % Copyright (c) 2013-2020 Donald G. Dansereau
 
-function CalOptions = LFModCalFind2DFeats( InputPath, CalOptions, FileOptions )
+function CalOptions = LFModCalFind2DFeats( InputImagePath, CalOptions, FileOptions )
 
 %---Defaults---
-FileOptions = LFDefaultField( 'FileOptions', 'OutputPath', InputPath );
+FileOptions = LFDefaultField( 'FileOptions', 'WorkingPath', InputImagePath );
 
 CalOptions = LFDefaultField( 'CalOptions', 'ForceRedoFeatFinding', false );
 CalOptions = LFDefaultField( 'CalOptions', 'FeatFnamePattern', '%s__Feat.mat' );
@@ -48,14 +48,14 @@ CalOptions = LFDefaultField( 'CalOptions', 'MinSubimageWeight', 0.2 ); % for fas
 
 %---Make sure dest exists---
 warning('off','MATLAB:MKDIR:DirectoryExists');
-mkdir( FileOptions.OutputPath );
+mkdir( FileOptions.WorkingPath );
 
 %---Tagged onto all saved files---
 TimeStamp = datestr(now,'ddmmmyyyy_HHMMSS');
 GeneratedByInfo = struct('mfilename', mfilename, 'time', TimeStamp, 'VersionStr', LFToolboxVersion);
 
 %---Find input files---
-[FileList, BasePath, BaseFnamePattern, CalOptions] = LFCalFindInputImages( InputPath, CalOptions );
+[FileList, BasePath, BaseFnamePattern, CalOptions] = LFCalFindInputImages( InputImagePath, CalOptions );
 
 %---enable warning to display it once; gets disabled after first call to detectCheckerboardPoints--
 warning('on','vision:calibrate:boardShouldBeAsymmetric');
@@ -84,7 +84,7 @@ for( iFile = 1:length(FileList) )
 	
 	%---Check for already-decoded file---
 	SaveFname = sprintf(CalOptions.FeatFnamePattern, ShortFname);
-	SaveFname = fullfile( FileOptions.OutputPath, SaveFname );
+	SaveFname = fullfile( FileOptions.WorkingPath, SaveFname );
 	if( ~CalOptions.ForceRedoFeatFinding )
 		if( exist(SaveFname, 'file') )
 			fprintf( ' already done, skipping\n' );

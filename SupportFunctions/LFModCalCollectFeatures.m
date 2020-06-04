@@ -1,12 +1,12 @@
 %todo[doc]
-function CalOptions = LFModCalCollectFeatures( InputPath, CalOptions )
+function CalOptions = LFModCalCollectFeatures( FileOptions, CalOptions )
 
 CalOptions = LFDefaultField( 'CalOptions', 'FeatFnamePattern', '%s__Feats.mat' );
 CalOptions = LFDefaultField( 'CalOptions', 'AllFeatsFname', 'AllFeats.mat' );
 
 %---Crawl folder structure locating feature observation info files---
-fprintf('\n===Locating feature observation files in %s===\n', InputPath);
-[CalOptions.FileList, BasePath] = LFFindFilesRecursive( InputPath, sprintf(CalOptions.FeatFnamePattern, '*') );
+fprintf('\n===Locating feature observation files in %s===\n', FileOptions.WorkingPath);
+[CalOptions.FileList, BasePath] = LFFindFilesRecursive( FileOptions.WorkingPath, sprintf(CalOptions.FeatFnamePattern, '*') );
 fprintf('Found :\n');
 disp(CalOptions.FileList)
 
@@ -37,6 +37,6 @@ end
 TimeStamp = datestr(now,'ddmmmyyyy_HHMMSS');
 GeneratedByInfo = struct('mfilename', mfilename, 'time', TimeStamp, 'VersionStr', LFToolboxVersion);
 
-SaveFname = fullfile(InputPath, CalOptions.AllFeatsFname);
+SaveFname = fullfile(FileOptions.WorkingPath, CalOptions.AllFeatsFname);
 fprintf('\nSaving to %s...\n', SaveFname);
 save(SaveFname, 'GeneratedByInfo', 'AllFeatObs', 'LFSize', 'CalOptions' );

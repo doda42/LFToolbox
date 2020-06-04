@@ -1,8 +1,9 @@
+% todo[doc]
 % LFCalRefine - refine calibration by minimizing point/ray reprojection error, called by LFUtilCalLensletCam
 %
-% Usage: 
-%     CalOptions = LFCalRefine( InputPath, CalOptions )
-% 
+% Usage:
+%     CalOptions = LFCalRefine( FileOptions, CalOptions )
+%
 % This function is called by LFUtilCalLensletCam to refine an initial camera model and pose
 % estimates through optimization. This follows the calibration procedure described in:
 %
@@ -15,14 +16,15 @@
 % reduced by two: H(3:4,5) were previously redundant with the camera's extrinsics, and are now
 % automatically centered; and the light field indices [i,j,k,l] are 1-based in this implementation,
 % and not 0-based as described in the paper.
-% 
+%
 % Inputs:
-% 
-%     InputPath : Path to folder containing decoded checkerboard images. Checkerboard corners must
+%
+%   FileOptions : struct with file options
+%   .WorkingPath : Path to folder containing decoded checkerboard images. Checkerboard corners must
 %                 be identified prior to calling this function, by running LFCalFindCheckerCorners
 %                 for example. An initial estiamte must be provided in a CalInfo file, as generated
 %                 by LFCalInit. LFUtilCalLensletCam demonstrates the complete procedure.
-% 
+%
 %     CalOptions struct controls calibration parameters :
 %                        .Phase : 'NoDistort' excludes distortion parameters from the optimization
 %                                 process; for any other value, distortion parameters are included
@@ -51,9 +53,9 @@
 %                                 optimization never terminates based on this criterion.
 %
 % Outputs :
-% 
+%
 %     CalOptions struct maintains the fields of the input CalOptions, and adds the fields:
-% 
+%
 %                    .LFSize : Size of the light field, in samples
 %            .IJVecToOptOver : Which samples in i and j were included in the optimization
 %           .IntrinsicsToOpt : Which intrinsics were optimized, these are indices into the 5x5
@@ -62,28 +64,31 @@
 %     .PreviousCamIntrinsics : Previous estimate of the camera's intrinsics
 %     .PreviousCamDistortion : Previous estimate of the camera's distortion parameters
 %                    .NPoses : Number of poses in the dataset
-% 
-% 
+%
+%
 % User guide: <a href="matlab:which LFToolbox.pdf; open('LFToolbox.pdf')">LFToolbox.pdf</a>
 % See also:  LFUtilCalLensletCam, LFCalFindCheckerCorners, LFCalInit, LFUtilDecodeLytroFolder
 
 % Copyright (c) 2013-2020 Donald G. Dansereau
 
-function CalOptions = LFModCalRefine( InputPath, CalOptions ) 
+function CalOptions = LFModCalRefine( FileOptions, CalOptions )
 
 %---Defaults---
 CalOptions = LFDefaultField( 'CalOptions', 'OptTolX', 5e-5 );
 CalOptions = LFDefaultField( 'CalOptions', 'OptTolFun', 0 );
 
 CalOptions = LFDefaultField( 'CalOptions', 'Fn_PerObsError', 'ObsError_PtRay' );
+CalOptions = LFDefaultField( 'CalOptions', 'Fn_OptParamsInit', 'OptParamsInit' );
+CalOptions = LFDefaultField( 'CalOptions', 'Fn_ModelToOptParams', 'ModelToOptParams' );
+CalOptions = LFDefaultField( 'CalOptions', 'Fn_OptParamsToModel', 'OptParamsToModel' );
 
 %---Load feaature observations and previous cal state---
-AllFeatsFname = fullfile(InputPath, CalOptions.AllFeatsFname);
-CalInfoFname = fullfile(InputPath, CalOptions.CalInfoFname);
+AllFeatsFname = fullfile(FileOptions.WorkingPath, CalOptions.AllFeatsFname);
+CalInfoFname = fullfile(FileOptions.WorkingPath, CalOptions.CalInfoFname);
 
 load(AllFeatsFname, 'AllFeatObs', 'LFSize');
 [EstCamPosesV, CameraModel] = ...
-    LFStruct2Var( LFReadMetadata(CalInfoFname), 'EstCamPosesV', 'CameraModel' );
+	LFStruct2Var( LFReadMetadata(CalInfoFname), 'EstCamPosesV', 'CameraModel' );
 CalOptions.LFSize = LFSize;
 
 %---Set up optimization variables---
@@ -93,7 +98,7 @@ CalOptions.IJVecToOptOver = CalOptions.LensletBorderSize+1:LFSize(1)-CalOptions.
 fprintf('    IJ Range: ');
 disp(CalOptions.IJVecToOptOver);
 
-[CalOptions, CameraModel] = ModelToOptParamsInit( CameraModel, CalOptions );
+[CalOptions, CameraModel] = feval( CalOptions.Fn_OptParamsInit, CameraModel, CalOptions );
 
 CalTarget = CalOptions.CalTarget;
 CalTarget = [CalTarget; ones(1,size(CalTarget,2))]; % homogeneous coord
@@ -101,11 +106,12 @@ CalTarget = [CalTarget; ones(1,size(CalTarget,2))]; % homogeneous coord
 %---Compute initial error between projected and measured feature positions---
 %---Encode params and grab info required to build Jacobian sparsity matrix---
 CalOptions.NPoses = size(EstCamPosesV,1);
-[OptParams0, ParamsInfo, JacobSensitivity] = ModelToOptParams( EstCamPosesV, CameraModel, CalOptions );
+[OptParams0, ParamsInfo, JacobSensitivity] = ...
+	feval( CalOptions.Fn_ModelToOptParams, EstCamPosesV, CameraModel, CalOptions );
 
 [ModelError0, JacobPattern] = FindError2DFeats( OptParams0, AllFeatObs, CalTarget, CalOptions, ParamsInfo, JacobSensitivity );
 if( numel(ModelError0) == 0 )
-    error('No valid grid points found -- possible grid parameter mismatch');
+	error('No valid grid points found -- possible grid parameter mismatch');
 end
 
 fprintf('\n    Start SSE: %g m^2, RMSE: %g m\n', sum((ModelError0).^2), sqrt(mean((ModelError0).^2)));
@@ -113,13 +119,14 @@ fprintf('\n    Start SSE: %g m^2, RMSE: %g m\n', sum((ModelError0).^2), sqrt(mea
 %---Start the optimization---
 ObjectiveFunc = @(Params) FindError2DFeats(Params, AllFeatObs, CalTarget, CalOptions, ParamsInfo, JacobSensitivity );
 OptimOptions = optimset('Display','iter', ...
-    'TolX', CalOptions.OptTolX, ...
-    'TolFun',CalOptions.OptTolFun, ...
-    'JacobPattern', JacobPattern);
+	'TolX', CalOptions.OptTolX, ...
+	'TolFun',CalOptions.OptTolFun, ...
+	'JacobPattern', JacobPattern);
 [OptParams, ~, FinalDist] = lsqnonlin(ObjectiveFunc, OptParams0, [],[], OptimOptions);
 
 %---Decode the resulting parameters and check the final error---
-[EstCamPosesV, CameraModel] = OptParamsToModel( OptParams, CalOptions, ParamsInfo );
+[EstCamPosesV, CameraModel] = ...
+	feval( CalOptions.Fn_OptParamsToModel, OptParams, CalOptions, ParamsInfo );
 fprintf(' ---Finished calibration refinement---\n');
 
 ReprojectionError = struct( 'SSE', sum(FinalDist.^2), 'RMSE', sqrt(mean(FinalDist.^2)) );
@@ -130,11 +137,119 @@ fprintf('\n    Start SSE: %g m^2, RMSE: %g m\n    Finish SSE: %g m^2, RMSE: %g m
 TimeStamp = datestr(now,'ddmmmyyyy_HHMMSS');
 GeneratedByInfo = struct('mfilename', mfilename, 'time', TimeStamp, 'VersionStr', LFToolboxVersion);
 
-SaveFname = fullfile(InputPath, CalOptions.CalInfoFname);
+SaveFname = fullfile(FileOptions.WorkingPath, CalOptions.CalInfoFname);
 fprintf('\nSaving to %s\n', SaveFname);
 
 LFWriteMetadata(SaveFname, LFVar2Struct(GeneratedByInfo, CameraModel, EstCamPosesV, CalOptions, ReprojectionError));
 
+end
+
+%---------------------------------------------------------------------------------------------------
+function [ModelError, JacobPattern] = FindError2DFeats( OptParams, AllFeatObs, CalTarget, CalOptions, ParamsInfo, JacobSensitivity )
+%---Decode optim params---
+[EstCamPosesV, CameraModel] = ...
+	feval( CalOptions.Fn_OptParamsToModel, OptParams, CalOptions, ParamsInfo );
+
+%---Tally up the total number of observations---
+TotFeatObs = size( [AllFeatObs{:,CalOptions.IJVecToOptOver,CalOptions.IJVecToOptOver}], 2 );
+CheckFeatObs = 0;
+
+%---Preallocate JacobPattern if it's requested---
+if( nargout >= 2 )
+	JacobPattern = zeros(TotFeatObs, length( OptParams ));
+end
+
+%---Preallocate distances---
+ModelError = zeros(1, TotFeatObs);
+
+%---Compute point-plane distances---
+OutputIdx = 0;
+for( PoseIdx = 1:CalOptions.NPoses )
+	%---Convert the pertinent camera pose to a homogeneous transform---
+	CurEstCamPoseV = squeeze(EstCamPosesV(PoseIdx, :));
+	CurEstCamPoseH = eye(4);
+	CurEstCamPoseH(1:3,1:3) = rodrigues(CurEstCamPoseV(4:6));
+	CurEstCamPoseH(1:3,4) = CurEstCamPoseV(1:3);
+	
+	%---Transform ideal 3D feature coords into camera's reference frame---
+	CalTarget_CamFrame = CurEstCamPoseH * CalTarget; % todo[refactor]: is CurEstCamPoseH actually the inverse of cam pose?
+	CalTarget_CamFrame = CalTarget_CamFrame(1:3,:); % won't be needing homogeneous points
+	
+	%---Iterate through the feature observations---
+	for( TIdx = CalOptions.IJVecToOptOver )
+		for( SIdx = CalOptions.IJVecToOptOver )
+			CurFeatObs = AllFeatObs{PoseIdx, TIdx,SIdx};
+			NFeatObs = size(CurFeatObs,2);
+			if( NFeatObs ~= prod(CalOptions.ExpectedCheckerSize) )
+				continue; % this implementation skips incomplete observations
+			end
+			CheckFeatObs = CheckFeatObs + NFeatObs;
+			
+			%---Assemble observed feature positions into complete 4D [i,j,k,l] indices---
+			CurFeatObs_Idx = [CurFeatObs; ones(1, NFeatObs)];
+			
+			%---Find error---
+			CurDist3D = feval( CalOptions.Fn_PerObsError, CurFeatObs_Idx, CameraModel, CalTarget_CamFrame );
+			ModelError(OutputIdx + (1:NFeatObs)) = CurDist3D;
+			
+			%---Optionally compute jacobian sensitivity matrix---
+			if( nargout >=2 )
+				% Build the Jacobian pattern. First we enumerate those observations related to
+				% the current pose, then find all parameters to which those observations are
+				% sensitive. This relies on the JacobSensitivity list constructed by the
+				% FlattenStruct function.
+				CurObservationList = OutputIdx + (1:NFeatObs);
+				CurSensitivityList = (JacobSensitivity==PoseIdx | JacobSensitivity==0);
+				JacobPattern(CurObservationList, CurSensitivityList) = 1;
+			end
+			OutputIdx = OutputIdx + NFeatObs;
+		end
+	end
+end
+
+%---Check that the expected number of observations have gone by---
+if( CheckFeatObs ~= TotFeatObs )
+	error(['Mismatch between expected (%d) and observed (%d) number of feature observations' ...
+		' -- possibly caused by a grid parameter mismatch'], TotFeatObs, CheckFeatObs);
+end
+end
+
+%---------------------------------------------------------------------------------------------------
+%---Find error given features, camera model, and checkerboards---
+% This method projects the features out as rays, and finds the ray-to-point distance
+function CurDist = ObsError_PtRay( CurFeatObs, CameraModel, CalTarget_CamFrame )
+NFeatObs = size(CurFeatObs,2);
+CurFeatObs_Ray = LFObsToRay_FreeIntrinH( CurFeatObs, CameraModel );
+
+%---Find 3D point-ray distance---
+STPlaneIntersect = [CurFeatObs_Ray(1:2,:); zeros(1,NFeatObs)];
+% Here interpret u,v as relative, at a distance of 1 m
+% Thus we use a relative 2pp, with D = 1m.
+RayDir = [CurFeatObs_Ray(3:4,:); ones(1,NFeatObs)];
+CurDist = LFFind3DPtRayDist( STPlaneIntersect, RayDir, CalTarget_CamFrame );
+end
+
+%---------------------------------------------------------------------------------------------------
+function [CalOptions, CameraModel] = OptParamsInit( CameraModel, CalOptions )
+CalOptions.IntrinsicsToOpt = sub2ind([5,5], [1,3, 2,4, 1,3, 2,4], [1,1, 2,2, 3,3, 4,4]);
+switch( lower(CalOptions.Phase) )
+	case 'nodistort'
+		CalOptions.DistortionParamsToOpt = [];
+	otherwise
+		CalOptions.DistortionParamsToOpt = 1:5;
+end
+
+if( isempty(CameraModel.Distortion) && ~isempty(CalOptions.DistortionParamsToOpt) )
+	CameraModel.Distortion( CalOptions.DistortionParamsToOpt ) = 0;
+end
+CalOptions.PreviousCameraModel = CameraModel;
+
+fprintf('    Intrinsics: ');
+disp(CalOptions.IntrinsicsToOpt);
+if( ~isempty(CalOptions.DistortionParamsToOpt) )
+	fprintf('    Distortion: ');
+	disp(CalOptions.DistortionParamsToOpt);
+end
 end
 
 %---------------------------------------------------------------------------------------------------
@@ -152,7 +267,7 @@ function [OptParams0, ParamsInfo, JacobSensitivity] = ModelToOptParams( EstCamPo
 P.EstCamPosesV = EstCamPosesV;
 J.EstCamPosesV = zeros(size(EstCamPosesV));
 for( i=1:CalOptions.NPoses )
-    J.EstCamPosesV(i,:) = i;
+	J.EstCamPosesV(i,:) = i;
 end
 
 P.IntrinParams = CameraModel.IntrinsicsH(CalOptions.IntrinsicsToOpt);
@@ -178,132 +293,3 @@ CameraModel.Distortion(CalOptions.DistortionParamsToOpt) = P.DistortParams;
 CameraModel.IntrinsicsH = LFRecenterIntrinsics(CameraModel.IntrinsicsH, CalOptions.LFSize);
 end
 
-%---------------------------------------------------------------------------------------------------
-function [Params, ParamInfo] = FlattenStruct(P)
-Params = [];
-ParamInfo.FieldNames = fieldnames(P);
-for( i=1:length( ParamInfo.FieldNames ) )
-    CurFieldName = ParamInfo.FieldNames{i};
-    CurField = P.(CurFieldName);
-    ParamInfo.SizeInfo{i} = size(CurField);
-    Params = [Params; CurField(:)];
-end
-end
-%---------------------------------------------------------------------------------------------------
-function [P] = UnflattenStruct(Params, ParamInfo)
-CurIdx = 1;
-for( i=1:length( ParamInfo.FieldNames ) )
-    CurFieldName = ParamInfo.FieldNames{i};
-    CurSize = ParamInfo.SizeInfo{i};
-    CurField = Params(CurIdx + (0:prod(CurSize)-1));
-    CurIdx = CurIdx + prod(CurSize);
-    CurField = reshape(CurField, CurSize);
-    P.(CurFieldName) = CurField;
-end
-end
-
-%---------------------------------------------------------------------------------------------------
-function [ModelError, JacobPattern] = FindError2DFeats( OptParams, AllFeatObs, CalTarget, CalOptions, ParamsInfo, JacobSensitivity )
-    %---Decode optim params---
-    [EstCamPosesV, CameraModel] = OptParamsToModel( OptParams, CalOptions, ParamsInfo );
-    
-    %---Tally up the total number of observations---
-    TotFeatObs = size( [AllFeatObs{:,CalOptions.IJVecToOptOver,CalOptions.IJVecToOptOver}], 2 );
-    CheckFeatObs = 0;
-    
-    %---Preallocate JacobPattern if it's requested---
-    if( nargout >= 2 )
-        JacobPattern = zeros(TotFeatObs, length( OptParams ));
-    end
-    
-    %---Preallocate distances---
-    ModelError = zeros(1, TotFeatObs);
-
-    %---Compute point-plane distances---
-    OutputIdx = 0;
-    for( PoseIdx = 1:CalOptions.NPoses )
-        %---Convert the pertinent camera pose to a homogeneous transform---
-        CurEstCamPoseV = squeeze(EstCamPosesV(PoseIdx, :));
-        CurEstCamPoseH = eye(4);
-        CurEstCamPoseH(1:3,1:3) = rodrigues(CurEstCamPoseV(4:6));
-        CurEstCamPoseH(1:3,4) = CurEstCamPoseV(1:3);
-		
-		%---Transform ideal 3D feature coords into camera's reference frame---
-		CalTarget_CamFrame = CurEstCamPoseH * CalTarget; % todo[refactor]: is CurEstCamPoseH actually the inverse of cam pose?
-		CalTarget_CamFrame = CalTarget_CamFrame(1:3,:); % won't be needing homogeneous points
-		
-        %---Iterate through the feature observations---
-        for( TIdx = CalOptions.IJVecToOptOver )
-            for( SIdx = CalOptions.IJVecToOptOver )
-                CurFeatObs = AllFeatObs{PoseIdx, TIdx,SIdx};
-                NFeatObs = size(CurFeatObs,2);
-                if( NFeatObs ~= prod(CalOptions.ExpectedCheckerSize) )
-                    continue; % this implementation skips incomplete observations
-                end
-                CheckFeatObs = CheckFeatObs + NFeatObs;
-                
-                %---Assemble observed feature positions into complete 4D [i,j,k,l] indices---
-                CurFeatObs_Idx = [CurFeatObs; ones(1, NFeatObs)];
-				
-				%---Find error---
-				CurDist3D = feval( CalOptions.Fn_PerObsError, CurFeatObs_Idx, CameraModel, CalTarget_CamFrame );
-				ModelError(OutputIdx + (1:NFeatObs)) = CurDist3D;
-
-				%---Optionally compute jacobian sensitivity matrix---
-				if( nargout >=2 )
-					% Build the Jacobian pattern. First we enumerate those observations related to
-					% the current pose, then find all parameters to which those observations are
-					% sensitive. This relies on the JacobSensitivity list constructed by the
-					% FlattenStruct function.
-					CurObservationList = OutputIdx + (1:NFeatObs);
-					CurSensitivityList = (JacobSensitivity==PoseIdx | JacobSensitivity==0);
-					JacobPattern(CurObservationList, CurSensitivityList) = 1;
-				end
-				OutputIdx = OutputIdx + NFeatObs;
-			end
-		end
-	end
-	
-	%---Check that the expected number of observations have gone by---
-	if( CheckFeatObs ~= TotFeatObs )
-		error(['Mismatch between expected (%d) and observed (%d) number of feature observations' ...
-			' -- possibly caused by a grid parameter mismatch'], TotFeatObs, CheckFeatObs);
-	end
-end
-
-%---Find error given features, camera model, and checkerboards---
-% This method projects the features out as rays, and finds the ray-to-point distance
-function CurDist = ObsError_PtRay( CurFeatObs, CameraModel, CalTarget_CamFrame )
-NFeatObs = size(CurFeatObs,2);
-CurFeatObs_Ray = LFObsToRay_FreeIntrinH( CurFeatObs, CameraModel );
-
-%---Find 3D point-ray distance---
-STPlaneIntersect = [CurFeatObs_Ray(1:2,:); zeros(1,NFeatObs)];
-% Here interpret u,v as relative, at a distance of 1 m
-% Thus we use a relative 2pp, with D = 1m.
-RayDir = [CurFeatObs_Ray(3:4,:); ones(1,NFeatObs)];
-CurDist = LFFind3DPtRayDist( STPlaneIntersect, RayDir, CalTarget_CamFrame );
-end
-
-%---
-function [CalOptions, CameraModel] = ModelToOptParamsInit( CameraModel, CalOptions )
-CalOptions.IntrinsicsToOpt = sub2ind([5,5], [1,3, 2,4, 1,3, 2,4], [1,1, 2,2, 3,3, 4,4]);
-switch( lower(CalOptions.Phase) )
-	case 'nodistort'
-		CalOptions.DistortionParamsToOpt = [];
-	otherwise
-		CalOptions.DistortionParamsToOpt = 1:5;
-end
-
-if( isempty(CameraModel.Distortion) && ~isempty(CalOptions.DistortionParamsToOpt) )
-	CameraModel.Distortion( CalOptions.DistortionParamsToOpt ) = 0;
-end
-CalOptions.PreviousCameraModel = CameraModel;
-
-fprintf('    Intrinsics: ');
-disp(CalOptions.IntrinsicsToOpt);
-if( ~isempty(CalOptions.DistortionParamsToOpt) )
-    fprintf('    Distortion: ');
-    disp(CalOptions.DistortionParamsToOpt);
-end
-end

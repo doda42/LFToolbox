@@ -2,17 +2,18 @@
 % LFCalInit - initialize calibration estimate, called by LFUtilCalLensletCam
 %
 % Usage: 
-%     CalOptions = LFCalInit( InputPath, CalOptions )
-%     CalOptions = LFCalInit( InputPath )
+%     CalOptions = LFCalInit( FileOptions, CalOptions )
+%     CalOptions = LFCalInit( FileOptions )
 %
 % This function is called by LFUtilCalLensletCam to initialize a pose and camera model estimate
 % given a set of extracted checkerboard corners.
 % 
 % Inputs:
 % 
-%     InputPath : Path to folder containing processed checkerboard images. Checkerboard corners must
-%                 be identified prior to calling this function, by running LFCalFindCheckerCorners
-%                 for example. This is demonstrated by LFUtilCalLensletCam.
+%     FileOptions : struct controlling file locations
+%       .WorkingPath : Path to folder containing processed checkerboard images. Checkerboard corners must
+%                      be identified prior to calling this function, by running LFCalFindCheckerCorners
+%                      for example. This is demonstrated by LFUtilCalLensletCam.
 % 
 %     [optional] CalOptions : struct controlling calibration parameters, all fields are optional
 %                   .SaveResult : Set to false to perform a "dry run"
@@ -36,7 +37,7 @@
 
 % Copyright (c) 2013-2020 Donald G. Dansereau
 
-function CalOptions = LFModCalInit( InputPath, CalOptions )
+function CalOptions = LFModCalInit( FileOptions, CalOptions )
 
 CalOptions = LFDefaultField( 'CalOptions', 'AllFeatsFname', 'AllFeats.mat' );
 
@@ -46,14 +47,14 @@ CalOptions = LFDefaultField( 'CalOptions', 'ForceRedoInit', false );
 
 %---Start by checking if this step has already been completed---
 fprintf('\n===Initializing calibration process===\n');
-CalInfoSaveFname = fullfile(InputPath, CalOptions.CalInfoFname);
+CalInfoSaveFname = fullfile(FileOptions.WorkingPath, CalOptions.CalInfoFname);
 if( ~CalOptions.ForceRedoInit && exist(CalInfoSaveFname, 'file') )
     fprintf(' ---File %s exists, already initialized, skipping---\n', CalInfoSaveFname);
     return;
 end
 
 %---Load feature observations---
-AllFeatsFile = fullfile(InputPath, CalOptions.AllFeatsFname);
+AllFeatsFile = fullfile(FileOptions.WorkingPath, CalOptions.AllFeatsFname);
 load( AllFeatsFile, 'AllFeatObs', 'LFSize' );
 
 %---Initial estimate of focal length---

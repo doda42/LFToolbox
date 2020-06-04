@@ -10,6 +10,7 @@ Reverse compatibility:
 - White image and calibration database file formats changed, re-run LFUtilProcessWhiteImages and LFUtilProcessCalibrations; grid analysis and calibrations don't need to re-run, only the database file needs to be re-generated.
 - LFUtilDecodeLytroFolder RectOptions.CalibrationDatabaseFname is now split into CalibrationDatabaseFname and CalibrationDatabasePath; default behaviour remains unchanged.
 - CalOptions.MinSubimageWeight is now a float in range 0-1, default behaviour is unchanged, if specifying your own value it must be scaled down by 2^16 compared with previous toolbox versions.
+- LFCalDispEstPoses minor argument change to accept FileOptions struct
 
 New features:
 - New decode output options OutputPrecision, OutputFormat, ImwriteOptions, and SaveWeight; saving decoded LFs to 8-bit eslf.png files reduces file size significantly
