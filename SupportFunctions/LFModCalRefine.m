@@ -81,6 +81,7 @@ CalOptions = LFDefaultField( 'CalOptions', 'Fn_PerObsError', 'ObsError_PtRay' );
 CalOptions = LFDefaultField( 'CalOptions', 'Fn_OptParamsInit', 'OptParamsInit' );
 CalOptions = LFDefaultField( 'CalOptions', 'Fn_ModelToOptParams', 'ModelToOptParams' );
 CalOptions = LFDefaultField( 'CalOptions', 'Fn_OptParamsToModel', 'OptParamsToModel' );
+CalOptions = LFDefaultField( 'CalOptions', 'Fn_ObsToRay', 'LFObsToRay_FreeIntrinH' );
 
 %---Load feaature observations and previous cal state---
 AllFeatsFname = fullfile(FileOptions.WorkingPath, CalOptions.AllFeatsFname);
@@ -189,7 +190,7 @@ for( PoseIdx = 1:CalOptions.NPoses )
 			CurFeatObs_Idx = [CurFeatObs; ones(1, NFeatObs)];
 			
 			%---Find error---
-			CurDist3D = feval( CalOptions.Fn_PerObsError, CurFeatObs_Idx, CameraModel, CalTarget_CamFrame );
+			CurDist3D = feval( CalOptions.Fn_PerObsError, CurFeatObs_Idx, CameraModel, CalTarget_CamFrame, CalOptions );
 			ModelError(OutputIdx + (1:NFeatObs)) = CurDist3D;
 			
 			%---Optionally compute jacobian sensitivity matrix---
@@ -217,9 +218,10 @@ end
 %---------------------------------------------------------------------------------------------------
 %---Find error given features, camera model, and checkerboards---
 % This method projects the features out as rays, and finds the ray-to-point distance
-function CurDist = ObsError_PtRay( CurFeatObs, CameraModel, CalTarget_CamFrame )
+function CurDist = ObsError_PtRay( CurFeatObs, CameraModel, CalTarget_CamFrame, CalOptions )
 NFeatObs = size(CurFeatObs,2);
-CurFeatObs_Ray = LFObsToRay_FreeIntrinH( CurFeatObs, CameraModel );
+CurFeatObs_Ray = ...
+	feval( CalOptions.Fn_ObsToRay, CurFeatObs, CameraModel );
 
 %---Find 3D point-ray distance---
 STPlaneIntersect = [CurFeatObs_Ray(1:2,:); zeros(1,NFeatObs)];
