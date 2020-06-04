@@ -70,3 +70,4 @@ xlabel('x [m]');
 ylabel('y [m]');
 zlabel('z [m]');
 title('Estimated camera poses');
+drawnow

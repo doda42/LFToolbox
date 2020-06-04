@@ -103,6 +103,7 @@ CalOptions = LFDefaultField( 'CalOptions', 'ForceRedoFeatFinding', false );
 CalOptions = LFDefaultField( 'CalOptions', 'ForceRedoInit', false );
 CalOptions = LFDefaultField( 'CalOptions', 'ShowDisplay', true );
 CalOptions = LFDefaultField( 'CalOptions', 'CalInfoFname', 'ModCalInfo.json' );
+CalOptions = LFDefaultField( 'CalOptions', 'NumIterations', 2 );
 
 CalOptions = LFDefaultField( 'CalOptions', 'Fn_CalInit', 'LFModCalInit' );
 
@@ -116,7 +117,7 @@ if( ~CalOptions.ForceRedoInit && ~CalOptions.ForceRedoFeatFinding && exist(CalIn
 	fprintf('---File %s already exists\n   Loading calibration state and options\n', CalInfoFname);
 	CalOptions = LFStruct2Var( LFReadMetadata(CalInfoFname), 'CalOptions' );
 else
-	CalOptions.Phase = 'Start';
+	CalOptions.Iteration = 0;
 end
 
 %---Step through the calibration phases---
@@ -124,37 +125,26 @@ CalOptions = LFModCalFind2DFeats( InputImagePath, CalOptions, FileOptions );
 CalOptions = LFModCalCollectFeatures( FileOptions, CalOptions );
 CalOptions = ...  % todo: carry some LF metadata through to init
 	feval( CalOptions.Fn_CalInit, FileOptions, CalOptions );
+
 if( CalOptions.ShowDisplay )
 	LFFigure(2);
 	clf
 	LFCalDispEstPoses( FileOptions, CalOptions, [], [0.7,0.7,0.7] );
 end
 
-CalOptions.Phase = 'NoDistort';
-tic
-CalOptions = LFModCalRefine( FileOptions, CalOptions );
-toc
-
-if( CalOptions.ShowDisplay )
-	LFFigure(2);
-	LFCalDispEstPoses( FileOptions, CalOptions, [], [0,0.7,0] );
+while( 1 )
+	CalOptions.Iteration = CalOptions.Iteration + 1;
+	
+	tic
+	CalOptions = LFModCalRefine( FileOptions, CalOptions );
+	toc
+	
+	if( CalOptions.ShowDisplay )
+		LFFigure(2);
+		LFCalDispEstPoses( FileOptions, CalOptions, [], [0,0.7,0] );
+	end
+	
+	if( CalOptions.Iteration >= CalOptions.NumIterations )
+		break;
+	end
 end
-
-CalOptions.Phase = 'WithDistort';
-tic
-CalOptions = LFModCalRefine( FileOptions, CalOptions );
-toc
-if( CalOptions.ShowDisplay )
-	LFFigure(2);
-	LFCalDispEstPoses( FileOptions, CalOptions, [], [0,0,1] );
-end
-% 
-% CalOptions.Phase = 'Refine';
-% tic
-% CalOptions = LFModCalRefine( FileOptions, CalOptions );
-% toc
-% RefineComplete = true;
-% if( CalOptions.ShowDisplay )
-% 	LFFigure(2);
-% 	LFCalDispEstPoses( FileOptions, CalOptions, [], [1,0,0] );
-% end
