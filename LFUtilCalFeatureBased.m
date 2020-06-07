@@ -123,7 +123,7 @@ end
 %---Step through the calibration phases---
 CalOptions = LFModCalFind2DFeats( InputImagePath, CalOptions, FileOptions );
 CalOptions = LFModCalCollectFeatures( FileOptions, CalOptions );
-CalOptions = ...  % todo: carry some LF metadata through to init
+CalOptions = ... 
 	feval( CalOptions.Fn_CalInit, FileOptions, CalOptions );
 
 if( CalOptions.ShowDisplay )

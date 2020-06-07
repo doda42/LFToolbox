@@ -18,7 +18,7 @@ for( iFile = 1:length(CalOptions.FileList) )
     [~,ShortFname] = fileparts(CurFname);
     fprintf('---%s [%3d / %3d]...', ShortFname, iFile, length(CalOptions.FileList));
     
-    load(fullfile(BasePath, CurFname), 'FeatObs', 'LFSize');
+    load(fullfile(BasePath, CurFname), 'FeatObs', 'LFSize', 'LFMetadata');
     PerImageValidCount = 0;
     for( TIdx = 1:size(FeatObs,1) )
         for( SIdx = 1:size(FeatObs,2) )
@@ -33,10 +33,9 @@ for( iFile = 1:length(CalOptions.FileList) )
     fprintf(' %d / %d valid.\n', PerImageValidCount, prod(LFSize(1:2)));
 end
 
-
 TimeStamp = datestr(now,'ddmmmyyyy_HHMMSS');
 GeneratedByInfo = struct('mfilename', mfilename, 'time', TimeStamp, 'VersionStr', LFToolboxVersion);
 
 SaveFname = fullfile(FileOptions.WorkingPath, CalOptions.AllFeatsFname);
 fprintf('\nSaving to %s...\n', SaveFname);
-save(SaveFname, 'GeneratedByInfo', 'AllFeatObs', 'LFSize', 'CalOptions' );
+save(SaveFname, 'GeneratedByInfo', 'AllFeatObs', 'LFSize', 'CalOptions', 'FileOptions', 'LFMetadata' );

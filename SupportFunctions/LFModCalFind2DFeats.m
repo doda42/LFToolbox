@@ -46,6 +46,8 @@ CalOptions = LFDefaultField( 'CalOptions', 'FeatFnamePattern', '%s__Feat.mat' );
 CalOptions = LFDefaultField( 'CalOptions', 'ShowDisplay', true );
 CalOptions = LFDefaultField( 'CalOptions', 'MinSubimageWeight', 0.2 ); % for fast rejection of dark frames
 
+CalOptions = LFDefaultField( 'CalOptions', 'Fn_FeatureFinder', 'detectCheckerboardPoints' );
+
 %---Make sure dest exists---
 warning('off','MATLAB:MKDIR:DirectoryExists');
 mkdir( FileOptions.WorkingPath );
@@ -98,14 +100,7 @@ for( iFile = 1:length(FileList) )
 	%---Load the LF---
 	tic  % track time
 	
-	if( strfind( CurFname, '.eslf' ) )
-		LF = LFReadESLF( CurFname );
-	elseif( strfind( CurFname, '.mat' ) )
-		load( CurFname, 'LF' );
-	else
-		error('unknown file format\n');
-	end
-	
+	[LF, LFMetadata] = LFRead( CurFname );
 	LFSize = size(LF);
 	
 	fprintf('Processing all subimages');
@@ -124,7 +119,9 @@ for( iFile = 1:length(FileList) )
 				CurImg = squeeze(LF(TIdx, SIdx, :,:, 1:3));
 				CurImg = rgb2gray(CurImg);
 				
-				[CurChecker,CheckBoardSize] = detectCheckerboardPoints( CurImg );  % todo: easy-insert alt feature finder here
+				[CurChecker, CheckBoardSize] = ...
+					feval( CalOptions.Fn_FeatureFinder, CurImg );
+				
 				warning('off','vision:calibrate:boardShouldBeAsymmetric');  % display once (at most)
 				CurValid = (prod(CheckBoardSize-1) == prod(CalOptions.ExpectedCheckerSize));
 				CurChecker = CurChecker';
@@ -194,7 +191,7 @@ for( iFile = 1:length(FileList) )
 	
 	%---Save---	
 	fprintf('Saving result to %s...\n', SaveFname);
-	save(SaveFname, 'GeneratedByInfo', 'FeatObs', 'LFSize', 'CalOptions', 'FileOptions');
+	save(SaveFname, 'GeneratedByInfo', 'FeatObs', 'LFSize', 'CalOptions', 'FileOptions', 'LFMetadata');
 	
 	TotFileTime = TotFileTime + toc;
 	MeanFileTime = TotFileTime / ProcessedFileCount;
