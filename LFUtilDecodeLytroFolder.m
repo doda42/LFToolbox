@@ -501,6 +501,9 @@ if( isempty( CalInfo ) )
 	warning('No suitable calibration found, skipping');
 	return;
 end
+if( ~isfield(CalInfo, 'LensletGridModel') )  % todo
+	CalInfo = CalInfo.LFMetadata; % compatibility with new modular cal v0.6
+end
 
 %---Compare structs
 a = CalInfo.LensletGridModel;

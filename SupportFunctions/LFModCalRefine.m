@@ -88,8 +88,8 @@ AllFeatsFname = fullfile(FileOptions.WorkingPath, CalOptions.AllFeatsFname);
 CalInfoFname = fullfile(FileOptions.WorkingPath, CalOptions.CalInfoFname);
 
 load(AllFeatsFname, 'AllFeatObs', 'LFSize');
-[EstCamPosesV, CameraModel] = ...
-	LFStruct2Var( LFReadMetadata(CalInfoFname), 'EstCamPosesV', 'CameraModel' );
+[EstCamPosesV, CameraModel, LFMetadata, CamInfo] = ...
+	LFStruct2Var( LFReadMetadata(CalInfoFname), 'EstCamPosesV', 'CameraModel', 'LFMetadata', 'CamInfo' );
 CalOptions.LFSize = LFSize;
 
 %---Set up optimization variables---
@@ -141,7 +141,7 @@ GeneratedByInfo = struct('mfilename', mfilename, 'time', TimeStamp, 'VersionStr'
 SaveFname = fullfile(FileOptions.WorkingPath, CalOptions.CalInfoFname);
 fprintf('\nSaving to %s\n', SaveFname);
 
-LFWriteMetadata(SaveFname, LFVar2Struct(GeneratedByInfo, CameraModel, EstCamPosesV, CalOptions, ReprojectionError));
+LFWriteMetadata(SaveFname, LFVar2Struct(GeneratedByInfo, CameraModel, EstCamPosesV, CalOptions, ReprojectionError, LFMetadata, CamInfo));
 
 end
 
@@ -272,7 +272,7 @@ for( i=1:CalOptions.NPoses )
 	J.EstCamPosesV(i,:) = i;
 end
 
-P.IntrinParams = CameraModel.IntrinsicsH(CalOptions.IntrinsicsToOpt);
+P.IntrinParams = CameraModel.EstCamIntrinsicsH(CalOptions.IntrinsicsToOpt);
 J.IntrinParams = zeros(size(CalOptions.IntrinsicsToOpt));
 
 P.DistortParams = CameraModel.Distortion(CalOptions.DistortionParamsToOpt);
@@ -289,9 +289,9 @@ EstCamPosesV = P.EstCamPosesV;
 
 CameraModel = CalOptions.PreviousCameraModel;
 
-CameraModel.IntrinsicsH(CalOptions.IntrinsicsToOpt) = P.IntrinParams;
+CameraModel.EstCamIntrinsicsH(CalOptions.IntrinsicsToOpt) = P.IntrinParams;
 CameraModel.Distortion(CalOptions.DistortionParamsToOpt) = P.DistortParams;
 
-CameraModel.IntrinsicsH = LFRecenterIntrinsics(CameraModel.IntrinsicsH, CalOptions.LFSize);
+CameraModel.EstCamIntrinsicsH = LFRecenterIntrinsics(CameraModel.EstCamIntrinsicsH, CalOptions.LFSize);
 end
 

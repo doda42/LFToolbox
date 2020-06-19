@@ -2,9 +2,10 @@
 % todo[doc] : naming convention for camera models
 
 %---Convert a feature observation (pixel index) into a ray using general H and distortion---
-function CurFeatObs_Ray = ObsToRay_FreeIntrinH( CurFeatObs, CameraModel )
+function CurFeatObs_Ray = LFObsToRay_FreeIntrinH( CurFeatObs, CameraModel )
+
 %---Project observed feature indices to [s,t,u,v] rays---
-CurFeatObs_Ray = CameraModel.IntrinsicsH * CurFeatObs;
+CurFeatObs_Ray = CameraModel.EstCamIntrinsicsH * CurFeatObs;
 
 %---Apply direction-dependent distortion model---
 if( ~isempty(CameraModel.Distortion) && any(CameraModel.Distortion(:)~=0))

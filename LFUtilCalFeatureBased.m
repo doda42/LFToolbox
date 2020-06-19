@@ -89,7 +89,7 @@
 
 % Copyright (c) 2013-2020 Donald G. Dansereau
 
-function LFUtilCalLensletCam( InputImagePath, CalOptions, FileOptions )
+function LFUtilCalFeatureBased( InputImagePath, CalOptions, FileOptions )
 
 %---Tweakables---
 InputImagePath = LFDefaultVal('InputImagePath', '.');
@@ -102,7 +102,7 @@ CalOptions = LFDefaultField( 'CalOptions', 'LensletBorderSize', 1 );
 CalOptions = LFDefaultField( 'CalOptions', 'ForceRedoFeatFinding', false );
 CalOptions = LFDefaultField( 'CalOptions', 'ForceRedoInit', false );
 CalOptions = LFDefaultField( 'CalOptions', 'ShowDisplay', true );
-CalOptions = LFDefaultField( 'CalOptions', 'CalInfoFname', 'ModCalInfo.json' );
+CalOptions = LFDefaultField( 'CalOptions', 'CalInfoFname', 'CalInfo.json' );
 CalOptions = LFDefaultField( 'CalOptions', 'NumIterations', 2 );
 
 CalOptions = LFDefaultField( 'CalOptions', 'Fn_CalInit', 'LFModCalInit' );
@@ -112,6 +112,7 @@ if( ~isfield(CalOptions, 'CalTarget') )
 end
 
 %---Check for previously started calibration---
+ForceRedoInit = CalOptions.ForceRedoInit; % save current ForceRedoInit state
 CalInfoFname = fullfile(FileOptions.WorkingPath, CalOptions.CalInfoFname);
 if( ~CalOptions.ForceRedoInit && ~CalOptions.ForceRedoFeatFinding && exist(CalInfoFname, 'file') )
 	fprintf('---File %s already exists\n   Loading calibration state and options\n', CalInfoFname);
@@ -119,6 +120,7 @@ if( ~CalOptions.ForceRedoInit && ~CalOptions.ForceRedoFeatFinding && exist(CalIn
 else
 	CalOptions.Iteration = 0;
 end
+CalOptions.ForceRedoInit = ForceRedoInit; % restore current ForceRedoInit state
 
 %---Step through the calibration phases---
 CalOptions = LFModCalFind2DFeats( InputImagePath, CalOptions, FileOptions );
@@ -132,7 +134,7 @@ if( CalOptions.ShowDisplay )
 	LFCalDispEstPoses( FileOptions, CalOptions, [], [0.7,0.7,0.7] );
 end
 
-while( 1 )
+while( CalOptions.Iteration < CalOptions.NumIterations )
 	CalOptions.Iteration = CalOptions.Iteration + 1;
 	
 	tic
@@ -142,9 +144,5 @@ while( 1 )
 	if( CalOptions.ShowDisplay )
 		LFFigure(2);
 		LFCalDispEstPoses( FileOptions, CalOptions, [], [0,0.7,0] );
-	end
-	
-	if( CalOptions.Iteration >= CalOptions.NumIterations )
-		break;
 	end
 end

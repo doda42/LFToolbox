@@ -61,6 +61,11 @@ for( iFile = 1:length(FileNames) )
         
         %---Calibration file---
         CurCamInfo = CurFileInfo.CamInfo;
+	
+%	elseif( isfield( CurFileInfo, 'LFMetadata' ) ) % todo
+ %       
+  %      %---Calibration file---
+   %     CurCamInfo = CurFileInfo.LFMetadata.DecodeOptions.WhiteImageInfo;
         
     elseif( isfield( CurFileInfo, 'master' ) )
         
@@ -80,7 +85,7 @@ for( iFile = 1:length(FileNames) )
         
     else
         
-        error('Unrecognized file format reading metadata\n');
+        error('Unrecognized file format reading metadata');
         
     end
 

@@ -42,7 +42,7 @@ function CalOptions = LFModCalInit( FileOptions, CalOptions )
 CalOptions = LFDefaultField( 'CalOptions', 'AllFeatsFname', 'AllFeats.mat' );
 
 %---Defaults---
-CalOptions = LFDefaultField( 'CalOptions', 'CalInfoFname', 'ModCalInfo.json' );
+CalOptions = LFDefaultField( 'CalOptions', 'CalInfoFname', 'CalInfo.json' );
 CalOptions = LFDefaultField( 'CalOptions', 'ForceRedoInit', false );
 
 %---Start by checking if this step has already been completed---
@@ -55,7 +55,7 @@ end
 
 %---Load feature observations---
 AllFeatsFile = fullfile(FileOptions.WorkingPath, CalOptions.AllFeatsFname);
-load( AllFeatsFile, 'AllFeatObs', 'LFSize' );
+load( AllFeatsFile, 'AllFeatObs', 'LFSize', 'LFMetadata', 'CamInfo' );
 
 %---Initial estimate of focal length---
 
@@ -188,7 +188,7 @@ fprintf('\nInitializing estimate of camera intrinsics to: \n');
 disp(EstCamIntrinsicsH);
 
 %---Start with no distortion estimate---
-CameraModel.IntrinsicsH = EstCamIntrinsicsH;
+CameraModel.EstCamIntrinsicsH = EstCamIntrinsicsH;
 CameraModel.Distortion = [];
 
 %---Optionally save the results---
@@ -196,6 +196,6 @@ TimeStamp = datestr(now,'ddmmmyyyy_HHMMSS');
 GeneratedByInfo = struct('mfilename', mfilename, 'time', TimeStamp, 'VersionStr', LFToolboxVersion);
 
 fprintf('Saving to %s...\n', CalInfoSaveFname);
-LFWriteMetadata(CalInfoSaveFname, LFVar2Struct(GeneratedByInfo, CameraModel, EstCamPosesV, CalOptions ));
+LFWriteMetadata(CalInfoSaveFname, LFVar2Struct(GeneratedByInfo, CameraModel, EstCamPosesV, CalOptions, LFMetadata, CamInfo));
 
 fprintf(' ---Calibration initialization done---\n');

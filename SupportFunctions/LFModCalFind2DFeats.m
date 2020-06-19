@@ -57,7 +57,7 @@ TimeStamp = datestr(now,'ddmmmyyyy_HHMMSS');
 GeneratedByInfo = struct('mfilename', mfilename, 'time', TimeStamp, 'VersionStr', LFToolboxVersion);
 
 %---Find input files---
-[FileList, BasePath, BaseFnamePattern, CalOptions] = LFCalFindInputImages( InputImagePath, CalOptions );
+[FileList, BasePath, BaseFnamePattern, CalOptions, CamInfo] = LFCalFindInputImages( InputImagePath, CalOptions );
 
 %---enable warning to display it once; gets disabled after first call to detectCheckerboardPoints--
 warning('on','vision:calibrate:boardShouldBeAsymmetric');
@@ -70,7 +70,7 @@ FirstRun = true;
 SkippedFileCount = 0;
 ProcessedFileCount = 0;
 TotFileTime = 0;
-%---Process each raw lenslet file---
+%---Process each file---
 for( iFile = 1:length(FileList) )
 	FeatObs = {};
 	
@@ -84,7 +84,7 @@ for( iFile = 1:length(FileList) )
 	[~,ShortFname] = fileparts(CurBaseFname);
 	fprintf(' --- %s [%d / %d]', ShortFname, iFile, length(FileList));
 	
-	%---Check for already-decoded file---
+	%---Check for already-processed file---
 	SaveFname = sprintf(CalOptions.FeatFnamePattern, ShortFname);
 	SaveFname = fullfile( FileOptions.WorkingPath, SaveFname );
 	if( ~CalOptions.ForceRedoFeatFinding )
@@ -191,7 +191,7 @@ for( iFile = 1:length(FileList) )
 	
 	%---Save---	
 	fprintf('Saving result to %s...\n', SaveFname);
-	save(SaveFname, 'GeneratedByInfo', 'FeatObs', 'LFSize', 'CalOptions', 'FileOptions', 'LFMetadata');
+	save(SaveFname, 'GeneratedByInfo', 'FeatObs', 'LFSize', 'CalOptions', 'FileOptions', 'LFMetadata', 'CamInfo');
 	
 	TotFileTime = TotFileTime + toc;
 	MeanFileTime = TotFileTime / ProcessedFileCount;

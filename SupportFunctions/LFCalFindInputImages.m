@@ -1,5 +1,6 @@
 % todo[doc]
-function [FileList, BasePath, BaseFnamePattern, CalOptions] = LFCalFindInputImages( InputPath, CalOptions )
+function [FileList, BasePath, BaseFnamePattern, CalOptions, CamInfo] = ...
+	LFCalFindInputImages( InputPath, CalOptions )
 
 %---Defaults---
 CalOptions = LFDefaultField( 'CalOptions', 'LFFnamePattern',  ...
