@@ -98,8 +98,13 @@ LF = reshape(LF, [prod(LFSize(1:NDims-1)), NChans]);
 if( NChans == 4 || NChans == 2 )
 	% Weight channel found, strip it out and use it
 	LFW = LF(:,end);
-	LF = LF(:,1:end-1);
 	ValidIdx = find(LFW > WeightCutoff);
+	if( isempty(ValidIdx) )
+		warning('No weight values above WeightCutoff, aborting equalization');
+		LF = reshape(LF, [LFSize(1:NDims-1),NChans]);
+		return
+	end
+	LF = LF(:,1:end-1);
 else
 	LFW = [];
 	ValidIdx = ':';
