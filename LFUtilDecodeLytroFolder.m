@@ -177,7 +177,7 @@ FileOptions = LFDefaultField('FileOptions', 'OutputPrecision', 'uint16' );
 FileOptions = LFDefaultField('FileOptions', 'OutputFormat', 'mat' );
 FileOptions = LFDefaultField('FileOptions', 'ImwriteOptions', {} );
 FileOptions = LFDefaultField('FileOptions', 'SaveWeight', true );
-FileOptions = LFDefaultField('FileOptions', 'SaveResult', true);
+FileOptions = LFDefaultField('FileOptions', 'SaveResult', true );
 FileOptions = LFDefaultField('FileOptions', 'ForceRedo', false);
 FileOptions = LFDefaultField('FileOptions', 'SaveFnamePattern', '%s__Decoded');
 FileOptions = LFDefaultField('FileOptions', 'ThumbFnamePattern', '%s__Decoded_Thumb.png');
@@ -215,7 +215,7 @@ end
 %---Crawl folder structure locating raw lenslet images---
 DefaultFileSpec = {'*.lfr', '*.lfp', '*.LFR', '*.raw'}; % gets overriden below, if a file spec is provided
 DefaultPath = 'Images';
-fprintf('Input from %s\n', InputPath);
+% fprintf('Input from %s\n', InputPath);  % todo[bug]: incompatible with cell array syntax
 
 % Find input files
 [FileList, BasePath] = LFFindFilesRecursive( InputPath, DefaultFileSpec, DefaultPath );
@@ -304,6 +304,19 @@ for( iFile = 1:length(FileList) )
 		[LF, RectOptions, Success] = Rectify( LF, LFMetadata, DecodeOptions, RectOptions, LensletGridModel );
 		if( Success )
 			CompletedTasks = [CompletedTasks, 'Rectify'];
+			SaveRequired = true;
+		end
+		%---Display thumbnail---
+		Thumb = DispThumb(LF, CurFname, CompletedTasks);
+	end
+	
+	%---Optionally apply modular cal rectification---
+	if( ismember( 'ModRectify', TasksRemaining ) )
+		RectOptions.CalibrationDatabasePath = ...
+			LFLocateDatabaseFile( RectOptions.CalibrationDatabasePath, RectOptions.CalibrationDatabaseFname );
+		[LF, RectOptions, Success] = ModRectify( LF, LFMetadata, DecodeOptions, RectOptions, LensletGridModel );
+		if( Success )
+			CompletedTasks = [CompletedTasks, 'ModRectify'];
 			SaveRequired = true;
 		end
 		%---Display thumbnail---
@@ -501,11 +514,8 @@ if( isempty( CalInfo ) )
 	warning('No suitable calibration found, skipping');
 	return;
 end
-if( ~isfield(CalInfo, 'LensletGridModel') )  % todo
-	CalInfo = CalInfo.LFMetadata; % compatibility with new modular cal v0.6
-end
 
-%---Compare structs
+%---Compare structs---
 a = CalInfo.LensletGridModel;
 b = LensletGridModel;
 a.Orientation = strcmp(a.Orientation, 'horz');
@@ -520,4 +530,34 @@ end
 [LF, RectOptions] = LFCalRectifyLF( LF, CalInfo, RectOptions );
 Success = true;
 end
+
+%---------------------------------------------------------------------------------------------------
+function [LF, RectOptions, Success] = ModRectify( LF, LFMetadata, DecodeOptions, RectOptions, LensletGridModel )
+Success = false;
+fprintf('Applying rectification... ');
+%---Load cal info---
+fprintf('Selecting calibration...\n');
+
+[CalInfo, RectOptions] = LFFindCalInfo( LFMetadata, RectOptions );
+if( isempty( CalInfo ) )
+	warning('No suitable calibration found, skipping');
+	return;
+end
+
+%---Compare structs---
+a = CalInfo.LFMetadata.LensletGridModel;
+b = LensletGridModel;
+a.Orientation = strcmp(a.Orientation, 'horz');
+b.Orientation = strcmp(b.Orientation, 'horz');
+FractionalDiff = abs( (struct2array(a) - struct2array(b)) ./ struct2array(a) );
+if( ~all( FractionalDiff < RectOptions.MaxGridModelDiff ) )
+	warning(['Lenslet grid models differ -- ideally the same grid model and white image are ' ...
+		' used to decode during calibration and rectification']);
+end
+
+%---Perform rectification---
+[LF, RectOptions] = LFModCalRectifyLF( LF, CalInfo, RectOptions );
+Success = true;
+end
+
 
