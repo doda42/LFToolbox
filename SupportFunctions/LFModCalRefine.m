@@ -123,7 +123,9 @@ OptimOptions = optimset('Display','iter', ...
 	'TolX', CalOptions.OptTolX, ...
 	'TolFun',CalOptions.OptTolFun, ...
 	'JacobPattern', JacobPattern);
-[OptParams, ~, FinalDist] = lsqnonlin(ObjectiveFunc, OptParams0, [],[], OptimOptions);
+
+Bounds = reshape( ParamsInfo.Bounds, 2, [] );
+[OptParams, ~, FinalDist] = lsqnonlin(ObjectiveFunc, OptParams0, Bounds(1,:), Bounds(2,:), OptimOptions);
 
 %---Decode the resulting parameters and check the final error---
 [EstCamPosesV, CameraModel] = ...
@@ -271,15 +273,19 @@ J.EstCamPosesV = zeros(size(EstCamPosesV));
 for( i=1:CalOptions.NPoses )
 	J.EstCamPosesV(i,:) = i;
 end
+B.EstCamPosesV = [-inf;inf] .* ones(1,numel(P.EstCamPosesV));
 
 P.IntrinParams = CameraModel.EstCamIntrinsicsH(CalOptions.IntrinsicsToOpt);
 J.IntrinParams = zeros(size(CalOptions.IntrinsicsToOpt));
+B.IntrinParams = [-inf;inf] .* ones(1,numel(P.IntrinParams));
 
 P.DistortParams = CameraModel.Distortion(CalOptions.DistortionParamsToOpt);
 J.DistortParams = zeros(size(CalOptions.DistortionParamsToOpt));
+B.DistortParams = [-inf;inf] .* ones(1,numel(J.DistortParams));
 
 [OptParams0, ParamsInfo] = FlattenStruct(P);
 JacobSensitivity = FlattenStruct(J);
+ParamsInfo.Bounds = FlattenStruct(B);
 end
 
 %---------------------------------------------------------------------------------------------------
