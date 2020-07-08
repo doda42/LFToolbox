@@ -82,6 +82,8 @@ CalOptions = LFDefaultField( 'CalOptions', 'Fn_OptParamsInit', 'OptParamsInit' )
 CalOptions = LFDefaultField( 'CalOptions', 'Fn_ModelToOptParams', 'ModelToOptParams' );
 CalOptions = LFDefaultField( 'CalOptions', 'Fn_OptParamsToModel', 'OptParamsToModel' );
 CalOptions = LFDefaultField( 'CalOptions', 'Fn_ObsToRay', 'LFObsToRay_FreeIntrinH' );
+CalOptions = LFDefaultField( 'CalOptions', 'Fn_RayToObs', 'LFRayToObs_FreeIntrinH' );
+CalOptions = LFDefaultField( 'CalOptions', 'Fn_InvertDistortion', 'LFModCalInvertDistortion' );
 
 %---Load feaature observations and previous cal state---
 AllFeatsFname = fullfile(FileOptions.WorkingPath, CalOptions.AllFeatsFname);

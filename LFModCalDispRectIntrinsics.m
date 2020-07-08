@@ -57,7 +57,7 @@ end
 LFSize = size(LF);
 
 RectOptions = LFDefaultField( 'RectOptions', 'Precision', 'single' );
-RectOptions = LFDefaultField( 'RectOptions', 'NInverse_Distortion_Iters', 2 );
+RectOptions = LFDefaultField( 'RectOptions', 'NInverse_Distortion_Iters', 3 );
 RectOptions = LFDefaultField( 'RectOptions', 'RectCamIntrinsicsH', LFModCalDefaultIntrinsics( LFSize, CalInfo.CameraModel ) );
 
 if( isempty( CalInfo ) )
@@ -73,7 +73,7 @@ u_in=cast(1:10:LFSize(4), 'uint16');
 [tt,ss,vv,uu] = ndgrid(t_in,s_in,v_in,u_in);
 InterpIdx = [ss(:)'; tt(:)'; uu(:)'; vv(:)'; ones(size(ss(:)'))];
 InterpIdx = feval( CalInfo.CalOptions.Fn_InvertDistortion, ...
-	InterpIdx, CalInfo.CameraModel, RectOptions );
+	InterpIdx, CalInfo, RectOptions );
 InterpIdx = round(double(InterpIdx));
 
 PaintVal = cast(double(max(LF(:))).*PaintColour, 'like', LF);

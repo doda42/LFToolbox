@@ -56,9 +56,8 @@ function [LF, RectOptions] = LFCalRectifyLF( LF, CalInfo, RectOptions )
 
 %---Defaults---
 RectOptions = LFDefaultField( 'RectOptions', 'Precision', 'single' );
-RectOptions = LFDefaultField( 'RectOptions', 'NInverse_Distortion_Iters', 2 );
+RectOptions = LFDefaultField( 'RectOptions', 'NInverse_Distortion_Iters', 3 );
 RectOptions = LFDefaultField( 'RectOptions', 'MaxUBlkSize', 32 );
-RectOptions = LFDefaultField( 'RectOptions', 'Fn_InvertDistortion', 'LFMapRectifiedToMeasured' );
 LFSize = size(LF);
 
 RectOptions = LFDefaultField( 'RectOptions', 'RectCamIntrinsicsH', LFModCalDefaultIntrinsics( LFSize, CalInfo.CameraModel ) );
@@ -90,7 +89,7 @@ for( UStart = 1:UBlkSize:LFSize(4) )
     clear tt ss vv uu
     
     InterpIdx = feval( CalInfo.CalOptions.Fn_InvertDistortion, ...
-		InterpIdx, CalInfo.CameraModel, RectOptions );
+		InterpIdx, CalInfo, RectOptions );
     
     for( ColChan = 1:NChans )
         % todo[optimization]: use a weighted interpolation scheme to exploit the weight channel
