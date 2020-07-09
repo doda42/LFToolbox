@@ -105,7 +105,7 @@ CalOptions = LFDefaultField( 'CalOptions', 'ShowDisplay', true );
 CalOptions = LFDefaultField( 'CalOptions', 'CalInfoFname', 'CalInfo.json' );
 CalOptions = LFDefaultField( 'CalOptions', 'NumIterations', 2 );
 
-CalOptions = LFDefaultField( 'CalOptions', 'Fn_CalInit', 'LFModCalInit' );
+CalOptions = LFDefaultField( 'CalOptions', 'Fn_CalInit', 'HD_CalInit' );
 
 if( ~isfield(CalOptions, 'CalTarget') )
 	CalOptions.CalTarget = LFModCalTargetChecker( CalOptions );

@@ -78,12 +78,11 @@ CalOptions = LFDefaultField( 'CalOptions', 'OptTolX', 5e-5 );
 CalOptions = LFDefaultField( 'CalOptions', 'OptTolFun', 0 );
 
 CalOptions = LFDefaultField( 'CalOptions', 'Fn_PerObsError', 'ObsError_PtRay' );
-CalOptions = LFDefaultField( 'CalOptions', 'Fn_OptParamsInit', 'OptParamsInit' );
-CalOptions = LFDefaultField( 'CalOptions', 'Fn_ModelToOptParams', 'ModelToOptParams' );
-CalOptions = LFDefaultField( 'CalOptions', 'Fn_OptParamsToModel', 'OptParamsToModel' );
-CalOptions = LFDefaultField( 'CalOptions', 'Fn_ObsToRay', 'LFObsToRay_FreeIntrinH' );
-CalOptions = LFDefaultField( 'CalOptions', 'Fn_RayToObs', 'LFRayToObs_FreeIntrinH' );
-CalOptions = LFDefaultField( 'CalOptions', 'Fn_InvertDistortion', 'LFModCalInvertDistortion' );
+CalOptions = LFDefaultField( 'CalOptions', 'Fn_OptParamsInit', 'HD_OptParamsInit' );
+CalOptions = LFDefaultField( 'CalOptions', 'Fn_ModelToOptParams', 'HD_ModelToOptParams' );
+CalOptions = LFDefaultField( 'CalOptions', 'Fn_OptParamsToModel', 'HD_OptParamsToModel' );
+CalOptions = LFDefaultField( 'CalOptions', 'Fn_ObsToRay', 'HD_ObsToRay' );
+CalOptions = LFDefaultField( 'CalOptions', 'Fn_RayToObs', 'HD_RayToObs' );
 
 %---Load feaature observations and previous cal state---
 AllFeatsFname = fullfile(FileOptions.WorkingPath, CalOptions.AllFeatsFname);
@@ -235,71 +234,6 @@ RayDir = [CurFeatObs_Ray(3:4,:); ones(1,NFeatObs)];
 CurDist = LFFind3DPtRayDist( STPlaneIntersect, RayDir, CalTarget_CamFrame );
 end
 
-%---------------------------------------------------------------------------------------------------
-function [CalOptions, CameraModel] = OptParamsInit( CameraModel, CalOptions )
-CalOptions.IntrinsicsToOpt = sub2ind([5,5], [1,3, 2,4, 1,3, 2,4], [1,1, 2,2, 3,3, 4,4]);
-switch( CalOptions.Iteration )
-	case 1
-		CalOptions.DistortionParamsToOpt = [];
-	otherwise
-		CalOptions.DistortionParamsToOpt = 1:5;
-end
 
-if( isempty(CameraModel.Distortion) && ~isempty(CalOptions.DistortionParamsToOpt) )
-	CameraModel.Distortion( CalOptions.DistortionParamsToOpt ) = 0;
-end
-CalOptions.PreviousCameraModel = CameraModel;
 
-fprintf('    Intrinsics: ');
-disp(CalOptions.IntrinsicsToOpt);
-if( ~isempty(CalOptions.DistortionParamsToOpt) )
-	fprintf('    Distortion: ');
-	disp(CalOptions.DistortionParamsToOpt);
-end
-end
-
-%---------------------------------------------------------------------------------------------------
-function [OptParams0, ParamsInfo, JacobSensitivity] = ModelToOptParams( EstCamPosesV, CameraModel, CalOptions )
-% This makes use of FlattenStruct to reversibly flatten all params into a single array.
-% It also applies the same process to a sensitivity list, to facilitate building a Jacobian
-% Sparisty matrix.
-
-% The 'P' structure contains all the parameters to encode, and the 'J' structure mirrors it exactly
-% with a sensitivity list. Each entry in 'J' lists those poses that are senstitive to the
-% corresponding parameter. e.g. The first estimated camera pose affects only observations made
-% within the first pose, and so the sensitivity list for that parameter lists only the first pose. A
-% `J' value of 0 means all poses are sensitive to that variable -- as in the case of the intrinsics,
-% which affect all observations.
-P.EstCamPosesV = EstCamPosesV;
-J.EstCamPosesV = zeros(size(EstCamPosesV));
-for( i=1:CalOptions.NPoses )
-	J.EstCamPosesV(i,:) = i;
-end
-B.EstCamPosesV = [-inf;inf] .* ones(1,numel(P.EstCamPosesV));
-
-P.IntrinParams = CameraModel.EstCamIntrinsicsH(CalOptions.IntrinsicsToOpt);
-J.IntrinParams = zeros(size(CalOptions.IntrinsicsToOpt));
-B.IntrinParams = [-inf;inf] .* ones(1,numel(P.IntrinParams));
-
-P.DistortParams = CameraModel.Distortion(CalOptions.DistortionParamsToOpt);
-J.DistortParams = zeros(size(CalOptions.DistortionParamsToOpt));
-B.DistortParams = [-inf;inf] .* ones(1,numel(J.DistortParams));
-
-[OptParams0, ParamsInfo] = FlattenStruct(P);
-JacobSensitivity = FlattenStruct(J);
-ParamsInfo.Bounds = FlattenStruct(B);
-end
-
-%---------------------------------------------------------------------------------------------------
-function [EstCamPosesV, CameraModel] = OptParamsToModel( Params, CalOptions, ParamsInfo )
-P = UnflattenStruct(Params, ParamsInfo);
-EstCamPosesV = P.EstCamPosesV;
-
-CameraModel = CalOptions.PreviousCameraModel;
-
-CameraModel.EstCamIntrinsicsH(CalOptions.IntrinsicsToOpt) = P.IntrinParams;
-CameraModel.Distortion(CalOptions.DistortionParamsToOpt) = P.DistortParams;
-
-CameraModel.EstCamIntrinsicsH = LFRecenterIntrinsics(CameraModel.EstCamIntrinsicsH, CalOptions.LFSize);
-end
 

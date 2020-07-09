@@ -1,3 +1,4 @@
+% todo[doc]
 function CurChecker = LFCheckerFixOrient( CurChecker, CalOptions )
 
 assert(size(CurChecker,1) == 2);
