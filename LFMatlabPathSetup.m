@@ -14,8 +14,7 @@ if (~isdeployed)
 	
 	fprintf('Adding paths for LF Toolbox ');
 	addpath( fullfile(LFToolboxPath) );
-	addpath( fullfile(LFToolboxPath, 'SupportFunctions') );
-	addpath( fullfile(LFToolboxPath, 'SupportFunctions', 'CameraCal') );
+	addpath( genpath(fullfile(LFToolboxPath, 'SupportFunctions')) );
 	
 	fprintf('%s, done.\n', LFToolboxVersion);
 end
