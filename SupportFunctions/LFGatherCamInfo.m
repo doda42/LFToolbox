@@ -62,11 +62,6 @@ for( iFile = 1:length(FileNames) )
         %---Calibration file---
         CurCamInfo = CurFileInfo.CamInfo;
 	
-%	elseif( isfield( CurFileInfo, 'LFMetadata' ) ) % todo
- %       
-  %      %---Calibration file---
-   %     CurCamInfo = CurFileInfo.LFMetadata.DecodeOptions.WhiteImageInfo;
-        
     elseif( isfield( CurFileInfo, 'master' ) )
         
         %---Lytro TXT metadata file associated with white image---
