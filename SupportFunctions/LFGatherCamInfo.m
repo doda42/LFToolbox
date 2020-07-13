@@ -80,7 +80,7 @@ for( iFile = 1:length(FileNames) )
         
     else
         
-        error('Unrecognized file format reading metadata\n');
+        error('Unrecognized file format reading metadata');
         
     end
 
