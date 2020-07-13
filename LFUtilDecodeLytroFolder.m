@@ -215,7 +215,6 @@ end
 %---Crawl folder structure locating raw lenslet images---
 DefaultFileSpec = {'*.lfr', '*.lfp', '*.LFR', '*.raw'}; % gets overriden below, if a file spec is provided
 DefaultPath = 'Images';
-fprintf('Input from %s\n', InputPath);
 
 % Find input files
 [FileList, BasePath] = LFFindFilesRecursive( InputPath, DefaultFileSpec, DefaultPath );
