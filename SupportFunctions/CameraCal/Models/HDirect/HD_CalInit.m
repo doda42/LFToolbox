@@ -37,12 +37,12 @@
 
 % Copyright (c) 2013-2020 Donald G. Dansereau
 
-function CalOptions = LFModCalInit( FileOptions, CalOptions )
+function CalOptions = HD_CalInit( FileOptions, CalOptions )
 
 CalOptions = LFDefaultField( 'CalOptions', 'AllFeatsFname', 'AllFeats.mat' );
 
 %---Defaults---
-CalOptions = LFDefaultField( 'CalOptions', 'CalInfoFname', 'CalInfo.json' );
+CalOptions = LFDefaultField( 'CalOptions', 'CalInfoFname', 'ModCalInfo.json' );
 CalOptions = LFDefaultField( 'CalOptions', 'ForceRedoInit', false );
 
 %---Start by checking if this step has already been completed---
@@ -59,12 +59,16 @@ load( AllFeatsFile, 'AllFeatObs', 'LFSize', 'LFMetadata', 'CamInfo' );
 
 %---Initial estimate of focal length---
 
+% setup t,s index ranges
+TVec = (1+CalOptions.LensletBorderSize):(size(AllFeatObs,2)-CalOptions.LensletBorderSize);
+SVec = (1+CalOptions.LensletBorderSize):(size(AllFeatObs,3)-CalOptions.LensletBorderSize);
+
 %---Compute homography for each subcam pose---
 fprintf('Initial estimate of focal length...\n');
 ValidFeatCount = 0;
 for( iFile = 1:length(CalOptions.FileList) )
-    for( TIdx = 1:size(AllFeatObs,3) )
-        for( SIdx = 1:size(AllFeatObs,2) )
+    for( TIdx = TVec )
+        for( SIdx = SVec )
 			CurFeatObs = AllFeatObs{iFile, TIdx, SIdx};
 			if( ~isempty(CurFeatObs) )
 				CurFeatObs = CurFeatObs(3:4,:);
@@ -137,9 +141,9 @@ fprintf('\nInitial estimate of extrinsics...\n');
 ValidSuperPoseCount = size(AllFeatObs,1);
 for( iSuperPoseIdx = 1:ValidSuperPoseCount )
     fprintf('---[%d / %d]', iSuperPoseIdx, ValidSuperPoseCount);
-    for( TIdx = 1:size(AllFeatObs,2) )
+    for( TIdx = TVec )  
         fprintf('.');
-        for( SIdx = 1:size(AllFeatObs,3) ) % todo[testing]: check with asymmetric board
+        for( SIdx = SVec ) 
             CurFeatObs = AllFeatObs{iSuperPoseIdx, TIdx, SIdx};
             if( isempty(CurFeatObs) )
                 continue;
@@ -191,7 +195,7 @@ disp(EstCamIntrinsicsH);
 CameraModel.EstCamIntrinsicsH = EstCamIntrinsicsH;
 CameraModel.Distortion = [];
 
-%---Optionally save the results---
+%---Save the results---
 TimeStamp = datestr(now,'ddmmmyyyy_HHMMSS');
 GeneratedByInfo = struct('mfilename', mfilename, 'time', TimeStamp, 'VersionStr', LFToolboxVersion);
 
