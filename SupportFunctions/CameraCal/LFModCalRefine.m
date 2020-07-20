@@ -224,7 +224,7 @@ end
 function CurDist = ObsError_PtRay( CurFeatObs, CameraModel, CalTarget_CamFrame, CalOptions )
 NFeatObs = size(CurFeatObs,2);
 CurFeatObs_Ray = ...
-	feval( CalOptions.Fn_ObsToRay, CurFeatObs, CameraModel );
+	feval( CalOptions.Fn_ObsToRay, CurFeatObs, CameraModel, CalOptions );
 
 %---Find 3D point-ray distance---
 STPlaneIntersect = [CurFeatObs_Ray(1:2,:); zeros(1,NFeatObs)];

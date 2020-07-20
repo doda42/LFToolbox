@@ -78,10 +78,10 @@ u_in=cast(1:10:LFSize(4), RectOptions.Precision);
 InterpIdx = [ss(:)'; tt(:)'; uu(:)'; vv(:)'; ones(size(ss(:)'))];
 
 %---Convert the index of the desired ray to a ray representation using the desired camera's model---
-Ray = feval(CalInfo.CalOptions.Fn_ObsToRay, InterpIdx, RectOptions.RectCameraModel );
+Ray = feval(CalInfo.CalOptions.Fn_ObsToRay, InterpIdx, RectOptions.RectCameraModel, CalInfo.CalOptions );
 
 %---Now find the actual observation that corresponds to the desired ray---
-InterpIdx = feval( CalInfo.CalOptions.Fn_RayToObs, Ray, CalInfo.CameraModel, RectOptions );
+InterpIdx = feval( CalInfo.CalOptions.Fn_RayToObs, Ray, CalInfo.CameraModel, RectOptions, CalInfo.CalOptions );
 InterpIdx = InterpIdx(1:4,:); % drop homogeneous coordinates
 
 InterpIdx = round(double(InterpIdx));

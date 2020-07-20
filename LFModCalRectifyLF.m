@@ -92,11 +92,11 @@ for( UStart = 1:UBlkSize:LFSize(4) )
     clear tt ss vv uu
 
 	%---Convert the index of the desired ray to a ray representation using the desired camera's model---
-	Ray = feval(CalInfo.CalOptions.Fn_ObsToRay, InterpIdx, RectOptions.RectCameraModel );
+	Ray = feval(CalInfo.CalOptions.Fn_ObsToRay, InterpIdx, RectOptions.RectCameraModel, CalInfo.CalOptions );
 	
 	%---Now find the actual observation that corresponds to the desired ray---
 	% todo[optimization]: The variable InterpIdx could be precomputed and saved with the calibration
-	InterpIdx = feval( CalInfo.CalOptions.Fn_RayToObs, Ray, CalInfo.CameraModel, RectOptions );
+	InterpIdx = feval( CalInfo.CalOptions.Fn_RayToObs, Ray, CalInfo.CameraModel, CalInfo.CalOptions );
 	InterpIdx = InterpIdx(1:4,:); % drop homogeneous coordinates
     
     for( ColChan = 1:NChans )
