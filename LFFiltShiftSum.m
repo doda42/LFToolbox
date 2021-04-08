@@ -173,7 +173,7 @@ switch( lower(FiltOptions.FlattenMethod) )
 		ImgOut = squeeze(nanmedian(t));
 	case 'stddev'
 		t = reshape(LF(:,:,:,:,1:NColChans), [prod(LFSize(1:2)), NewLFSize(3:4), NColChans]);
-		ImgOut = squeeze(nanstd(t));
+		ImgOut = squeeze(nanstd(t)); %todo[doc]: document
 	otherwise
 		error('Unrecognized method');
 end
