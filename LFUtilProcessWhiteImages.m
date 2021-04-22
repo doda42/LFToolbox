@@ -220,7 +220,7 @@ for( iFile = 1:length(WhiteImageInfo) )
         colormap gray
         plot(GridCoordsX(1:VPlotSamps,1:HPlotSamps), GridCoordsY(1:VPlotSamps,1:HPlotSamps), 'r.')
         axis off
-		title('Lop left');
+		title('Top left');
         
 		CenterStart = (ImgSize-DispSize_pix)/2;
         HCenterStartSamps = floor(CenterStart(2) / LensletGridModel.HSpacing);
