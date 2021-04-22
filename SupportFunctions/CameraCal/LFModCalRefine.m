@@ -84,7 +84,7 @@ CalOptions = LFDefaultField( 'CalOptions', 'Fn_OptParamsToModel', 'HD_OptParamsT
 CalOptions = LFDefaultField( 'CalOptions', 'Fn_ObsToRay', 'HD_ObsToRay' );
 CalOptions = LFDefaultField( 'CalOptions', 'Fn_RayToObs', 'HD_RayToObs' );
 
-%---Load feaature observations and previous cal state---
+%---Load feature observations and previous cal state---
 AllFeatsFname = fullfile(FileOptions.WorkingPath, CalOptions.AllFeatsFname);
 CalInfoFname = fullfile(FileOptions.WorkingPath, CalOptions.CalInfoFname);
 
