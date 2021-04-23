@@ -1,7 +1,7 @@
 % LFBuildLensletGridModel - builds a lenslet grid model from a white image, called by LFUtilProcessWhiteImages
 %
 % Usage:
-%     [LensletGridModel, GridCoords] = LFBuildLensletGridModel( WhiteImg, GridModelOptions, DebugDisplay )
+%     LensletGridModel = LFBuildLensletGridModel( WhiteImg, todo[doc], GridModelOptions, DebugDisplay )
 %
 % Inputs: 
 %             WhiteImg : path of an image taken through a diffuser, or of an entirely white scene
@@ -43,7 +43,7 @@
 
 % Copyright (c) 2013-2020 Donald G. Dansereau
 
-function [LensletGridModel, GridCoords] = LFBuildLensletGridModel( WhiteImg, GridModelOptions, DebugDisplay )
+function [LensletGridModel, GridCoords] = LFBuildLensletGridModel( WhiteImg, WhiteImgMetadata, GridModelOptions, DebugDisplay )
 
 %---Defaults---
 GridModelOptions = LFDefaultField( 'GridModelOptions', 'Precision', 'single' );
@@ -262,26 +262,8 @@ LensletGridModel.VOffset = NewOffsetVec(2);
 LensletGridModel.UMax = floor((size(WhiteImg,2)-LensletGridModel.HOffset)/LensletGridModel.HSpacing) + 1;
 LensletGridModel.VMax = floor((size(WhiteImg,1)-LensletGridModel.VOffset)/LensletGridModel.VSpacing) + 1;
 
-GridCoords = LFBuildHexGrid( LensletGridModel );
 fprintf('...Done.\n');
 
 end
 
 
-function [GridCoords] = LFBuildHexGrid( LensletGridModel )
-
-ToOffset = eye(3);
-ToOffset(1:2,3) = [LensletGridModel.HOffset, LensletGridModel.VOffset];
-
-R = ToOffset * LFRotz(LensletGridModel.Rot);
-
-[vv,uu] = ndgrid((0:LensletGridModel.VMax-1).*LensletGridModel.VSpacing, (0:LensletGridModel.UMax-1).*LensletGridModel.HSpacing);
-
-uu(LensletGridModel.FirstPosShiftRow:2:end,:) = uu(LensletGridModel.FirstPosShiftRow:2:end,:) + 0.5.*LensletGridModel.HSpacing;
-
-GridCoords = [uu(:), vv(:), ones(numel(vv),1)];
-GridCoords = (R*GridCoords')';
-
-GridCoords = reshape(GridCoords(:,1:2), [LensletGridModel.VMax,LensletGridModel.UMax,2]);
-
-end

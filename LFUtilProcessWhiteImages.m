@@ -58,6 +58,8 @@
 %                                     images include are very dark and not useful for grid modelling
 %
 %     GridModelOptions : struct controlling grid construction by LFBuildLensletGridModel
+%                   .Fn_GridFitter  : todo[doc]
+%                   .Fn_GridBuilder : todo[doc]
 %             .FilterDiskRadiusMult : Filter disk radius for prefiltering white image for locating
 %                                     lenslets; expressed relative to lenslet spacing; e.g. a
 %                                     value of 1/3 means a disk filte with a radius of 1/3 the
@@ -110,13 +112,15 @@ FileOptions = LFDefaultField( 'FileOptions', 'WhiteRawDataFnameExtension', '.RAW
 FileOptions = LFDefaultField( 'FileOptions', 'ProcessedWhiteImagenamePattern', '%s.grid.json' );
 FileOptions = LFDefaultField( 'FileOptions', 'WhiteImageMinMeanIntensity', 500 );
 
+GridModelOptions = LFDefaultField( 'GridModelOptions', 'Fn_GridFitter', 'LFBuildLensletGridModel' ); 
+GridModelOptions = LFDefaultField( 'GridModelOptions', 'Fn_GridBuilder', 'LFBuildHexGrid' ); 
+
 GridModelOptions = LFDefaultField( 'GridModelOptions', 'Orientation', 'horz' );
 GridModelOptions = LFDefaultField( 'GridModelOptions', 'FilterDiskRadiusMult', 1/3 );
 GridModelOptions = LFDefaultField( 'GridModelOptions', 'CropAmt', 25 );
 GridModelOptions = LFDefaultField( 'GridModelOptions', 'SkipStep', 250 );
 
 DispSize_pix = 160; % size of windows for visual confirmation display
-DebugBuildGridModel = false; % additional debug display
 
 %---Load white image info---
 fprintf('Building database of white files...\n');
@@ -199,8 +203,13 @@ for( iFile = 1:length(WhiteImageInfo) )
         GridModelOptions.ApproxLensletSpacing = ...
             WhiteImageMetadata.devices.mla.lensPitch / WhiteImageMetadata.devices.sensor.pixelPitch;
         
-        %---Find grid params---
-        [LensletGridModel, GridCoords] = LFBuildLensletGridModel( WhiteImage, GridModelOptions, DebugBuildGridModel );
+        %---Fit a grid model, and build the grid to display---
+		LensletGridModel = ... 
+			feval( GridModelOptions.Fn_GridFitter, WhiteImage, WhiteImageMetadata, GridModelOptions );
+		
+		GridCoords = ... 
+			feval( GridModelOptions.Fn_GridBuilder, LensletGridModel );
+            
         GridCoordsX = GridCoords(:,:,1);
         GridCoordsY = GridCoords(:,:,2);
         
