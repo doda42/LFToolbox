@@ -187,6 +187,7 @@ DecodeOptions = LFDefaultField('DecodeOptions', 'ColourHistThresh', 0.01);
 
 DecodeOptions = LFDefaultField('DecodeOptions', 'WhiteImageDatabaseFname', 'WhiteImageDatabase.json');
 DecodeOptions = LFDefaultField('DecodeOptions', 'WhiteImageDatabasePath', 'Cameras');
+DecodeOptions = LFDefaultField('DecodeOptions', 'ClipMode' ,'none');
 DecodeOptions.WhiteImageDatabasePath = ...
 	LFLocateDatabaseFile( DecodeOptions.WhiteImageDatabasePath, DecodeOptions.WhiteImageDatabaseFname );
 
