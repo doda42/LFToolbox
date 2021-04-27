@@ -516,7 +516,7 @@ if( isempty( CalInfo ) )
 	return;
 end
 
-%---Compare structs
+%---Compare structs---
 a = CalInfo.LensletGridModel;
 b = LensletGridModel;
 a.Orientation = strcmp(a.Orientation, 'horz');
