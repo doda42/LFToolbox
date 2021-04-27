@@ -46,6 +46,7 @@
 %      LensletGridModel  : Lenslet grid model used to decode the light field, as constructed from
 %                          the white image by LFUtilProcessWhiteImages / LFBuildLensletGridModel
 %          DecodeOptions : The options as applied, including any default values omitted in the input
+%    DebayerLensletImage : The result of devignetting and debayering, with no further processing.
 % 
 % 
 % Example:
@@ -62,7 +63,7 @@
 
 % Copyright (c) 2013-2020 Donald G. Dansereau
 
-function [LF, LFMetadata, WhiteImageMetadata, LensletGridModel, DecodeOptions] = ...
+function [LF, LFMetadata, WhiteImageMetadata, LensletGridModel, DecodeOptions, DebayerLensletImage] = ...
     LFLytroDecodeImage( InputFname, DecodeOptions )
 
 %---Defaults---
@@ -238,7 +239,7 @@ WhiteImage = LFReadRaw( WhiteRawFname, BitPacking );
 
 %---Decode---
 fprintf('Decoding lenslet image :');
-[LF, LFWeight, DecodeOptions] = LFDecodeLensletImageDirect( LensletImage, WhiteImage, LensletGridModel, DecodeOptions );
+[LF, LFWeight, DecodeOptions, DebayerLensletImage] = LFDecodeLensletImageDirect( LensletImage, WhiteImage, LensletGridModel, DecodeOptions );
 LF(:,:,:,:,end+1:end+DecodeOptions.NWeightChans) = LFWeight;
 DecodeOptions.LFSize = size(LF);
 
