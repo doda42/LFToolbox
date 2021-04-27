@@ -357,8 +357,6 @@ for( iFile = 1:length(FileList) )
 			case 'eslf.png'
 				WriteAlpha = FileOptions.SaveWeight;
 				LFWriteESLF( LF, SaveFname, WriteAlpha, FileOptions.ImwriteOptions{:} );
-				MetadataFname = [SaveFname, '.json'];
-				LFWriteMetadata( MetadataFname, LFVar2Struct(GeneratedByInfo, LFMetadata, WhiteImageMetadata, LensletGridModel, DecodeOptions, RectOptions, MaxLum));
 			case 'eslf.jpg'
 				WriteAlpha = false;
 				LFWriteESLF( LF, SaveFname, WriteAlpha, FileOptions.ImwriteOptions{:} );
