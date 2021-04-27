@@ -137,7 +137,11 @@ for( TIdx = 1:LFSize(1) )
 		Interpolant.Method = FiltOptions.InterpMethod;
 		Interpolant.ExtrapolationMethod = FiltOptions.ExtrapMethod;
 		
-		CurSlice = Interpolant( {v+VOffset, u+UOffset, 1:size(LF,5)} );
+		if( ndims(CurSlice)==3 ) % todo[refactor]: find a more elegant way to handle single-channel LFs
+			CurSlice = Interpolant( {v+VOffset, u+UOffset, 1:size(LF,5)} );
+		else
+			CurSlice = Interpolant( {v+VOffset, u+UOffset} ); 
+		end
 		
 		LFOut(TIdx,SIdx, :,:, :) = CurSlice;
 	end
@@ -167,6 +171,9 @@ switch( lower(FiltOptions.FlattenMethod) )
 	case 'median'
 		t = reshape(LF(:,:,:,:,1:NColChans), [prod(LFSize(1:2)), NewLFSize(3:4), NColChans]);
 		ImgOut = squeeze(nanmedian(t));
+	case 'stddev'
+		t = reshape(LF(:,:,:,:,1:NColChans), [prod(LFSize(1:2)), NewLFSize(3:4), NColChans]);
+		ImgOut = squeeze(nanstd(t)); %todo[doc]: document
 	otherwise
 		error('Unrecognized method');
 end

@@ -3,7 +3,7 @@
 % Usage:
 %
 %   AllFiles = LFFindFilesRecursive( InputPath )
-%   [AllFiles, BasePath, FolderList, PerFolderFiles] =
+%   [AllFiles, BasePath, FolderList, PerFolderFiles, SearchOptions] =
 %                 LFFindFilesRecursive( InputPath, DefaultFileSpec, DefaultPath, SearchOptions )
 %
 % Inputs:
@@ -20,7 +20,10 @@
 %    SearchOptions struct
 %           .ReportFolders : report the folder structure instead of file names. Default false.
 %        .IncludeRecursion : set to false to disable recursively searching folders. Default true.
-%                .Verbose' : verbose output. Default true.
+%            .ExcludeFiles : list of file/folder names to ignore, as cell array of regular
+%                            expressions. Default ignores system files like .DS_Store and ._*, see
+%                            code for full list.
+%                 .Verbose : verbose output. Default true.
 %
 % Outputs:
 %
@@ -40,12 +43,17 @@
 %   LFFindFilesRecursive('Images/IMG_0001.LFR')
 %   LFFindFilesRecursive('IMG_0001.LFR')
 %   LFFindFilesRecursive('*.png',[],[],struct('IncludeRecursion',false))
+% 
+%   Retrieve and add to the list of ignored file types:
+%      [~,~,~,~,SearchOptions] = LFFindFilesRecursive();
+%      SearchOptions.ExcludeFiles{end+1} = '#.*'; % regexp to ignore files starting in #
+%      LFFindFilesRecursive([], [], [], SearchOptions )
 %
 % User guide: <a href="matlab:which LFToolbox.pdf; open('LFToolbox.pdf')">LFToolbox.pdf</a>
 
 % Copyright (c) 2013-2020 Donald G. Dansereau
 
-function [AllFiles, BasePath, FolderList, PerFolderFiles] = ...
+function [AllFiles, BasePath, FolderList, PerFolderFiles, SearchOptions] = ...
 	LFFindFilesRecursive( InputPath, DefaultFileSpec, DefaultPath, SearchOptions )
 PerFolderFiles = [];
 AllFiles = [];
@@ -57,6 +65,8 @@ InputPath = LFDefaultVal( 'InputPath', '.' );
 SearchOptions = LFDefaultField('SearchOptions', 'ReportFolders', false);
 SearchOptions = LFDefaultField('SearchOptions', 'IncludeRecursion', true);
 SearchOptions = LFDefaultField('SearchOptions', 'Verbose', true);
+SearchOptions = LFDefaultField('SearchOptions', 'ExcludeFiles', ...
+	{'\.DS_Store', '\.\_.*', '\.Spotlight-V100','\.Trashes', 'Thumbs\.db', 'Desktop\.ini'});
 
 PathOnly = '';
 if( ~iscell(InputPath) )
@@ -110,6 +120,12 @@ end
 FolderList = textscan(FolderList, '%s', 'Delimiter', pathsep);
 FolderList = FolderList{1};
 
+%---Remove filtered folder name matches---
+for( CurFilt = SearchOptions.ExcludeFiles )
+	FilteredMatchIdx = ~cellfun( @isempty, regexp(FolderList, CurFilt ) );
+	FolderList(FilteredMatchIdx) = [];
+end
+
 %---Compile a list of all files---
 PerFolderFiles = cell(length(FolderList),1);
 for( iFileSpec=1:length(InputFileSpec) )
@@ -126,6 +142,14 @@ for( iFileSpec=1:length(InputFileSpec) )
 			CurDirList = CurDirList(~[CurDirList.isdir]);
 		end
 		CurDirList = {CurDirList.name};
+
+		%---Remove filtered filename matches---
+		for( CurFilt = SearchOptions.ExcludeFiles )
+			FilteredMatchIdx = ~cellfun( @isempty, regexp(CurDirList, CurFilt) );
+			CurDirList(FilteredMatchIdx) = [];
+		end
+
+		%---Record remaining files
 		PerFolderFiles{iFolder} = [PerFolderFiles{iFolder}, CurDirList];
 		
 		% Prepend the current folder name for a complete path to each file

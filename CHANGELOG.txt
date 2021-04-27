@@ -28,6 +28,7 @@ New features:
 - Added FileOptions.OutputPath parameter to allow LFUtilProcessWhiteImages, LFUtilDecodeLytroFolder, LFUtilCalLensletCam, and LFUtilProcessCalibrations to save in specified output folders, leaving input folders untouched
 - LFBuild2DLPF, LFBuild4DLPF for frequency-domain lowpass filters, optionally anisotropic
 - Smarter search for of white image and calibration databases decoding and rectifying; More informative error messages when locating white databases / files
+- LFFiltShiftSum: stddev mode.
 
 Decoding improvements:
 - New decode options WeightedDemosaic, WeightedInterp for improved demosaicing and interpolations (reduce ghosting artifacts on external views).
@@ -40,6 +41,7 @@ Decoding improvements:
 
 Misc improvements:
 - LFWriteESLF: smarter jpeg file writing; reduces to 8-bit and strips weight channel as needed
+- LFFindFilesRecursive: ignore OS files like .DS_Store by default; control via SearchOptions.ExcludeFiles, see example in header comment.
 
 
 ---v0.5.1----------------------------------------------------------------------

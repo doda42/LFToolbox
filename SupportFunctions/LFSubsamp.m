@@ -32,7 +32,7 @@ LFSize = size(LF);
 if( numel(LFSize)==4 )
 	LFSize(5) = 1;
 end
-SubsampRate = min(SubsampRate, LFSize(1:4)-1);
+SubsampRate = max(1,min(SubsampRate, LFSize(1:4)-1));
 
 %---Build resampling grid and grab first sample---
 [tt,ss,vv,uu] = ndgrid(1:SubsampRate(1), 1:SubsampRate(2), 1:SubsampRate(3), 1:SubsampRate(4));
