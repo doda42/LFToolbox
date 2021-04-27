@@ -64,8 +64,9 @@
 %                             path will mirror the folder structure of the input, and save generated
 %                             files in that structure, leaving the input untouched
 %          .OutputPrecision : 'uint8' or 'uint16', default 'uint16'
-%             .OutputFormat : Output file format: default 'mat', can also be 'eslf.png' or
-%                            'eslf.jpg'
+%             .OutputFormat : Output file format: default 'mat', can also be 'eslf.png', 'eslf.jpg'
+%                             for eslf files, or 'raw.png', 'raw.jpg' to save demosaiced devignetted
+%                             but otherwise unprocessed lenslet image
 %           .ImwriteOptions : Cell array of additional options to pass to imwrite for eslf output
 %                             formats; see LFWriteESLF
 %               .SaveWeight : Save the weight channel, default true
@@ -184,7 +185,6 @@ FileOptions = LFDefaultField('FileOptions', 'ThumbFnamePattern', '%s__Decoded_Th
 
 DecodeOptions = LFDefaultField('DecodeOptions', 'OptionalTasks', {}); % 'ColourCorrect', 'Rectify'
 DecodeOptions = LFDefaultField('DecodeOptions', 'ColourHistThresh', 0.01);
-
 DecodeOptions = LFDefaultField('DecodeOptions', 'WhiteImageDatabaseFname', 'WhiteImageDatabase.json');
 DecodeOptions = LFDefaultField('DecodeOptions', 'WhiteImageDatabasePath', 'Cameras');
 DecodeOptions = LFDefaultField('DecodeOptions', 'ClipMode' ,'none');
@@ -267,7 +267,7 @@ for( iFile = 1:length(FileList) )
 	if( ~FileExists )
 		% No previous result, decode
 		InputFname = fullfile(BasePath, CurFname);
-		[LF, LFMetadata, WhiteImageMetadata, LensletGridModel, DecodeOptions] = ...
+		[LF, LFMetadata, WhiteImageMetadata, LensletGridModel, DecodeOptions, DebayerLensletImage] = ...
 			LFLytroDecodeImage( InputFname, DecodeOptions );
 		if( isempty(LF) )
 			continue;
@@ -370,15 +370,21 @@ for( iFile = 1:length(FileList) )
 			case 'eslf.png'
 				WriteAlpha = FileOptions.SaveWeight;
 				LFWriteESLF( LF, SaveFname, WriteAlpha, FileOptions.ImwriteOptions{:} );
-				MetadataFname = [SaveFname, '.json'];
-				LFWriteMetadata( MetadataFname, LFVar2Struct(GeneratedByInfo, LFMetadata, WhiteImageMetadata, LensletGridModel, DecodeOptions, RectOptions, MaxLum));
 			case 'eslf.jpg'
 				WriteAlpha = false;
 				LFWriteESLF( LF, SaveFname, WriteAlpha, FileOptions.ImwriteOptions{:} );
-				MetadataFname = [SaveFname, '.json'];
-				LFWriteMetadata( MetadataFname, LFVar2Struct(GeneratedByInfo, LFMetadata, WhiteImageMetadata, LensletGridModel, DecodeOptions, RectOptions, MaxLum));
+            case 'raw.png'  % todo[optimisation]: skip decode if all we need is lenslet image
+                imwrite( DebayerLensletImage(:,:,1:3), SaveFname );
+            case 'raw.jpg'
+                imwrite( DebayerLensletImage(:,:,1:3), SaveFname );
 			otherwise
 				error('Unrecognized output format %s', FileOptions.OutputFormat);
+		end
+		
+		if( ~strcmp(FileOptions.OutputFormat, 'mat') )
+			% all formats except mat get an accompanying .json metadata file
+			MetadataFname = [SaveFname, '.json'];
+			LFWriteMetadata( MetadataFname, LFVar2Struct(GeneratedByInfo, LFMetadata, WhiteImageMetadata, LensletGridModel, DecodeOptions, RectOptions, MaxLum));
 		end
 	end
 end
