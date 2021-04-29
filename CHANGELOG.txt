@@ -17,6 +17,8 @@ Performance improvements:
 - Faster / smarter display during calibration checkerboard finding; faster calibration
 
 ---v0.6----------------------------------------------------------------------
+Contributions from Doug Palmer, Mikael Le Pendu, Pierre David  todo[doc] list all, contributors.txt?
+
 
 Reverse compatibility:
 - White image and calibration database file formats changed, re-run LFUtilProcessWhiteImages and LFUtilProcessCalibrations; grid analysis and calibrations don't need to re-run, only the database file needs to be re-generated.
