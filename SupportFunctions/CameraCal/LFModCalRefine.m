@@ -126,20 +126,23 @@ ParamsTyp(ParamsTyp == 0) = 1e-5; % todo[refactor]: add explicit scaling option
 ObjectiveFunc = @(Params) FindError2DFeats(Params, AllFeatObs, CalTarget, CalOptions, ParamsInfo, JacobSensitivity );
 OptimOptions = optimset('Display','iter', ...
 	'TolX', CalOptions.OptTolX, ...
-	'TolFun',CalOptions.OptTolFun, ...
+	'TolFun', CalOptions.OptTolFun, ...
     'MaxIter', CalOptions.OptMaxIterations,...
 	'JacobPattern', JacobPattern, ...
     'TypicalX', ParamsTyp);
 
 Bounds = reshape( ParamsInfo.Bounds, 2, [] );
 [OptParams, ~, FinalDist] = lsqnonlin(ObjectiveFunc, OptParams0, Bounds(1,:), Bounds(2,:), OptimOptions);
+[FinalDist, ~, SSE_ST] = ObjectiveFunc(OptParams);
+SSE_ST = SSE_ST(:,:,1) ./ SSE_ST(:,:,2);
 
 %---Decode the resulting parameters and check the final error---
 [EstCamPosesV, CameraModel] = ...
 	feval( CalOptions.Fn_OptParamsToModel, OptParams, CalOptions, ParamsInfo );
 fprintf(' ---Finished calibration refinement---\n');
 
-ReprojectionError = struct( 'SSE', sum(FinalDist.^2), 'RMSE', sqrt(mean(FinalDist.^2)) );
+ReprojectionError = struct( 'SSE', sum(FinalDist.^2), 'RMSE', sqrt(mean(FinalDist.^2)), ...
+	'SSE_ST', SSE_ST );
 fprintf('\n    Start SSE: %g m^2, RMSE: %g m\n    Finish SSE: %g m^2, RMSE: %g m\n', ...
 	sum((ModelError0).^2), sqrt(mean((ModelError0).^2)), ...
 	ReprojectionError.SSE, ReprojectionError.RMSE );
@@ -155,7 +158,7 @@ LFWriteMetadata(SaveFname, LFVar2Struct(GeneratedByInfo, CameraModel, EstCamPose
 end
 
 %---------------------------------------------------------------------------------------------------
-function [ModelError, JacobPattern] = FindError2DFeats( OptParams, AllFeatObs, CalTarget, CalOptions, ParamsInfo, JacobSensitivity )
+function [ModelError, JacobPattern, SSE_ST] = FindError2DFeats( OptParams, AllFeatObs, CalTarget, CalOptions, ParamsInfo, JacobSensitivity )
 %---Decode optim params---
 [EstCamPosesV, CameraModel] = ...
 	feval( CalOptions.Fn_OptParamsToModel, OptParams, CalOptions, ParamsInfo );
@@ -171,6 +174,7 @@ end
 
 %---Preallocate distances---
 ModelError = zeros(1, TotFeatObs);
+SSE_ST = zeros([CalOptions.LFSize(1:2),2]); % track error by s,t index
 
 %---Compute point-plane distances---
 OutputIdx = 0;
@@ -201,6 +205,10 @@ for( PoseIdx = 1:CalOptions.NPoses )
 			%---Find error---
 			CurDist3D = feval( CalOptions.Fn_PerObsError, CurFeatObs_Idx, CameraModel, CalTarget_CamFrame, CalOptions );
 			ModelError(OutputIdx + (1:NFeatObs)) = CurDist3D;
+
+			% Keep track of squared error and number of observations for each s,t idx 
+            SSE_ST(TIdx,SIdx,1) = SSE_ST(TIdx,SIdx,1) + sum(CurDist3D.^2);
+			SSE_ST(TIdx,SIdx,2) = SSE_ST(TIdx,SIdx,2) + length(CurDist3D);
 			
 			%---Optionally compute jacobian sensitivity matrix---
 			if( nargout >=2 )
