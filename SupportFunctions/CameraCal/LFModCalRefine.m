@@ -76,8 +76,8 @@ function CalOptions = LFModCalRefine( FileOptions, CalOptions )
 %---Defaults---
 CalOptions = LFDefaultField( 'CalOptions', 'OptTolX', 5e-5 );
 CalOptions = LFDefaultField( 'CalOptions', 'OptTolFun', 0 );
-
-CalOptions = LFDefaultField( 'CalOptions', 'Fn_PerObsError', 'ObsError_PtRay' );
+CalOptions = LFDefaultField( 'CalOptions', 'OptMaxIterations',50);
+CalOptions = LFDefaultField( 'CalOptions', 'Fn_PerObsError', 'ObsError_PtRay_Normalized' );
 CalOptions = LFDefaultField( 'CalOptions', 'Fn_OptParamsInit', 'HD_OptParamsInit' );
 CalOptions = LFDefaultField( 'CalOptions', 'Fn_ModelToOptParams', 'HD_ModelToOptParams' );
 CalOptions = LFDefaultField( 'CalOptions', 'Fn_OptParamsToModel', 'HD_OptParamsToModel' );
@@ -118,12 +118,18 @@ end
 
 fprintf('\n    Start SSE: %g m^2, RMSE: %g m\n', sum((ModelError0).^2), sqrt(mean((ModelError0).^2)));
 
+% Set up typical values for lsqnonlin option TypicalX
+ParamsTyp = OptParams0;
+ParamsTyp(ParamsTyp == 0) = 1e-5; % todo[refactor]: add explicit scaling option
+
 %---Start the optimization---
 ObjectiveFunc = @(Params) FindError2DFeats(Params, AllFeatObs, CalTarget, CalOptions, ParamsInfo, JacobSensitivity );
 OptimOptions = optimset('Display','iter', ...
 	'TolX', CalOptions.OptTolX, ...
 	'TolFun',CalOptions.OptTolFun, ...
-	'JacobPattern', JacobPattern);
+    'MaxIter', CalOptions.OptMaxIterations,...
+	'JacobPattern', JacobPattern, ...
+    'TypicalX', ParamsTyp);
 
 Bounds = reshape( ParamsInfo.Bounds, 2, [] );
 [OptParams, ~, FinalDist] = lsqnonlin(ObjectiveFunc, OptParams0, Bounds(1,:), Bounds(2,:), OptimOptions);
@@ -234,6 +240,13 @@ RayDir = [CurFeatObs_Ray(3:4,:); ones(1,NFeatObs)];
 CurDist = LFFind3DPtRayDist( STPlaneIntersect, RayDir, CalTarget_CamFrame );
 end
 
+%---------------------------------------------------------------------------------------------------
+%---Find error given features, camera model, and checkerboards---
+% Similar to ObsError_PtRay but normalises to the distance to each calibration point
+function CurDist = ObsError_PtRay_Normalized( CurFeatObs, CameraModel, CalTarget_CamFrame, CalOptions )
+CurDist = ObsError_PtRay( CurFeatObs, CameraModel, CalTarget_CamFrame, CalOptions );
+CurDist = CurDist ./ CalTarget_CamFrame(3,:);
+end
 
 
 
