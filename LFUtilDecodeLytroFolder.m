@@ -187,7 +187,7 @@ DecodeOptions = LFDefaultField('DecodeOptions', 'OptionalTasks', {}); % 'ColourC
 DecodeOptions = LFDefaultField('DecodeOptions', 'ColourHistThresh', 0.01);
 DecodeOptions = LFDefaultField('DecodeOptions', 'WhiteImageDatabaseFname', 'WhiteImageDatabase.json');
 DecodeOptions = LFDefaultField('DecodeOptions', 'WhiteImageDatabasePath', 'Cameras');
-DecodeOptions = LFDefaultField('DecodeOptions', 'ClipMode' ,'none');
+
 DecodeOptions.WhiteImageDatabasePath = ...
 	LFLocateDatabaseFile( DecodeOptions.WhiteImageDatabasePath, DecodeOptions.WhiteImageDatabaseFname );
 
@@ -326,12 +326,12 @@ for( iFile = 1:length(FileList) )
 	%---Optionally save---
 	if( SaveRequired && FileOptions.SaveResult )
 		% Convert to ints
-		if(strcmp(DecodeOptions.ClipMode,'none'))
+		if( isfield(DecodeOptions, 'ClipMode') && strcmp(DecodeOptions.ClipMode,'none') )
 			MaxLum = max(LF(:));
 		else
 			MaxLum=1;
         end
-		LF = LFConvertToInt( LF ./ MaxLum, FileOptions.OutputPrecision);
+		LF = LFConvertToInt( LF ./ MaxLum, FileOptions.OutputPrecision );
 		
 		% Strip weight if we don't want it
 		% todo[optimization]: don't decode weight if it's not wanted
