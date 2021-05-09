@@ -441,6 +441,7 @@ if( ~ForceRedo && exist(SaveFname, 'file') )
 		
 		%---Convert to float as this is what subsequent operations require---
 		OrigClass = class(SDecoded.LF);
+		SDecoded.DecodeOptions = LFDefaultField( 'SDecoded.DecodeOptions', 'Precision', 'single' );
 		SDecoded.LF = cast( SDecoded.LF, SDecoded.DecodeOptions.Precision ) ./ ...
 			cast( intmax(OrigClass), SDecoded.DecodeOptions.Precision );
 		fprintf('Done\n');
