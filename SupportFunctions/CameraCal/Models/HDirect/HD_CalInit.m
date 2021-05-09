@@ -132,7 +132,13 @@ for iHomography = 1:size(H,1)
     end
 end
 
-FocInit = sqrt(b'*(sum(A')') / (b'*b)) * ones(2,1);
+FocInit = sqrt(b'*(sum(A')') / (b'*b)) * ones(2,1); % try single-focal model for initial guess
+
+InvalidSingleFocEst = (b'*(sum(A')') < 0) || any(imag(FocInit) ~= 0);
+if( InvalidSingleFocEst )
+	fprintf('Estimating independent horz, vertical focal lengths\n');
+	FocInit = sqrt(abs(1./(inv(A'*A)*A'*b))); % fall back to two-focal model for initial guess
+end
 fprintf('Init focal length est: %.2f, %.2f\n', FocInit);
 
 %---Initial estimate of extrinsics---
