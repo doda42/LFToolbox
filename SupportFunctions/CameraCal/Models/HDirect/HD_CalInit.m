@@ -74,6 +74,13 @@ for( iFile = 1:length(CalOptions.FileList) )
 				CurFeatObs = CurFeatObs(3:4,:);
 				ValidFeatCount = ValidFeatCount + 1;			
 				%---Compute homography for each subcam pose---
+				% todo[optimisation]: for non-square decode, better performance in single-FocLen est
+				% if we adjusted CurFeatObs based on DecodeOptions.OutputScale:
+				%
+				% DecodeAspectRatio = LFMetadata.DecodeOptions.OutputScale(4) / LFMetadata.DecodeOptions.OutputScale(3);
+				% CurFeatObs(2,:) = CurFeatObs(2,:) .* DecodeAspectRatio;
+				% 
+				% Also adjust centering CInit, below				
 				CurH = compute_homography( CurFeatObs, CalOptions.CalTarget(1:2,:) );
 				H(ValidFeatCount, :,:) = CurH;
 			end
@@ -89,7 +96,9 @@ b = [];
 %---Initialize principal point at the center of the image---
 % This section of code is based heavily on code from the Camera Calibration Toolbox for Matlab by
 % Jean-Yves Bouguet
-CInit = LFSize([4,3])'/2 - 0.5; 
+LFSizeAdjusted = LFSize;
+% LFSizeAdjusted(3) = LFSizeAdjusted(3) .* DecodeAspectRatio;
+CInit = LFSizeAdjusted([4,3])'/2 - 0.5;
 RecenterH = [1, 0, -CInit(1); 0, 1, -CInit(2); 0, 0, 1];
 
 for iHomography = 1:size(H,1)
