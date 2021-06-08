@@ -47,7 +47,7 @@
 %          .ExpectedCheckerSize : Number of checkerboard corners, as recognized by the automatic
 %                                 corner detector; edge corners are not recognized, so a standard
 %                                 8x8-square chess board yields 7x7 corners
-%     .ExpectedCheckerSpacing_m : Physical extents of the checkerboard, in meters
+%     .ExpectedCheckerSpacing_m : Physical extents of one checkerboard square, in meters
 %           .LensletBorderSize : Number of pixels to skip around the edges of lenslets; a low
 %                                 value of 1 or 0 is generally appropriate, as invalid pixels are
 %                                 automatically skipped
