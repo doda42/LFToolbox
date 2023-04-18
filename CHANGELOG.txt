@@ -3,6 +3,11 @@ Copyright (c) 2013-2020 Donald G. Dansereau
 
 Please refer to README.md and LFToolbox.pdf for installation instructions and further information.
 
+---v0.5.2----------------------------------------------------------------------
+Minor bug fixes
+
+- LFFiltShiftSum removed dependency on stats toolbox functions nansum etc, should be compatible with newer matlab versions, tested on 2022b
+
 ---v0.5.1----------------------------------------------------------------------
 Minor bug fixes and improvements
 

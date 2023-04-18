@@ -159,14 +159,14 @@ end
 
 switch( lower(FiltOptions.FlattenMethod) )
 	case 'sum'
-		ImgOut = squeeze(nansum(nansum(LF,1),2));
+		ImgOut = squeeze(sum(LF,[1,2], 'omitnan'));
 	case 'max'
-		ImgOut = squeeze(nanmax(nanmax(LF,[],1),[],2));
+		ImgOut = squeeze(max(LF, [], [1,2], 'omitnan'));
 	case 'min'
-		ImgOut = squeeze(nanmin(nanmin(LF,[],1),[],2));
+		ImgOut = squeeze(min(LF, [], [1,2], 'omitnan'));
 	case 'median'
 		t = reshape(LF(:,:,:,:,1:NColChans), [prod(LFSize(1:2)), NewLFSize(3:4), NColChans]);
-		ImgOut = squeeze(nanmedian(t));
+		ImgOut = squeeze(median(t, 'omitnan'));
 	otherwise
 		error('Unrecognized method');
 end
