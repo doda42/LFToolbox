@@ -45,6 +45,10 @@ Misc improvements:
 - LFWriteESLF: smarter jpeg file writing; reduces to 8-bit and strips weight channel as needed
 - LFFindFilesRecursive: ignore OS files like .DS_Store by default; control via SearchOptions.ExcludeFiles, see example in header comment.
 
+---v0.5.2----------------------------------------------------------------------
+Minor bug fixes
+
+- LFFiltShiftSum removed dependency on stats toolbox functions nansum etc, should be compatible with newer matlab versions, tested on 2022b
 
 ---v0.5.1----------------------------------------------------------------------
 Minor bug fixes and improvements
