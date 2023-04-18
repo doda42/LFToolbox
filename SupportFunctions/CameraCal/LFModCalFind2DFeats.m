@@ -120,7 +120,7 @@ for( iFile = 1:length(FileList) )
 				CurImg = rgb2gray(CurImg);
 				
 				[CurChecker, CheckBoardSize] = ...
-					feval( CalOptions.Fn_FeatureFinder, CurImg );
+					feval( CalOptions.Fn_FeatureFinder, CurImg );  %todo: fix interpretation to deal with NaNs coming from new detectCheckerboardPoints, or disable partial
 				
 				warning('off','vision:calibrate:boardShouldBeAsymmetric');  % display once (at most)
 				CurValid = (prod(CheckBoardSize-1) == prod(CalOptions.ExpectedCheckerSize));
