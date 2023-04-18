@@ -3,6 +3,11 @@ Copyright (c) 2013-2020 Donald G. Dansereau
 
 Please refer to README.md and LFToolbox.pdf for installation instructions and further information.
 
+---v0.5.3----------------------------------------------------------------------
+Minor bug fixes
+
+- LFCalFindCheckerCorners updated for newer versions of MATLAB's detectCheckerboardPoints by disabling partial detections
+
 ---v0.5.2----------------------------------------------------------------------
 Minor bug fixes
 

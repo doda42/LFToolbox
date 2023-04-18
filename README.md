@@ -18,6 +18,7 @@ Sample data:
 * Additional datasets and community links at [dgd.vision](http://dgd.vision/Tools/LFToolbox)
 
 ## What's New / Development Plan
+v0.5.3: bug fixes, see CHANGELOG.txt
 v0.5.2: bug fixes, see CHANGELOG.txt
 
 v0.5.1: bug fixes, documentation improvements, see CHANGELOG.txt
