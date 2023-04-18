@@ -163,7 +163,7 @@ for( iFile = 1:length(FileList) )
                 CurImg = squeeze(LF(TIdx, SIdx, :,:, 1:3));
                 CurImg = rgb2gray(CurImg);
                 
-                [CurCheckerCorners,CheckBoardSize] = detectCheckerboardPoints( CurImg );
+                [CurCheckerCorners,CheckBoardSize] = detectCheckerboardPoints( CurImg, 'PartialDetections',false );
                 warning('off','vision:calibrate:boardShouldBeAsymmetric');  % display once (at most)
                 
                 % Matlab's detectCheckerboardPoints sometimes expresses the grid in different orders, especially for
