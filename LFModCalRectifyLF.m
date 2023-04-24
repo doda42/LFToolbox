@@ -58,7 +58,7 @@ function [LF, RectOptions] = LFModCalRectifyLF( LF, CalInfo, RectOptions )
 RectOptions = LFDefaultField( 'RectOptions', 'Precision', 'single' );
 RectOptions = LFDefaultField( 'RectOptions', 'NInverse_Distortion_Iters', 3 );
 RectOptions = LFDefaultField( 'RectOptions', 'MaxUBlkSize', 32 );
-RectOptions = LFDefaultField( 'RectOptions', 'Fn_DefaultRectCamera', 'HD_DefaultRectCamera' );
+RectOptions = LFDefaultField( 'RectOptions', 'Fn_DefaultRectCamera', CalInfo.CalOptions.Fn_DefaultRectCamera );
 LFSize = size(LF);
 
 DefaultCameraModel = feval( RectOptions.Fn_DefaultRectCamera, LFSize, CalInfo, RectOptions );

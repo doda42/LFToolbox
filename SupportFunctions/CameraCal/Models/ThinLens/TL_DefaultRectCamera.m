@@ -27,14 +27,14 @@
 
 % Copyright (c) 2013-2020 Donald G. Dansereau
 
-function RectCamIntrinsicsH = LFModCalDefaultIntrinsics( LFSize, CalInfo )
+function DefaultRectCamera = TL_DefaultRectCamera( LFSize, CalInfo, RectOptions )
 
-RectCamIntrinsicsH = CalInfo.EstCamIntrinsicsH;
+RectCamIntrinsicsH = CalInfo.CameraModel.EstCamIntrinsicsH;
 
-ST_ST_Slope = mean([CalInfo.EstCamIntrinsicsH(1,1), CalInfo.EstCamIntrinsicsH(2,2)]);
-ST_UV_Slope = mean([CalInfo.EstCamIntrinsicsH(1,3), CalInfo.EstCamIntrinsicsH(2,4)]);
-UV_ST_Slope = mean([CalInfo.EstCamIntrinsicsH(3,1), CalInfo.EstCamIntrinsicsH(4,2)]);
-UV_UV_Slope = mean([CalInfo.EstCamIntrinsicsH(3,3), CalInfo.EstCamIntrinsicsH(4,4)]);
+ST_ST_Slope = mean([RectCamIntrinsicsH(1,1), RectCamIntrinsicsH(2,2)]);
+ST_UV_Slope = mean([RectCamIntrinsicsH(1,3), RectCamIntrinsicsH(2,4)]);
+UV_ST_Slope = mean([RectCamIntrinsicsH(3,1), RectCamIntrinsicsH(4,2)]);
+UV_UV_Slope = mean([RectCamIntrinsicsH(3,3), RectCamIntrinsicsH(4,4)]);
 
 RectCamIntrinsicsH(1,1) = ST_ST_Slope;
 RectCamIntrinsicsH(2,2) = ST_ST_Slope;
@@ -47,4 +47,9 @@ RectCamIntrinsicsH(3,3) = UV_UV_Slope;
 RectCamIntrinsicsH(4,4) = UV_UV_Slope;
 
 %---force s,t translation to CENTER---
-% RectCamIntrinsicsH = LFRecenterIntrinsics( RectCamIntrinsicsH, LFSize );
+RectCamIntrinsicsH = LFRecenterIntrinsics( RectCamIntrinsicsH, LFSize );
+
+%---Report result as a CameraModel---
+DefaultRectCamera.EstCamIntrinsicsH = RectCamIntrinsicsH;
+DefaultRectCamera.Distortion = [];
+

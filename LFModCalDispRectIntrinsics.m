@@ -58,7 +58,7 @@ LFSize = size(LF);
 
 RectOptions = LFDefaultField( 'RectOptions', 'Precision', 'single' );
 RectOptions = LFDefaultField( 'RectOptions', 'NInverse_Distortion_Iters', 3 );
-RectOptions = LFDefaultField( 'RectOptions', 'Fn_DefaultRectCamera', 'HD_DefaultRectCamera' );
+RectOptions = LFDefaultField( 'RectOptions', 'Fn_DefaultRectCamera', CalInfo.CalOptions.Fn_DefaultRectCamera );
 
 DefaultCameraModel = feval( RectOptions.Fn_DefaultRectCamera, LFSize, CalInfo, RectOptions );
 RectOptions = LFDefaultField( 'RectOptions', 'RectCameraModel', DefaultCameraModel );
@@ -81,7 +81,7 @@ InterpIdx = [ss(:)'; tt(:)'; uu(:)'; vv(:)'; ones(size(ss(:)'))];
 Ray = feval(CalInfo.CalOptions.Fn_ObsToRay, InterpIdx, RectOptions.RectCameraModel, CalInfo.CalOptions );
 
 %---Now find the actual observation that corresponds to the desired ray---
-InterpIdx = feval( CalInfo.CalOptions.Fn_RayToObs, Ray, CalInfo.CameraModel, RectOptions, CalInfo.CalOptions );
+InterpIdx = feval( CalInfo.CalOptions.Fn_RayToObs, Ray, CalInfo.CameraModel, CalInfo.CalOptions );
 InterpIdx = InterpIdx(1:4,:); % drop homogeneous coordinates
 
 InterpIdx = round(double(InterpIdx));

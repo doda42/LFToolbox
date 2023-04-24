@@ -43,33 +43,66 @@ CalibrationPath = ['Cal_', CurMethod];
 DecodeOptions.WhiteImageDatabasePath = WhiteImagesProcPath;
 
 % ---Process White Images---
-FileOptions.OutputPath = WhiteImagesProcPath;
+FileOptionsWhiteImg.OutputPath = WhiteImagesProcPath;
 InputPath = fullfile(WhiteImagesInPath, CameraSerial);
-LFUtilProcessWhiteImages( InputPath, FileOptions, GridModelOptions );
+LFUtilProcessWhiteImages( InputPath, FileOptionsWhiteImg, GridModelOptions );
 
 % ---Decode---
-FileOptions = [];
 CurInPath = fullfile( TopInPath, RawPath, CurDataset );
-FileOptions.OutputPrecision = 'uint8';
-FileOptions.SaveWeight = true;
-FileOptions.OutputFormat = 'mat';
-FileOptions.OutputPath = fullfile( TopInPath, DecodePath, CurDataset );
-LFUtilDecodeLytroFolder( CurInPath, FileOptions, DecodeOptions );
+FileOptionsDecode.OutputPrecision = 'uint8';
+FileOptionsDecode.SaveWeight = true;
+FileOptionsDecode.OutputFormat = 'mat';
+FileOptionsDecode.OutputPath = fullfile( TopInPath, DecodePath, CurDataset );
+
+CalInputImagesPath = FileOptionsDecode.OutputPath;
+FileOptionsCal.WorkingPath = fullfile( TopInPath, CalibrationPath, CurDataset );
+RectOptions.CalibrationDatabasePath = FileOptionsCal.WorkingPath;
+
+LFUtilDecodeLytroFolder( CurInPath, FileOptionsDecode, DecodeOptions, RectOptions );
 
 % ---Calibrate---
-CalInputImagesPath = FileOptions.OutputPath;
-CalFileOptions.WorkingPath = fullfile( TopInPath, CalibrationPath, CurDataset );
 tic
-LFUtilCalFeatureBased( CalInputImagesPath, CalOptions, CalFileOptions );
+LFUtilCalFeatureBased( CalInputImagesPath, CalOptions, FileOptionsCal );
 toc
 
 % ---Rectify---
-% todo : this decodes and rectifies all files in the set, could pick out one or two for testing
-RectOptions.CalibrationDatabasePath = CalFileOptions.WorkingPath;
+%---Rectify a single test file---
 LFUtilProcessCalibrations( RectOptions.CalibrationDatabasePath );
 DecodeOptions.OptionalTasks = 'ModRectify';
-FileOptions.OutputPath = fullfile( TopInPath, ['Rectified_', CurMethod], CurDataset );
-FileOptions.ForceRedo = true;
-sfigure(1);  
-LFUtilDecodeLytroFolder( CurInPath, FileOptions, DecodeOptions, RectOptions );
+FileOptionsRect = FileOptionsDecode; % copy over the file format info
+FileOptionsRect.OutputPath = fullfile( TopInPath, ['Rectified_', CurMethod], CurDataset );
+
+% Find first decoded (non-rectified) file and copy it into the dest folder
+% Copying this over avoids having to re-decode it
+TestFile = LFFindFilesRecursive( FileOptionsDecode.OutputPath, {'*.mat'} );
+TestFile = TestFile{1};
+system(sprintf('mkdir -p %s', FileOptionsRect.OutputPath))
+CpCmd = sprintf('cp %s %s', fullfile(FileOptionsDecode.OutputPath, TestFile), FileOptionsRect.OutputPath);
+system(CpCmd);
+
+% optionally take control over the rectified camera's intrinsics
+DemoIntrinsicsControl = true;
+if( DemoIntrinsicsControl )
+	load(fullfile(FileOptionsDecode.OutputPath, TestFile), 'LF', 'LFMetadata', 'RectOptions');
+
+	% visualise the default intrins sampling pattern
+	sfigure(10);
+	RectOptions = LFModCalDispRectIntrinsics( LF, LFMetadata, RectOptions ); 
+
+	% manipulate the default intrins to cover a larger range of u,v
+	RectOptions.RectCameraModel.EstCamIntrinsicsH(3,3) = 1.1 * RectOptions.RectCameraModel.EstCamIntrinsicsH(3,3);
+	RectOptions.RectCameraModel.EstCamIntrinsicsH(4,4) = 1.1 * RectOptions.RectCameraModel.EstCamIntrinsicsH(4,4);
+	RectOptions.RectCameraModel.EstCamIntrinsicsH = ...
+		LFRecenterIntrinsics( RectOptions.RectCameraModel.EstCamIntrinsicsH, size(LF) );
+
+	% visualise the manipulated intrins sampling pattern
+	sfigure(11);
+	LFModCalDispRectIntrinsics( LF, LFMetadata, RectOptions );
+end
+
+% Now find the corresponding (first) raw file and decode it with rectify turned on
+TestFile = LFFindFilesRecursive( CurInPath, {'*.lfr', '*.LFR'} );
+TestFile = TestFile{1};
+sfigure(3);
+LFUtilDecodeLytroFolder( fullfile(CurInPath, TestFile), FileOptionsRect, DecodeOptions, RectOptions );
 

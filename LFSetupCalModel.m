@@ -14,6 +14,7 @@ switch( CameraModel )
 		CalOptions.Fn_OptParamsToModel = @TL_OptParamsToModel;
 		CalOptions.Fn_ObsToRay = @TL_ObsToRay;
 		CalOptions.Fn_RayToObs = @TL_RayToObs;
+		CalOptions.Fn_DefaultRectCamera = @TL_DefaultRectCamera;
 
 	case 'HDirect'
 		fprintf('Using direct intrinsic matrix H camera model\n');
@@ -23,6 +24,7 @@ switch( CameraModel )
 		CalOptions.Fn_OptParamsToModel = @HD_OptParamsToModel;
 		CalOptions.Fn_ObsToRay = @HD_ObsToRay;
 		CalOptions.Fn_RayToObs = @HD_RayToObs;
+		CalOptions.Fn_DefaultRectCamera = @HD_DefaultRectCamera;
 
 	otherwise
 		error('Unrecognised camera model name');
