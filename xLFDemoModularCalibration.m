@@ -18,7 +18,7 @@ CalOptions = [];
 RectOptions = [];
 
 % Set up common cal options
-CalOptions.ForceRedoInit = true;
+CalOptions.ForceRedoInit = false;
 CalOptions.ExpectedCheckerSize =  [12,7];
 CalOptions.ExpectedCheckerSpacing_m =  [20,20]*1e-3;
 

@@ -1,4 +1,5 @@
 % todo[doc]
+% todo : turn this into a per-model function, e.g. TL_SetupCal, HD_SetupCal, etc for extensibility
 
 function CalOptions = LFSetupCalModel( CameraModel, DistortionModel, CalOptions )
 
