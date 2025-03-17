@@ -526,10 +526,8 @@ end
 %---Compare structs---
 a = CalInfo.LensletGridModel;
 b = LensletGridModel;
-a.Orientation = strcmp(a.Orientation, 'horz');
-b.Orientation = strcmp(b.Orientation, 'horz');
-FractionalDiff = abs( (struct2array(a) - struct2array(b)) ./ struct2array(a) );
-if( ~all( FractionalDiff < RectOptions.MaxGridModelDiff ) )
+StructsMatch = CompareStructs( a, b, RectOptions.MaxGridModelDiff );
+if( ~StructsMatch )
 	warning(['Lenslet grid models differ -- ideally the same grid model and white image are ' ...
 		' used to decode during calibration and rectification']);
 end
@@ -555,10 +553,8 @@ end
 %---Compare structs---
 a = CalInfo.LFMetadata.LensletGridModel;
 b = LensletGridModel;
-a.Orientation = strcmp(a.Orientation, 'horz');
-b.Orientation = strcmp(b.Orientation, 'horz');
-FractionalDiff = abs( (struct2array(a) - struct2array(b)) ./ struct2array(a) );
-if( ~all( FractionalDiff < RectOptions.MaxGridModelDiff ) )
+StructsMatch = CompareStructs( a, b, RectOptions.MaxGridModelDiff );
+if( ~StructsMatch )
 	warning(['Lenslet grid models differ -- ideally the same grid model and white image are ' ...
 		' used to decode during calibration and rectification']);
 end
@@ -568,4 +564,19 @@ end
 Success = true;
 end
 
+%---Fast struct compare---
+% This incomplete in that it only compares numerical entries
+function StructsMatch = CompareStructs( a, b, Tolerance )
+StructsMatch = false;
+a = struct2cell(a);
+b = struct2cell(b);
+a = a(cellfun(@isnumeric, a));
+b = b(cellfun(@isnumeric, b));
+a = [a{:}];
+b = [b{:}];
+if( size(a) == size(b) )
+	FractionalDiff = abs( (a - b) ./ a );
+	StructsMatch = all( FractionalDiff < Tolerance );
+end
+end
 
