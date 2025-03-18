@@ -3,6 +3,11 @@ Copyright (c) 2013-2020 Donald G. Dansereau
 
 Please refer to README.md and LFToolbox.pdf for installation instructions and further information.
 
+---Pending Release-------------------------------------------------------------
+Minor bug fixes
+
+- LFUtilUnpackLytroArchive forced output format for correct unpacking of Lytro archives
+
 ---v0.5.3----------------------------------------------------------------------
 Minor bug fixes
 
