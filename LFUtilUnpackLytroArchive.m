@@ -93,12 +93,13 @@ for( VolumeIdx = 1:length(AllVolumes) )
                 TOC = LFReadMetadata( CurSection.Data );
             else
                 assert( exist('TOC','var')==1, 'Expected to find table of contents at top of file' );
+                assert( all( CurSection.SectHeader == LFPConsts.SectHeaderLFC ), 'Expected LFC section, header error' );
                 MatchingSectIdx = find( strcmp( CurSection.Sha1, {TOC.files.dataRef} ) );
                 CurFname = TOC.files(MatchingSectIdx).name;
                 CurFname = strrep( CurFname, 'C:\', '' );
                 CurFname = strrep( CurFname, '\', '__' );
                 OutFile = fopen( fullfile(OutPath, CurFname), 'wb' );
-                fwrite( OutFile, CurSection.Data );
+                fwrite( OutFile, uint8(CurSection.Data), 'uint8' );
                 fclose(OutFile);
             end
         end
@@ -138,7 +139,7 @@ while( 1 )
     end
 end
 if ~feof(InFile)
-    fseek( InFile, -1, 'cof'); % rewind one byte
+    fseek( InFile, -1, 'cof' ); % rewind one byte
 end
 
 end
