@@ -31,6 +31,17 @@ Misc improvements:
 - LFWriteESLF: smarter jpeg file writing; reduces to 8-bit and strips weight channel as needed
 - LFFindFilesRecursive: ignore OS files like .DS_Store by default; control via SearchOptions.ExcludeFiles, see example in header comment.
 
+
+---Pending Release-------------------------------------------------------------
+Minor bug fixes
+
+- LFUtilUnpackLytroArchive forced output format for correct unpacking of Lytro archives
+
+---v0.5.3----------------------------------------------------------------------
+Minor bug fixes
+
+- LFCalFindCheckerCorners updated for newer versions of MATLAB's detectCheckerboardPoints by disabling partial detections
+
 ---v0.5.2----------------------------------------------------------------------
 Minor bug fixes
 
