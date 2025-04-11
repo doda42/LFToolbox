@@ -1,3 +1,7 @@
+% todo[doc]
+
+% Copyright (c) 2020 Mikael Le Pendu
+
 function [ val ] = LFWeightedInterp(A, W, ImCoords, Belong, Centers)
 
 %Belong : contains, for each pixel of the input image, the index of the

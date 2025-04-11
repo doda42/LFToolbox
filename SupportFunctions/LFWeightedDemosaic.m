@@ -1,3 +1,7 @@
+% todo[doc]
+
+% Copyright (c) 2020 Mikael Le Pendu
+
 function [ Raw ] = LFWeightedDemosaic( Raw1C, Weights, Belonging, DecodeOptions )
 %LFWEIGHTEDDEMOSAIC Perform a white lenslet image guided demosaicing on
 %a raw lenslet image

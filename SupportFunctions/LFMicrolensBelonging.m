@@ -1,3 +1,7 @@
+% todo[doc]
+
+% Copyright (c) 2020 Mikael Le Pendu
+
 function [ Belonging, Centers, Dist ] = LFMicrolensBelonging(M,N, LensletGridModel)
 %LFMICROLENSBELONGING
 
