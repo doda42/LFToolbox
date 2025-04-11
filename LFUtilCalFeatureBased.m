@@ -103,7 +103,7 @@ CalOptions = LFDefaultField( 'CalOptions', 'ForceRedoFeatFinding', false );
 CalOptions = LFDefaultField( 'CalOptions', 'ForceRedoInit', false );
 CalOptions = LFDefaultField( 'CalOptions', 'ShowDisplay', true );
 CalOptions = LFDefaultField( 'CalOptions', 'CalInfoFname', 'CalInfo.json' );
-CalOptions = LFDefaultField( 'CalOptions', 'NumIterations', 2 );
+CalOptions = LFDefaultField( 'CalOptions', 'NumIterations', 1 );
 
 CalOptions = LFDefaultField( 'CalOptions', 'Fn_CalInit', 'HD_CalInit' );
 
