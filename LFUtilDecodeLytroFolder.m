@@ -230,7 +230,12 @@ end
 %---Crawl folder structure locating raw lenslet images---
 DefaultFileSpec = {'*.lfr', '*.lfp', '*.LFR', '*.raw'}; % gets overriden below, if a file spec is provided
 DefaultPath = 'Images';
-% fprintf('Input from %s\n', InputPath);  % todo[bug]: incompatible with cell array syntax
+if iscell(InputPath)
+	PrintPath = strjoin(InputPath, ', ');
+else
+	PrintPath = InputPath;
+end
+fprintf('Input path: %s\n', PrintPath);
 
 % Find input files
 [FileList, BasePath] = LFFindFilesRecursive( InputPath, DefaultFileSpec, DefaultPath );
