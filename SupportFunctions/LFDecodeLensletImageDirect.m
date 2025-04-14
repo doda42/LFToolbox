@@ -203,7 +203,7 @@ switch DecodeOptions.ClipMode
     case 'hard'
         LensletImage = min(1, max(0, LensletImage));
     case 'soft'
-        LensletImage = max(0, SoftClip(LensletImage, SoftClipSharpness));
+        LensletImage = max(0, SoftClip(LensletImage, DecodeOptions.SoftClipSharpness));
     case 'none'
     otherwise
         error(['Unknown ClipMode ''' DecodeOptions.ClipMode '''. Valid values are ''none'', ''soft'', ''hard''.']);
