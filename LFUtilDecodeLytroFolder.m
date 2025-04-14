@@ -55,9 +55,10 @@
 %
 % Inputs -- all are optional, see code below for default values :
 %
-%     InputPath :  Path to folder containing light fields, or to a specific light field, optionally including one or
-%     more wildcard filename specifications. In case wildcards are used, this searches sub-folders recursively. See
-%     LFFindFilesRecursive.m for more information and examples of how InputPath is interpreted.
+%     InputPath : Path to folder containing light fields, or to a specific light field, optionally 
+%                 including one or more wildcard filename specifications. In case wildcards are used, 
+%                 this searches sub-folders recursively. See LFFindFilesRecursive.m for more 
+%                 information and examples of how InputPath is interpreted.
 %
 %     FileOptions : struct controlling file naming and saving
 %               .OutputPath : By default files are saved alongside input files; specifying an output
@@ -78,42 +79,52 @@
 %        .ThumbFnamePattern : As with SaveFnamePattern, defines the name of the output thumbnail
 %                             image
 %
-%     DecodeOptions : struct controlling the decoding process, see LFDecodeLensletImageDirect for more info
-%                    .OptionalTasks : Cell array containing any combination of 'ColourCorrect' and
-%                                     'Rectify'; an empty array "{}" means no additional tasks are
+%     DecodeOptions : struct controlling the decoding process, see LFDecodeLensletImageDirect for 
+%                     more info
+%                    .OptionalTasks : Cell array containing any combination of 'ColourCorrect' and 
+%                                     'Rectify'; an empty array "{}" means no additional tasks are 
 %                                     requested; case sensitive
-%         .LensletImageFnamePattern : Pattern used to locate input files -- the pattern %s stands in
-%                                     for the base filename
+%         .LensletImageFnamePattern : Pattern used to locate input files -- the pattern %s stands in for the base
+%                                     filename
 %                 .ColourHistThresh : Threshold used by LFHistEqualize in optional colour correction
-%           .WhiteImageDatabasePath : Path to the white images database, as created by
-%                                     LFUtilProcessWhiteImages. Default is relative path 'Cameras'.
-%                                     This can include the filename or only specify a path. The
-%                                     toolbox will search folders recursively for a file with the
-%                                     name WhiteImageDatabaseFname. If exactly one exists in the
-%                                     specified folder structure, it will be used.
+%           .WhiteImageDatabasePath : Path to the white images database, as created by LFUtilProcessWhiteImages.
+%                                     Default is relative path 'Cameras'. This can include the filename or only
+%                                     specify a path. The toolbox will search folders recursively for a file with
+%                                     the name WhiteImageDatabaseFname. If exactly one exists in the specified
+%                                     folder structure, it will be used.
 %          .WhiteImageDatabaseFname : Filename of the white image database, default WhiteImageDatabase.json
 %                          .DoDehex : Controls whether hexagonal sampling is converted to rectangular, default true
 %                       .DoSquareST : Controls whether s,t dimensions are resampled to square pixels, default true
-%                     .ResampMethod : 'fast'(default)
-%                                     'triangulation'
-%                                     'barycentric': slower but generates larger images by a factor 3*sqrt(3)/2.
-%                                     'none': No interpolation -> Generates many incomplete views with a weight map per RGB component (zero weight indicate missing pixel).
-%                      .LevelLimits : a two-element vector defining the black and white levels
-%                        .Precision : 'single'(default) or 'double'
-%                 .WeightedDemosaic : Do White Image guided demosaicing, default=false.
-%                   .WeightedInterp : Do White Image guided interpolations for lenslet image rotation/translation/scaling operations, default=false.
+%                     .ResampMethod : 'fast' (default), 'triangulation', 'barycentric' (slower but generates larger
+%                                     images by a factor 3*sqrt(3)/2), or 'none' (no interpolation, generates many
+%                                     incomplete views with a weight map per RGB component; zero weight indicates
+%                                     missing pixel)
+%                      .LevelLimits : A two-element vector defining the black and white levels
+%                        .Precision : 'single' (default) or 'double'
+%                 .WeightedDemosaic : Perform white image guided demosaicing, default false
+%                   .WeightedInterp : Perform white image guided interpolations for lenslet image rotation/
+%                                     translation/scaling operations, default false
 %              .ColourCompatibility : Keep same colours/exposure as versions v0.4 and v0.5 of the toolbox, default true
-%               .NormaliseWIColours : Normalise sensor responses of Red and Blue pixels realtively to Green pixels in the White Image (prevents interference betweeen devignetting and white balance settings).
-%                                     The option is true by default. But it is always desactivated when ColourCompatibility is true, to avoid changing colours compared to versions v0.4 and v0.5.
-%              .NormaliseWIExposure : Normalises White image exposure to have value 1 at microlens centers (prevents interference between devignetting and exposure settings).
-%                                     The option is true by default. But it is always desactivated when ColourCompatibility is true, to avoid changing exposure compared to versions v0.4 and v0.5.
-%                .EarlyWhiteBalance : Perform white balance directly on the RAW data, before demosaicing, default = false.
-%                 .CorrectSaturated : Process saturated pixels on the sensor so that they appear white after white balance, default = false.
-%                         .ClipMode : Clipping for highlights : 'hard', 'soft' or 'none'. The default is 'soft' if CorrectSaturated is true, and 'hard' otherwise.
-%                                     ClipMode='none' prevents clipping of highlights. To retain values above the saturation level in the output integer format,
-%                                     the light field data is divided by its maximum value before conversion to integers, and the maximum value is saved in metadata as MaxLum. todo[doc]: describe soft
-%                  .HotPixelCorrect : Performs hot pixel correction using a list of hot pixels detected on the sensor (default=false). % todo[doc] explain when the required list of pixels is present
-%
+%               .NormaliseWIColours : Normalise sensor responses of red and blue pixels relative to green pixels in
+%                                     the white image. Prevents interference between devignetting and white balance
+%                                     settings. Default is true, but always deactivated when ColourCompatibility is
+%                                     true to avoid changing colours compared to versions v0.4 and v0.5.
+%              .NormaliseWIExposure : Normalises white image exposure to have value 1 at microlens centers (prevents
+%                                     interference between devignetting and exposure settings). Default is true, but
+%                                     always deactivated when ColourCompatibility is true to avoid changing exposure
+%                                     compared to versions v0.4 and v0.5.
+%                .EarlyWhiteBalance : Perform white balance directly on the RAW data, before demosaicing, default false
+%                 .CorrectSaturated : Process saturated pixels on the sensor so that they appear white after white
+%                                     balance, default false
+%                         .ClipMode : Clipping for highlights: 'hard', 'soft', or 'none'. Default is 'soft' if
+%                                     CorrectSaturated is true, and 'hard' otherwise. ClipMode='none' prevents clipping
+%                                     of highlights. To retain values above the saturation level in the output integer
+%                                     format, the light field data is divided by its maximum value before conversion
+%                                     to integers, and the maximum value is saved in metadata as MaxLum. todo[doc]: 
+%                                     describe soft
+%                  .HotPixelCorrect : Performs hot pixel correction using a list of hot pixels detected on the sensor,
+%                                     default false. Hot pixel files are found in the same folder as Lytro white images.
+% 
 %     RectOptions : struct controlling the optional rectification process
 %         .CalibrationDatabasePath  : Path to the calibration file database, as created by
 %                                     LFUtilProcessCalibrations; Default takes vale of
@@ -168,6 +179,9 @@
 % LFSelectFromDatabase
 
 % Copyright (c) 2013-2020 Donald G. Dansereau
+%
+% Added advanced colour correction features
+% 2020, Mikael Le Pendu
 
 function LFUtilDecodeLytroFolder( InputPath, FileOptions, DecodeOptions, RectOptions )
 

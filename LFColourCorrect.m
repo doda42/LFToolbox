@@ -1,8 +1,8 @@
 % LFColourCorrect - applies a colour correction matrix, balance vector, and gamma, called by LFUtilDecodeLytroFolder
 %
 % Usage: 
-%     LF = LFColourCorrect( LF, ColMatrix, ColBalance, Gamma )  % todo[doc]: update doc with
-%     SaturationLevel, doClip
+%     LF = LFColourCorrect( LF, ColMatrix, ColBalance, Gamma )
+%     LF = LFColourCorrect( LF, ColMatrix, ColBalance, Gamma, SaturationLevel, doClip )
 % 
 % This implementation deals with saturated input pixels by aggressively saturating output pixels.
 %
@@ -21,6 +21,11 @@
 %    ColBalance : 3-element vector containing a multiplicative colour balance.
 % 
 %    Gamma : rudimentary gamma correction is applied of the form LF = LF.^Gamma.
+% 
+%    SaturationLevel : colours are always normalised to this level, and also clipped to this level 
+%                      if doClip is true, default 1.0.
+% 
+%    doClip : set to true to clip values to max SaturationLevel, default false.
 %
 % Outputs : 
 % 
@@ -31,6 +36,9 @@
 % See also: LFHistEqualize, LFUtilDecodeLytroFolder
 
 % Copyright (c) 2013-2020 Donald G. Dansereau
+% 
+% Colour correction improvements including SaturationLevel, doClip
+% 2020, Mikael Le Pendu
 
 function LF = LFColourCorrect(LF, ColMatrix, ColBalance, Gamma, SaturationLevel, doClip)
 
