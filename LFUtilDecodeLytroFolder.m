@@ -317,19 +317,6 @@ for( iFile = 1:length(FileList) )
 		Thumb = DispThumb(LF, CurFname, CompletedTasks);
 	end
 	
-	%---Optionally rectify---
-	if( ismember( 'Rectify', TasksRemaining ) )
-		RectOptions.CalibrationDatabasePath = ...
-			LFLocateDatabaseFile( RectOptions.CalibrationDatabasePath, RectOptions.CalibrationDatabaseFname );
-		[LF, RectOptions, Success] = Rectify( LF, LFMetadata, DecodeOptions, RectOptions, LensletGridModel );
-		if( Success )
-			CompletedTasks = [CompletedTasks, 'Rectify'];
-			SaveRequired = true;
-		end
-		%---Display thumbnail---
-		Thumb = DispThumb(LF, CurFname, CompletedTasks);
-	end
-	
 	%---Optionally apply modular cal rectification---
 	if( ismember( 'ModRectify', TasksRemaining ) )
 		RectOptions.CalibrationDatabasePath = ...
@@ -527,33 +514,6 @@ LF = LFColourCorrect( LF, ColMatrix, ColBalance, DecodeOptions.Gamma, Saturation
 %---Put the weight channel back---
 LF(:,:,:,:,DecodeOptions.NColChans+1:DecodeOptions.NColChans+DecodeOptions.NWeightChans) = LFWeight;
 
-end
-
-%---------------------------------------------------------------------------------------------------
-function [LF, RectOptions, Success] = Rectify( LF, LFMetadata, DecodeOptions, RectOptions, LensletGridModel )
-Success = false;
-fprintf('Applying rectification... ');
-%---Load cal info---
-fprintf('Selecting calibration...\n');
-
-[CalInfo, RectOptions] = LFFindCalInfo( LFMetadata, RectOptions );
-if( isempty( CalInfo ) )
-	warning('No suitable calibration found, skipping');
-	return;
-end
-
-%---Compare structs---
-a = CalInfo.LensletGridModel;
-b = LensletGridModel;
-StructsMatch = CompareStructs( a, b, RectOptions.MaxGridModelDiff );
-if( ~StructsMatch )
-	warning(['Lenslet grid models differ -- ideally the same grid model and white image are ' ...
-		' used to decode during calibration and rectification']);
-end
-
-%---Perform rectification---
-[LF, RectOptions] = LFCalRectifyLF( LF, CalInfo, RectOptions );
-Success = true;
 end
 
 %---------------------------------------------------------------------------------------------------
