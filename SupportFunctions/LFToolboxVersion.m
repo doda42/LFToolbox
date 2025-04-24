@@ -3,4 +3,4 @@
 % Copyright (c) 2013-2020 Donald G. Dansereau
 
 function VersionStr = LFToolboxVersion
-VersionStr = 'development branch for modular calibration';
+VersionStr = 'development branch for v0.6';
