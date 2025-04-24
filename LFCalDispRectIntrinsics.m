@@ -1,3 +1,4 @@
+% todo[doc]
 % LFCalDispRectIntrinsics - Visualize sampling pattern resulting from a prescribed intrinsic matrix
 %
 % Usage: 
@@ -56,24 +57,34 @@ end
 LFSize = size(LF);
 
 RectOptions = LFDefaultField( 'RectOptions', 'Precision', 'single' );
-RectOptions = LFDefaultField( 'RectOptions', 'NInverse_Distortion_Iters', 2 );
-RectOptions = LFDefaultField( 'RectOptions', 'RectCamIntrinsicsH', LFDefaultIntrinsics( LFSize, CalInfo ) );
+RectOptions = LFDefaultField( 'RectOptions', 'NInverse_Distortion_Iters', 3 );
+RectOptions = LFDefaultField( 'RectOptions', 'Fn_DefaultRectCamera', CalInfo.CalOptions.Fn_DefaultRectCamera );
+
+DefaultCameraModel = feval( RectOptions.Fn_DefaultRectCamera, LFSize, CalInfo, RectOptions );
+RectOptions = LFDefaultField( 'RectOptions', 'RectCameraModel', DefaultCameraModel );
 
 if( isempty( CalInfo ) )
     warning('No suitable calibration found, skipping');
     return;
 end
 
+% todo[refactor] pull out code repeated with LFCalRectifyLF
 %--- visualize image utilization---
-t_in=cast(1:LFSize(1), 'uint16');
-s_in=cast(1:LFSize(2), 'uint16');
-v_in=cast(1:10:LFSize(3), 'uint16');
-u_in=cast(1:10:LFSize(4), 'uint16');
+t_in=cast(1:LFSize(1), RectOptions.Precision);
+s_in=cast(1:LFSize(2), RectOptions.Precision);
+v_in=cast(1:10:LFSize(3), RectOptions.Precision);
+u_in=cast(1:10:LFSize(4), RectOptions.Precision);
 [tt,ss,vv,uu] = ndgrid(t_in,s_in,v_in,u_in);
 InterpIdx = [ss(:)'; tt(:)'; uu(:)'; vv(:)'; ones(size(ss(:)'))];
-InterpIdx = LFMapRectifiedToMeasured( InterpIdx, CalInfo, RectOptions );
-InterpIdx = round(double(InterpIdx));
 
+%---Convert the index of the desired ray to a ray representation using the desired camera's model---
+Ray = feval(CalInfo.CalOptions.Fn_ObsToRay, InterpIdx, RectOptions.RectCameraModel, CalInfo.CalOptions );
+
+%---Now find the actual observation that corresponds to the desired ray---
+InterpIdx = feval( CalInfo.CalOptions.Fn_RayToObs, Ray, CalInfo.CameraModel, CalInfo.CalOptions );
+InterpIdx = InterpIdx(1:4,:); % drop homogeneous coordinates
+
+InterpIdx = round(double(InterpIdx));
 PaintVal = cast(double(max(LF(:))).*PaintColour, 'like', LF);
 LF = 0.7*LF;
 

@@ -45,6 +45,7 @@
 %          [Optional] EarlyWhiteBalance : Perform white balance directly on the RAW data, before demosaicing (default = false).
 %          [Optional] CorrectSaturated : Process saturated pixels on the sensor so that they appear white after white balance (default = false).
 %          [Optional] ClipMode : 'hard', 'soft', 'none'. The default is 'soft' if CorrectSaturated is true, 'hard' otherwise.
+%          [Optional] SoftClipSharpness : default 7, controls sharpness of clipping in soft clip mode.
 %          [Optional] HotPixelCorrect : Performs hot pixel correction using a list of hot pixels detected on the sensor (default=false).
 %                                       If the option is active, the vertical and horizontal indices of the hot pixels must be defined temporarily in DecodeOptions.HotPixelsX and DecodeOptions.HotPixelsY (these fields are removed after the hot pixel correction is done).
 %
@@ -68,6 +69,9 @@
 % See also:  LFLytroDecodeImage, LFUtilDecodeLytroFolder, LFDecodeLensletImageSimple
 
 % Copyright (c) 2013-2020 Donald G. Dansereau
+%
+% Added advanced colour correction features
+% 2020, Mikael Le Pendu
 
 function [LF, LFWeight, DecodeOptions, DebayerLensletImage] = ...
     LFDecodeLensletImageDirect( LensletImage, WhiteImage, LensletGridModel, DecodeOptions )
@@ -92,10 +96,12 @@ else
 end
 DecodeOptions = LFDefaultField( 'DecodeOptions', 'ClipMode', DefaultClipMode );% 'none', 'soft', 'hard'
 if(strcmp(DecodeOptions.ResampMethod,'none') || strcmp(DecodeOptions.ResampMethod,'none'))
-    %Weigthed interpolation not compatible with the ResampMode modes 'barycentric' and 'none'
+    % Weigthed interpolation not compatible with the ResampMode modes 'barycentric' and 'none'
     DecodeOptions.WeightedInterp=false;
     fprintf('ResampMethod not compatible with WeightedInterp, disabling\n');
 end
+DecodeOptions = LFDefaultField( 'DecodeOptions', 'SoftClipSharpness', 7 );
+
 
 %---Rescale image values, remove black level---
 DecodeOptions.LevelLimits = cast(DecodeOptions.LevelLimits, DecodeOptions.Precision);
@@ -197,7 +203,7 @@ switch DecodeOptions.ClipMode
     case 'hard'
         LensletImage = min(1, max(0, LensletImage));
     case 'soft'
-        LensletImage = max(0, softClip(LensletImage,7));
+        LensletImage = max(0, SoftClip(LensletImage, DecodeOptions.SoftClipSharpness));
     case 'none'
     otherwise
         error(['Unknown ClipMode ''' DecodeOptions.ClipMode '''. Valid values are ''none'', ''soft'', ''hard''.']);
@@ -626,8 +632,8 @@ end
 
 
 %------------------------------------------------------------------------------------------------------
-%Soft clipping function (high value of R -> hard clipping)
-function O = softClip(I,R)
+% Soft clipping function (high value of R -> hard clipping)
+function O = SoftClip(I,R)
 b = exp(R);
 O = log((1+b)./(1+b*exp(-R*I)))./log(1+b);
 end

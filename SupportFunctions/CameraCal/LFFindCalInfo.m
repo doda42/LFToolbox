@@ -47,8 +47,8 @@ assert( exist(PathToCalFile, 'file')~=0, ...
 	'Check / rebuild white image database.'], ...
 	PathToCalFile, RectOptions.CalibrationDatabasePath );
 
-CalInfo = LFReadMetadata( PathToCalFile );
 fprintf('Loading %s\n', RectOptions.CalInfoFname);
+CalInfo = LFReadMetadata( PathToCalFile );
 
 %---Check that the decode options and calibration info are a good match---
 fprintf('\nCalibration / LF Picture (ideally these match exactly):\n');

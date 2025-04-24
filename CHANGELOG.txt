@@ -3,14 +3,20 @@ Copyright (c) 2013-2020 Donald G. Dansereau
 
 Please refer to README.md and LFToolbox.pdf for installation instructions and further information.
 
-
 ---v0.6----------------------------------------------------------------------
+Contributions from Doug Palmer, Mikael Le Pendu, Pierre David  todo[doc] list all, contributors.txt?
 
 Reverse compatibility:
-- White image and calibration database file formats changed, re-run LFUtilProcessWhiteImages and LFUtilProcessCalibrations; grid analysis and calibrations don't need to re-run, only the database file needs to be re-generated.
+- Extensive changes to calibration functions and file formats as required by change to modular approach, previous calibrations should be re-run including white image and calibration processing, see LFDemoCalibration
+- CalOptions.MinSubimageWeight is now a float in range 0-1, default behaviour is unchanged, if specifying your own value it must be scaled down by 2^16 compared with previous toolbox versions.
+- LFCalDispEstPoses minor argument change to accept FileOptions struct
 - LFUtilDecodeLytroFolder RectOptions.CalibrationDatabaseFname is now split into CalibrationDatabaseFname and CalibrationDatabasePath; default behaviour remains unchanged.
 
 New features:
+- Calibration: added support for "ThinLens" camera model suitable to a wider range of cameras including the Illum
+- Calibration: modular approach allows integration of new camera models without modifying the toolbox
+- CalOptions.LFFnamePattern now accepts a cell array, and the default changed to look for .mat and .eslf.png files. Input files must include a weight channel.
+- LFReadESLF now loads accompanying .json metatadata files, adjusts default LensletSize_pix with the metadata, and returns the metadata as an output argument.
 - New decode output options OutputPrecision, OutputFormat, ImwriteOptions, and SaveWeight; saving decoded LFs to 8-bit eslf.png files reduces file size significantly
 - Using .json file format for white image and calibration file databases
 - Added FileOptions.OutputPath parameter to allow LFUtilProcessWhiteImages, LFUtilDecodeLytroFolder, LFUtilCalLensletCam, and LFUtilProcessCalibrations to save in specified output folders, leaving input folders untouched
@@ -27,10 +33,10 @@ Decoding improvements:
 - New ResampMethod option 'barycentric' from the ICCV2013 paper of Cho et al, "Modeling the calibration pipeline of the Lytro camera for high quality light-field image reconstruction".
 - New ResampMethod option 'none' from ICCP2020 paper of Le Pendu and Smolic, "High Resolution Light Field Recovery with Fourier Disparity Layer Completion, Demosaicing, and Super-Resolution".
 
-Misc improvements:
+Performance and behaaviour changes :
+- Faster / smarter display during calibration checkerboard finding; faster calibration
 - LFWriteESLF: smarter jpeg file writing; reduces to 8-bit and strips weight channel as needed
 - LFFindFilesRecursive: ignore OS files like .DS_Store by default; control via SearchOptions.ExcludeFiles, see example in header comment.
-
 
 ---Pending Release-------------------------------------------------------------
 Minor bug fixes
@@ -76,7 +82,7 @@ Bug Fixes :
 - LFMatlabPathSetup.m: compatible with deployed code
 
 Performance and behaviour changes :
-- Decoding: improved alignment with rotated lenslet grids, impacts decoding and calibration; white should be re-processed
+- Decoding: improved alignment with rotated lenslet grids, impacts decoding and calibration; white images should be re-processed
 - Decoding Lytro images is up to 2x faster, excluding saving to disk
 - LFDisp* functions now display in the active figure window, allowing multiple open interactive displays; scale changes work without closing the window
 - LFBuildLensletGridModel: added CropOffset to control region of interest; more informative debug display; 

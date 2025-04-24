@@ -32,6 +32,7 @@
 %         .WhiteProcDataFnameExtension : Grid model from LFUtilProcessWhiteImages, default 'grid.json'
 %          .WhiteRawDataFnameExtension : White image file extension, default '.RAW'
 %              .WhiteImageDatabasePath : White image database, default 'Cameras/WhiteImageDatabase.json'
+%                           .Fn_Decode : function that does the decoding, default LFDecodeLensletImageDirect
 % 
 %            For compatibility with extracted .raw and .json files:
 %                .MetadataFnamePattern : JSON file containing light field metadata, default '_metadata.json'
@@ -74,6 +75,7 @@ DecodeOptions = LFDefaultField( 'DecodeOptions', 'WhiteImageDatabasePath', fullf
 DecodeOptions = LFDefaultField( 'DecodeOptions', 'MetadataFnamePattern', '_metadata.json' );
 DecodeOptions = LFDefaultField( 'DecodeOptions', 'SerialdataFnamePattern', '_private_metadata.json' );
 DecodeOptions = LFDefaultField( 'DecodeOptions', 'HotPixelCorrect', false );
+DecodeOptions = LFDefaultField( 'DecodeOptions', 'Fn_Decode', 'LFDecodeLensletImageDirect' );
 
 %---
 LF = [];
@@ -239,7 +241,10 @@ WhiteImage = LFReadRaw( WhiteRawFname, BitPacking );
 
 %---Decode---
 fprintf('Decoding lenslet image :');
-[LF, LFWeight, DecodeOptions, DebayerLensletImage] = LFDecodeLensletImageDirect( LensletImage, WhiteImage, LensletGridModel, DecodeOptions );
+
+[LF, LFWeight, DecodeOptions, DebayerLensletImage] = ...
+    feval( DecodeOptions.Fn_Decode, LensletImage, WhiteImage, LensletGridModel, DecodeOptions );
+
 LF(:,:,:,:,end+1:end+DecodeOptions.NWeightChans) = LFWeight;
 DecodeOptions.LFSize = size(LF);
 

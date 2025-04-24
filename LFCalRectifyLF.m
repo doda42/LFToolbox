@@ -1,3 +1,4 @@
+% todo[doc]
 % LFCalRectifyLF - rectify a light field using a calibrated camera model, called as part of LFUtilDecodeLytroFolder
 %
 % Usage:
@@ -55,10 +56,13 @@ function [LF, RectOptions] = LFCalRectifyLF( LF, CalInfo, RectOptions )
 
 %---Defaults---
 RectOptions = LFDefaultField( 'RectOptions', 'Precision', 'single' );
-RectOptions = LFDefaultField( 'RectOptions', 'NInverse_Distortion_Iters', 2 );
+RectOptions = LFDefaultField( 'RectOptions', 'NInverse_Distortion_Iters', 3 );
 RectOptions = LFDefaultField( 'RectOptions', 'MaxUBlkSize', 32 );
+RectOptions = LFDefaultField( 'RectOptions', 'Fn_DefaultRectCamera', CalInfo.CalOptions.Fn_DefaultRectCamera );
 LFSize = size(LF);
-RectOptions = LFDefaultField( 'RectOptions', 'RectCamIntrinsicsH', LFDefaultIntrinsics( LFSize, CalInfo ) );
+
+DefaultCameraModel = feval( RectOptions.Fn_DefaultRectCamera, LFSize, CalInfo, RectOptions );
+RectOptions = LFDefaultField( 'RectOptions', 'RectCameraModel', DefaultCameraModel );
 
 %---Build interpolation indices---
 fprintf('Generating interpolation indices...\n');
@@ -69,14 +73,15 @@ LF = cast(LF, RectOptions.Precision);
 fprintf('Interpolating...');
 UBlkSize = RectOptions.MaxUBlkSize;
 LFOut = LF;
+t_in=cast(1:LFSize(1), RectOptions.Precision);
+s_in=cast(1:LFSize(2), RectOptions.Precision);
+v_in=cast(1:LFSize(3), RectOptions.Precision);
+
 for( UStart = 1:UBlkSize:LFSize(4) )
     UStop = UStart + UBlkSize - 1;
     UStop = min(UStop, LFSize(4));
-    
-    t_in=cast(1:LFSize(1), 'uint16'); % saving some mem by using uint16
-    s_in=cast(1:LFSize(2), 'uint16');
-    v_in=cast(1:LFSize(3), 'uint16');
-    u_in=cast(UStart:UStop, 'uint16');
+	
+    u_in = cast(UStart:UStop, RectOptions.Precision);
     [tt,ss,vv,uu] = ndgrid(t_in,s_in,v_in,u_in);
     
     % InterpIdx initially holds the index of the desired ray, and is evolved through the application
@@ -85,11 +90,18 @@ for( UStart = 1:UBlkSize:LFSize(4) )
     InterpIdx = [ss(:)'; tt(:)'; uu(:)'; vv(:)'; ones(size(ss(:)'))];
     DestSize = size(tt);
     clear tt ss vv uu
-    
-    InterpIdx = LFMapRectifiedToMeasured( InterpIdx, CalInfo, RectOptions );
+
+	%---Convert the index of the desired ray to a ray representation using the desired camera's model---
+	Ray = feval(CalInfo.CalOptions.Fn_ObsToRay, InterpIdx, RectOptions.RectCameraModel, CalInfo.CalOptions );
+	
+	%---Now find the actual observation that corresponds to the desired ray---
+	% todo[optimization]: The variable InterpIdx could be precomputed and saved with the calibration
+	InterpIdx = feval( CalInfo.CalOptions.Fn_RayToObs, Ray, CalInfo.CameraModel, CalInfo.CalOptions );
+	InterpIdx = InterpIdx(1:4,:); % drop homogeneous coordinates
     
     for( ColChan = 1:NChans )
         % todo[optimization]: use a weighted interpolation scheme to exploit the weight channel
+		% todo[optimization]: use faster griddedInterpolant
         InterpSlice = interpn(squeeze(LF(:,:,:,:,ColChan)), InterpIdx(2,:),InterpIdx(1,:), InterpIdx(4,:),InterpIdx(3,:), 'linear');
         InterpSlice = reshape(InterpSlice, DestSize);
         LFOut(:,:,:,UStart:UStop,ColChan) = InterpSlice;

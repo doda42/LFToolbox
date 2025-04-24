@@ -7,11 +7,17 @@
 %     HotPixelsFname : Name of the hotpixel binary file.
 %
 % Outputs : 
-% 
 %     HotPixelsXY : Array containing the horizontal and vertical indices of
 %     the hotpixels. HotPixelsXY(:,1) contains horizontal indices and
 %     HotPixelsXY(:,2) contains the vertical indices.
 %
+% Example : 
+%     HotPixelsXY = LFReadHotPixels('HOTPIXEL.BIN');
+%
+% User guide: <a href="matlab:which LFToolbox.pdf; open('LFToolbox.pdf')">LFToolbox.pdf</a>
+
+% Copyright (c) 2020 Mikael Le Pendu
+
 
 function [HotPixelsXY] = LFReadHotPixels(HotPixelsFname)
     fid=fopen(HotPixelsFname,'r','l');
