@@ -64,7 +64,7 @@ LFUtilDecodeLytroFolder( CurInPath, FileOptionsDecode, DecodeOptions, RectOption
 
 % ---Calibrate---
 tic
-LFUtilCalFeatureBased( CalInputImagesPath, CalOptions, FileOptionsCal );
+LFUtilCalLensletCam( CalInputImagesPath, CalOptions, FileOptionsCal );
 toc
 
 % ---Rectify---

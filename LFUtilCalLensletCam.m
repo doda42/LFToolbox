@@ -89,7 +89,7 @@
 
 % Copyright (c) 2013-2020 Donald G. Dansereau
 
-function LFUtilCalFeatureBased( InputImagePath, CalOptions, FileOptions )
+function LFUtilCalLensletCam( InputImagePath, CalOptions, FileOptions )
 
 %---Tweakables---
 InputImagePath = LFDefaultVal('InputImagePath', '.');
