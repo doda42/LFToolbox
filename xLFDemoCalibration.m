@@ -78,7 +78,7 @@ FileOptionsRect.OutputPath = fullfile( TopInPath, ['Rectified_', CurMethod], Cur
 % Copying this over avoids having to re-decode it
 TestFile = LFFindFilesRecursive( FileOptionsDecode.OutputPath, {'*.mat'} );
 TestFile = TestFile{1};
-system(sprintf('mkdir -p %s', FileOptionsRect.OutputPath))
+system(sprintf('mkdir -p %s', FileOptionsRect.OutputPath));
 CpCmd = sprintf('cp %s %s', fullfile(FileOptionsDecode.OutputPath, TestFile), FileOptionsRect.OutputPath);
 system(CpCmd);
 
