@@ -71,7 +71,7 @@
 
 % Copyright (c) 2013-2020 Donald G. Dansereau
 
-function CalOptions = LFModCalRefine( FileOptions, CalOptions )
+function CalOptions = LFCalRefine( FileOptions, CalOptions )
 
 %---Defaults---
 CalOptions = LFDefaultField( 'CalOptions', 'OptTolX', 5e-5 );

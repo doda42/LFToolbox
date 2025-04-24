@@ -60,11 +60,11 @@
 %                              estimted parameter values change by less than this amount, the
 %                              optimization terminates. See the Matlab documentation on lsqnonlin,
 %                              option `TolX' for more information. The default value of 5e-5 is set
-%                              within the LFModCalRefine function; a value of 0 means the optimization
+%                              within the LFCalRefine function; a value of 0 means the optimization
 %                              never terminates based on this criterion.
 %                 .OptTolFun : Similar to OptTolX, except this tolerance deals with the error value.
 %                              This corresponds to Matlab's lsqnonlin option `TolFun'. The default
-%                              value of 0 is set within the LFModCalRefine function, and means the
+%                              value of 0 is set within the LFCalRefine function, and means the
 %                              optimization never terminates based on this criterion.
 %
 %     FileOptions : struct controlling file naming and saving
@@ -85,7 +85,7 @@
 %   documentation for a more complete example.
 %
 % User guide: <a href="matlab:which LFToolbox.pdf; open('LFToolbox.pdf')">LFToolbox.pdf</a>
-% See also:  LFCalFindCheckerCorners, LFCalInit, LFModCalRefine, LFUtilDecodeLytroFolder, LFSelectFromDatabase
+% See also:  LFCalFindCheckerCorners, LFCalInit, LFCalRefine, LFUtilDecodeLytroFolder, LFSelectFromDatabase
 
 % Copyright (c) 2013-2020 Donald G. Dansereau
 
@@ -108,7 +108,7 @@ CalOptions = LFDefaultField( 'CalOptions', 'NumIterations', 1 );
 CalOptions = LFDefaultField( 'CalOptions', 'Fn_CalInit', 'HD_CalInit' );
 
 if( ~isfield(CalOptions, 'CalTarget') )
-	CalOptions.CalTarget = LFModCalTargetChecker( CalOptions );
+	CalOptions.CalTarget = LFCalTargetChecker( CalOptions );
 end
 
 %---Check for previously started calibration---
@@ -123,8 +123,8 @@ end
 CalOptions.ForceRedoInit = ForceRedoInit; % restore current ForceRedoInit state
 
 %---Step through the calibration phases---
-CalOptions = LFModCalFind2DFeats( InputImagePath, CalOptions, FileOptions );
-CalOptions = LFModCalCollectFeatures( FileOptions, CalOptions );
+CalOptions = LFCalFind2DFeats( InputImagePath, CalOptions, FileOptions );
+CalOptions = LFCalCollectFeatures( FileOptions, CalOptions );
 CalOptions = ... 
 	feval( CalOptions.Fn_CalInit, FileOptions, CalOptions );
 
@@ -138,7 +138,7 @@ while( CalOptions.Iteration < CalOptions.NumIterations )
 	CalOptions.Iteration = CalOptions.Iteration + 1;
 	
 	tic
-	CalOptions = LFModCalRefine( FileOptions, CalOptions );
+	CalOptions = LFCalRefine( FileOptions, CalOptions );
 	toc
 	
 	if( CalOptions.ShowDisplay )

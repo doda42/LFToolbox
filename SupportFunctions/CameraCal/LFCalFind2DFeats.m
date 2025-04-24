@@ -36,7 +36,7 @@
 
 % Copyright (c) 2013-2020 Donald G. Dansereau
 
-function CalOptions = LFModCalFind2DFeats( InputImagePath, CalOptions, FileOptions )
+function CalOptions = LFCalFind2DFeats( InputImagePath, CalOptions, FileOptions )
 
 %---Defaults---
 FileOptions = LFDefaultField( 'FileOptions', 'WorkingPath', InputImagePath );

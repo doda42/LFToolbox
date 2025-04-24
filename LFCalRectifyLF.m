@@ -52,7 +52,7 @@
 
 % Copyright (c) 2013-2020 Donald G. Dansereau
 
-function [LF, RectOptions] = LFModCalRectifyLF( LF, CalInfo, RectOptions )
+function [LF, RectOptions] = LFCalRectifyLF( LF, CalInfo, RectOptions )
 
 %---Defaults---
 RectOptions = LFDefaultField( 'RectOptions', 'Precision', 'single' );

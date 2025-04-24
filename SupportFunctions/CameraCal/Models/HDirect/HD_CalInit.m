@@ -42,7 +42,7 @@ function CalOptions = HD_CalInit( FileOptions, CalOptions )
 CalOptions = LFDefaultField( 'CalOptions', 'AllFeatsFname', 'AllFeats.mat' );
 
 %---Defaults---
-CalOptions = LFDefaultField( 'CalOptions', 'CalInfoFname', 'ModCalInfo.json' );
+CalOptions = LFDefaultField( 'CalOptions', 'CalInfoFname', 'CalInfo.json' );
 CalOptions = LFDefaultField( 'CalOptions', 'ForceRedoInit', false );
 
 %---Start by checking if this step has already been completed---

@@ -317,13 +317,13 @@ for( iFile = 1:length(FileList) )
 		Thumb = DispThumb(LF, CurFname, CompletedTasks);
 	end
 	
-	%---Optionally apply modular cal rectification---
-	if( ismember( 'ModRectify', TasksRemaining ) )
+	%---Optionally apply rectification---
+	if( ismember( 'Rectify', TasksRemaining ) )
 		RectOptions.CalibrationDatabasePath = ...
 			LFLocateDatabaseFile( RectOptions.CalibrationDatabasePath, RectOptions.CalibrationDatabaseFname );
-		[LF, RectOptions, Success] = ModRectify( LF, LFMetadata, DecodeOptions, RectOptions, LensletGridModel );
+		[LF, RectOptions, Success] = Rectify( LF, LFMetadata, DecodeOptions, RectOptions, LensletGridModel );
 		if( Success )
-			CompletedTasks = [CompletedTasks, 'ModRectify'];
+			CompletedTasks = [CompletedTasks, 'Rectify'];
 			SaveRequired = true;
 		end
 		%---Display thumbnail---
@@ -517,7 +517,7 @@ LF(:,:,:,:,DecodeOptions.NColChans+1:DecodeOptions.NColChans+DecodeOptions.NWeig
 end
 
 %---------------------------------------------------------------------------------------------------
-function [LF, RectOptions, Success] = ModRectify( LF, LFMetadata, DecodeOptions, RectOptions, LensletGridModel )
+function [LF, RectOptions, Success] = Rectify( LF, LFMetadata, DecodeOptions, RectOptions, LensletGridModel )
 Success = false;
 fprintf('Applying rectification... ');
 %---Load cal info---
@@ -539,7 +539,7 @@ if( ~StructsMatch )
 end
 
 %---Perform rectification---
-[LF, RectOptions] = LFModCalRectifyLF( LF, CalInfo, RectOptions );
+[LF, RectOptions] = LFCalRectifyLF( LF, CalInfo, RectOptions );
 Success = true;
 end
 

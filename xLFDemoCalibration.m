@@ -70,7 +70,7 @@ toc
 % ---Rectify---
 %---Rectify a single test file---
 LFUtilProcessCalibrations( RectOptions.CalibrationDatabasePath );
-DecodeOptions.OptionalTasks = 'ModRectify';
+DecodeOptions.OptionalTasks = 'Rectify';
 FileOptionsRect = FileOptionsDecode; % copy over the file format info
 FileOptionsRect.OutputPath = fullfile( TopInPath, ['Rectified_', CurMethod], CurDataset );
 
@@ -89,7 +89,7 @@ if( DemoIntrinsicsControl )
 
 	% visualise the default intrins sampling pattern
 	sfigure(10);
-	RectOptions = LFModCalDispRectIntrinsics( LF, LFMetadata, RectOptions ); 
+	RectOptions = LFCalDispRectIntrinsics( LF, LFMetadata, RectOptions ); 
 
 	% manipulate the default intrins to cover a larger range of u,v
 	RectOptions.RectCameraModel.EstCamIntrinsicsH(3,3) = 1.1 * RectOptions.RectCameraModel.EstCamIntrinsicsH(3,3);
@@ -99,7 +99,7 @@ if( DemoIntrinsicsControl )
 
 	% visualise the manipulated intrins sampling pattern
 	sfigure(11);
-	LFModCalDispRectIntrinsics( LF, LFMetadata, RectOptions );
+	LFCalDispRectIntrinsics( LF, LFMetadata, RectOptions );
 end
 
 % Now find the corresponding (first) raw file and decode it with rectify turned on

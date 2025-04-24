@@ -1,5 +1,5 @@
 %todo[doc]
-function CalOptions = LFModCalCollectFeatures( FileOptions, CalOptions )
+function CalOptions = LFCalCollectFeatures( FileOptions, CalOptions )
 
 CalOptions = LFDefaultField( 'CalOptions', 'FeatFnamePattern', '%s__Feats.mat' );
 CalOptions = LFDefaultField( 'CalOptions', 'AllFeatsFname', 'AllFeats.mat' );

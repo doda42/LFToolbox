@@ -1,4 +1,4 @@
-function CalTarget = LFModCalTargetChecker( CalOptions )
+function CalTarget = LFCalTargetChecker( CalOptions )
 
 IdealCheckerX = CalOptions.ExpectedCheckerSpacing_m(1) .* (0:CalOptions.ExpectedCheckerSize(1)-1);
 IdealCheckerY = CalOptions.ExpectedCheckerSpacing_m(2) .* (0:CalOptions.ExpectedCheckerSize(2)-1);

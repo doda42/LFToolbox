@@ -39,7 +39,7 @@
 
 % Copyright (c) 2013-2020 Donald G. Dansereau
 
-function [RectOptions, LF] = LFModCalDispRectIntrinsics( LF, LFMetadata, RectOptions, PaintColour )
+function [RectOptions, LF] = LFCalDispRectIntrinsics( LF, LFMetadata, RectOptions, PaintColour )
 
 PaintColour = LFDefaultVal( 'PaintColour', [0.5,1,1] );
 
@@ -68,7 +68,7 @@ if( isempty( CalInfo ) )
     return;
 end
 
-% todo[refactor] pull out code repeated with LFModCalRectifyLF
+% todo[refactor] pull out code repeated with LFCalRectifyLF
 %--- visualize image utilization---
 t_in=cast(1:LFSize(1), RectOptions.Precision);
 s_in=cast(1:LFSize(2), RectOptions.Precision);
