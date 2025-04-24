@@ -4,13 +4,9 @@
 clearvars
 
 % ------------------------------------------------------------
-TopInPath = '/home/don/Data.local/2023_Modcal_Example';
+TopInPath = '/home/don/Data.local/2025_PC_LFCal';
 WhiteImagesInPath = fullfile(TopInPath, 'Cameras');
-CameraSerial = 'B5143104560';
 RawPath = 'RAW';
-
-CurDataset  = '2021_May_50mm_B';
-CurMethod = 'TL';
 
 GridModelOptions = [];
 DecodeOptions = [];
@@ -19,20 +15,26 @@ RectOptions = [];
 
 % Set up common cal options
 CalOptions.ForceRedoInit = false;
-CalOptions.ExpectedCheckerSize =  [12,7];
-CalOptions.ExpectedCheckerSpacing_m =  [20,20]*1e-3;
+
+% CurDataset  = 'B01-10mm'; % MOD_0032, 13 images
+% CurDataset  = 'B01-16mm'; % MOD_0026, 17 images
+% CurDataset  = 'B01-55mm'; % MOD_0012, 11 images
+% CurDataset  = 'B01-80mm'; % MOD_0001, 8 images
+CurDataset  = 'F01-6.5mm'; % MOD_0001, 15 images
+
+CalOptions = LFReadMetadata( fullfile( TopInPath, RawPath, CurDataset, 'CalOptions.json' ) );
+% CurMethod = 'HD';
+CurMethod = 'TL';
 
 switch( CurMethod )
 	case 'TL'
-		WhiteImagesProcPath = fullfile(WhiteImagesInPath, [CameraSerial, '_ProcLegacy']);
-		DecodePath = 'ModDecode_Legacy';
-		CalOptions.NumIterations = 1;
+		WhiteImagesProcPath = fullfile(WhiteImagesInPath, [CalOptions.CameraSerial, '_Proc']);
+		DecodePath = 'Decoded';
 		CalOptions = LFSetupCalModel( 'ThinLens', '2DNoBias', CalOptions );
 
 	case 'HD'
-		WhiteImagesProcPath = fullfile(WhiteImagesInPath, [CameraSerial, '_ProcLegacy']);
-		DecodePath = 'ModDecode_Legacy';
-		CalOptions.NumIterations = 1;
+		WhiteImagesProcPath = fullfile(WhiteImagesInPath, [CalOptions.CameraSerial, '_Proc']);
+		DecodePath = 'Decoded';
 		CalOptions = LFSetupCalModel( 'HDirect', '2DNoBias', CalOptions );
 
 	otherwise
@@ -44,7 +46,7 @@ DecodeOptions.WhiteImageDatabasePath = WhiteImagesProcPath;
 
 % ---Process White Images---
 FileOptionsWhiteImg.OutputPath = WhiteImagesProcPath;
-InputPath = fullfile(WhiteImagesInPath, CameraSerial);
+InputPath = fullfile(WhiteImagesInPath, CalOptions.CameraSerial);
 LFUtilProcessWhiteImages( InputPath, FileOptionsWhiteImg, GridModelOptions );
 
 % ---Decode---
