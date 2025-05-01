@@ -1,8 +1,11 @@
 % todo[doc]
 
 % Copyright (c) 2020 Mikael Le Pendu
+%
+% Quick changes to reduce memory utilisation, 2025, Donald Dansereau
+% todo[refactor]: rewrite function with speed, memory efficiency in mind
 
-function [ Belonging, Centers, Dist ] = LFMicrolensBelonging(M,N, LensletGridModel)
+function [ Belonging, Centers ] = LFMicrolensBelonging(M,N, LensletGridModel)
 %LFMICROLENSBELONGING
 
 theta = LensletGridModel.Rot;
@@ -29,33 +32,46 @@ if LensletGridModel.FirstPosShiftRow == 1
 end
 o = RRot * o;%Inverse rotation must be applied (the data in LensletGridModel assumes the rotation has already been corrected).
 
-[u, v] = meshgrid(1:N,1:M);
-u = u(:);
-v = v(:);
+[u, v] = meshgrid(1:N, 1:M);
+u = single(u(:));
+v = single(v(:));
 uv = [u';v'];
-c = repmat(o,1,length(u));%offset to take the first microlens center as the origin.
-kr = TI*(uv - c);
+c = repmat(single(o),1,length(u));%offset to take the first microlens center as the origin.
+kr = single(TI*(uv - c));
+
+clear u
+clear v
+clear o
 
 %Find 4 closest centers in hexagonal space by rounding (integer position in
 %this space are microlens centers). One of them is the closest in the sensor space.
-k = zeros(size(kr,1), size(kr,2), 4);
+k = zeros(size(kr,1), size(kr,2), 4, 'single');
 k(:,:,1) = [floor(kr(1,:));floor(kr(2,:))];
 k(:,:,2) = [ceil(kr(1,:));floor(kr(2,:))];
 k(:,:,3) = [floor(kr(1,:));ceil(kr(2,:))];
 k(:,:,4) = [ceil(kr(1,:));ceil(kr(2,:))];
 
+krsize = size(kr);
+clear kr
+
 %Convert centers positions back to sensor space.
-X = zeros(size(kr,1), size(kr,2), 4);
+X = zeros(krsize(1), krsize(2), 4, 'single');
 X(:,:,1) = T*k(:,:,1) + c;
 X(:,:,2) = T*k(:,:,2) + c;
 X(:,:,3) = T*k(:,:,3) + c;
 X(:,:,4) = T*k(:,:,4) + c;
+
+clear c
+clear k
+
 %Find the closest among the 4 in sensor space.
 radius2 = (X(1,:,:) - repmat(uv(1,:),1,1,4)).^2 + (X(2,:,:) - repmat(uv(2,:),1,1,4)).^2;
+clear uv
 
-clear k
-[Dist, idx] = min(radius2,[],3);
-Xf = zeros(size(kr));
+[~, idx] = min(radius2,[],3);
+clear radius2
+
+Xf = zeros(krsize, 'single');
 for i = 1:4
    Xf(:,idx == i) = X(:,idx == i,i);
 end
@@ -63,7 +79,6 @@ clear X
 
 [Centers, ~, idx] = unique(Xf','rows');
 Belonging = reshape(idx, M,N);
-Dist = reshape(Dist, M,N);
 
 end
 

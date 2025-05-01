@@ -217,7 +217,7 @@ if(DecodeOptions.HotPixelCorrect)
 end
 
 if(DecodeOptions.WeightedDemosaic || DecodeOptions.WeightedInterp)
-    [Belonging, MLCenters, ~] = LFMicrolensBelonging(size(LensletImage,1),size(LensletImage,2), LensletGridModel);
+    [Belonging, MLCenters] = LFMicrolensBelonging(size(LensletImage,1),size(LensletImage,2), LensletGridModel);
     Weights = cast(WhiteImage.*double(intmax('uint16')), 'uint16');
     Weights = demosaic(Weights, DecodeOptions.DemosaicOrder);
     Weights = cast(Weights, DecodeOptions.Precision);
